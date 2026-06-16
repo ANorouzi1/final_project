@@ -1,86 +1,54 @@
-# Polygon-Aware Agricultural Field Segmentation
+# HLCV Project: Polygon-Aware Agricultural Field Segmentation
 
-Implementation scaffold for the project proposal: a dual-head U-Net that predicts
-both agricultural field masks and normalized distance-transform maps, followed by
-instance separation and polygon-aware refinement.
+This project implements the proposal in the CVPR-style PDF: agricultural field segmentation with a dual-head U-Net, distance-transform auxiliary learning, polygon-aware regularization, and region/boundary metrics.
 
-## What is included
+The structure follows Assignment 3:
 
-- Dual-head U-Net model with segmentation and distance-transform outputs.
-- Distance-transform target generation for binary field masks.
-- Combined segmentation, distance, and boundary-regularization losses.
-- Instance post-processing from mask + distance predictions.
-- Polygon simplification with the Douglas-Peucker algorithm.
-- mIoU, Boundary IoU, Instance F1, and Panoptic Quality metrics.
-- Synthetic polygon dataset generator for smoke testing.
-- Training and evaluation command-line entry points.
+- `cfgs/`: experiment dictionaries
+- `src/data_loaders/`: data modules and datasets
+- `src/models/`: model definitions
+- `src/losses/`: segmentation losses
+- `src/metrics/`: mIoU, Dice, Boundary IoU, instance F1, PQ-style score
+- `src/trainers/`: trainer with best/last checkpoint saving and early stopping
+- `notebooks/`: notebook-first workflow
+- `Logs/` and `Saved/`: training logs and checkpoints
 
-## Quick smoke test
+## Recommended Workflow
 
-This repository includes a smoke test that uses only NumPy and Pillow:
+Open these notebooks:
 
-```bash
-python3 scripts/smoke_test.py
-```
+1. `notebooks/01_project_overview.ipynb`
+2. `notebooks/02_train_synthetic_demo.ipynb`
 
-If PyTorch is installed, the same smoke test also performs a forward pass through
-the dual-head U-Net.
+The second notebook runs without downloading data by using a synthetic polygon-field dataset. This is useful for checking that the full training loop, loss, metrics, visualization, and checkpointing work before plugging in the real Fields of The World data.
 
-## Install for training
+## Real Data Layout
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-## Expected dataset layout
-
-The training code accepts simple image/mask folders. Masks should be binary or
-instance masks; all non-zero pixels are treated as field pixels for segmentation,
-and instance ids are used where available for metrics.
+For FTW-style data, place files like this:
 
 ```text
-data/
+data/ftw/
   train/
     images/
       sample_001.png
     masks/
       sample_001.png
+    distances/              # optional; generated from masks when missing
+      sample_001.png
   val/
     images/
-      sample_101.png
     masks/
-      sample_101.png
+    distances/
 ```
 
-For FTW, export or symlink the European subset into this structure.
+Masks should be binary or instance masks. Any non-zero value is treated as field foreground. Distance maps are normalized to `[0, 1]`; if they are missing, the dataset computes them from the mask.
 
-## Train
+## Quick Start
+
+From inside `outputs/hlcv`, run the notebooks. If you prefer a short script:
 
 ```bash
-python3 main.py train \
-  --train-images data/train/images \
-  --train-masks data/train/masks \
-  --val-images data/val/images \
-  --val-masks data/val/masks \
-  --epochs 30 \
-  --batch-size 8 \
-  --out outputs/checkpoints/dual_head_unet.pt
+python run_experiment.py --config synthetic_debug
 ```
 
-## Evaluate
-
-```bash
-python3 main.py evaluate \
-  --images data/val/images \
-  --masks data/val/masks \
-  --checkpoint outputs/checkpoints/dual_head_unet.pt
-```
-
-## Project notes
-
-The distance-transform head helps keep touching fields separable by teaching the
-network where field interiors peak and where physical boundaries should fall to
-zero. Post-processing uses these peaks as instance seeds, then simplifies each
-instance contour into vector-ready polygon vertices.
+The project is intentionally notebook-friendly, so the script is only a convenience wrapper.
