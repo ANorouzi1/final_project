@@ -10,6 +10,8 @@ class DiceBCEDistancePolygonLoss(nn.Module):
         dice_weight=1.0,
         distance_weight=0.5,
         polygon_weight=0.05,
+        distance_foreground_only=True,
+        distance_mask_threshold=0.5,
         eps=1e-6,
     ):
         super().__init__()
@@ -17,6 +19,8 @@ class DiceBCEDistancePolygonLoss(nn.Module):
         self.dice_weight = dice_weight
         self.distance_weight = distance_weight
         self.polygon_weight = polygon_weight
+        self.distance_foreground_only = distance_foreground_only
+        self.distance_mask_threshold = distance_mask_threshold
         self.eps = eps
 
     def forward(self, outputs, targets):
@@ -28,7 +32,7 @@ class DiceBCEDistancePolygonLoss(nn.Module):
         bce = F.binary_cross_entropy_with_logits(mask_logits, target_mask)
         mask_prob = torch.sigmoid(mask_logits)
         dice = self._dice_loss(mask_prob, target_mask)
-        distance = F.smooth_l1_loss(torch.sigmoid(distance_logits), target_distance)
+        distance = self._distance_loss(torch.sigmoid(distance_logits), target_distance, target_mask)
         polygon = self._polygon_smoothness(mask_prob)
 
         total = (
@@ -44,6 +48,17 @@ class DiceBCEDistancePolygonLoss(nn.Module):
             "distance_loss": distance.detach(),
             "polygon_loss": polygon.detach(),
         }
+
+    def _distance_loss(self, pred, target, mask):
+        loss = F.smooth_l1_loss(pred, target, reduction="none")
+        if not self.distance_foreground_only:
+            return loss.mean()
+
+        foreground = (mask > self.distance_mask_threshold).float()
+        foreground_pixels = foreground.sum()
+        if foreground_pixels <= 0:
+            return loss.sum() * 0.0
+        return (loss * foreground).sum() / foreground_pixels
 
     def _dice_loss(self, pred, target):
         pred = pred.flatten(1)

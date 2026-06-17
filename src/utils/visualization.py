@@ -70,6 +70,7 @@ def show_predictions(model, batch, device=None, threshold=0.5, max_items=4):
     for i in range(n):
         target = batch["mask"][i, 0] > threshold
         pred = pred_mask[i, 0] > threshold
+        pred_distance_in_target = pred_distance[i, 0] * target.float()
 
         axes[i, 0].imshow(_display_image(batch["image"][i]), cmap="gray" if batch["image"][i].shape[0] == 1 else None)
         axes[i, 0].set_title("image")
@@ -83,8 +84,8 @@ def show_predictions(model, batch, device=None, threshold=0.5, max_items=4):
         axes[i, 4].set_title("green ok / blue fp / red fn")
         axes[i, 5].imshow(batch["distance"][i, 0], cmap="magma")
         axes[i, 5].set_title("target distance")
-        axes[i, 6].imshow(pred_distance[i, 0], cmap="magma")
-        axes[i, 6].set_title("pred distance")
+        axes[i, 6].imshow(pred_distance_in_target, cmap="magma", vmin=0, vmax=1)
+        axes[i, 6].set_title("pred distance in target")
         for ax in axes[i]:
             ax.axis("off")
     plt.tight_layout()
