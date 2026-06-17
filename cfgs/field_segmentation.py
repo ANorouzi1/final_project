@@ -3,7 +3,7 @@ from pathlib import Path
 
 import torch
 
-from src.data_loaders.field_dataset import FieldSegmentationDataModule
+from src.data_loaders.field_dataset import FieldSegmentationDataModule, NUM_INPUT_CHANNELS
 from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
 from src.losses.segmentation_losses import DiceBCEDistancePolygonLoss
 from src.metrics.segmentation_metrics import (
@@ -119,7 +119,7 @@ ftw_dual_head = dict(
     name="ftw_dual_head",
     model_arch=DualHeadUNet,
     model_args=dict(
-        in_channels=3,
+        in_channels=NUM_INPUT_CHANNELS,
         base_channels=32,
         num_classes=1,
         bilinear=True,
@@ -127,12 +127,12 @@ ftw_dual_head = dict(
     datamodule=FieldSegmentationDataModule,
     data_args=dict(
         data_dir=str(PROJECT_ROOT / "data" / "ftw"),
-        split="train",
         image_size=256,
         batch_size=6,
         shuffle=True,
-        heldout_split=0.15,
-        num_workers=2,
+        max_train_samples=1000,
+        heldout_split=0.0,
+        num_workers=0,
     ),
     optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-4),
     lr_scheduler=partial(torch.optim.lr_scheduler.CosineAnnealingLR, T_max=40),
@@ -151,5 +151,5 @@ ftw_dual_head = dict(
         pq=PanopticQualityApprox(threshold=0.5, iou_threshold=0.5),
     ),
     trainer_module=FieldSegmentationTrainer,
-    trainer_config=_base_trainer("ftw_dual_head", epochs=40, early_stop=10),
+    trainer_config=_base_trainer("ftw_dual_head", epochs=5, early_stop=10),
 )

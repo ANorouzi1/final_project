@@ -5,3 +5,7 @@ pillow>=10.0
 matplotlib>=3.7
 tqdm>=4.66
 jupyter>=1.0
+pandas>=2.0
+pyarrow>=14.0
+tifffile>=2024.2
+rasterio>=1.3

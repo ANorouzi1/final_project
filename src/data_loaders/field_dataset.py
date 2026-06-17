@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from scipy.ndimage import distance_transform_edt
 from torch.utils.data import Dataset
 
-from .base_data_modules import BaseDataModule, subset_dataset
+from .base_data_modules import BaseDataModule
 
 
 # Bands per Sentinel-2 GeoTIFF in FTW (Red, Green, Blue, NIR).
@@ -171,13 +171,23 @@ class FTWFieldDataset(Dataset):
             raise FileNotFoundError(f"Missing FTW tile: {path}")
         try:
             import rasterio
-        except ImportError as exc:  # pragma: no cover
-            raise ImportError(
-                "Reading FTW GeoTIFFs needs rasterio. "
-                "Install via `pip install -r requirements.txt`."
-            ) from exc
-        with rasterio.open(path) as src:
-            return src.read()  # (bands, H, W)
+        except ImportError:
+            try:
+                import tifffile
+            except ImportError as exc:  # pragma: no cover
+                raise ImportError(
+                    "Reading FTW GeoTIFFs needs rasterio or tifffile. "
+                    "Install via `pip install -r requirements.txt`."
+                ) from exc
+            arr = tifffile.imread(path)
+            if arr.ndim == 2:
+                return arr[None, ...]
+            if arr.ndim == 3 and arr.shape[-1] <= 16:
+                return np.moveaxis(arr, -1, 0)
+            return arr
+        else:
+            with rasterio.open(path) as src:
+                return src.read()  # (bands, H, W)
 
     def _resize_chw(self, arr, mode):
         if arr.shape[-2:] == (self.image_size, self.image_size):
@@ -237,25 +247,32 @@ class FTWFieldDataModule(BaseDataModule):
         data_dir,
         countries=None,
         image_size=256,
+        split=None,
         train_split="train",
         val_split="val",
         normalize_scale=DEFAULT_S2_SCALE,
         mask_kind="semantic_2class",
         max_samples=None,
+        max_train_samples=None,
+        max_val_samples=None,
         heldout_split=0.0,
         split_seed=42,
         **loader_kwargs,
     ):
+        if split is not None:
+            train_split = split
+        if max_train_samples is None:
+            max_train_samples = max_samples
+
         train_dataset = FTWFieldDataset(
             data_dir=data_dir,
             split=train_split,
             countries=countries,
             image_size=image_size,
-            max_samples=max_samples,
+            max_samples=max_train_samples,
             normalize_scale=normalize_scale,
             mask_kind=mask_kind,
         )
-        train_dataset = subset_dataset(train_dataset, max_samples)
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
 
         # Prefer the official validation split unless a random heldout was requested.
@@ -265,7 +282,7 @@ class FTWFieldDataModule(BaseDataModule):
                 split=val_split,
                 countries=countries,
                 image_size=image_size,
-                max_samples=max_samples,
+                max_samples=max_val_samples,
                 normalize_scale=normalize_scale,
                 mask_kind=mask_kind,
             )
