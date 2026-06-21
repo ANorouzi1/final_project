@@ -5,7 +5,7 @@ import torch
 
 from src.data_loaders.field_dataset import FieldSegmentationDataModule, NUM_INPUT_CHANNELS
 from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
-from src.losses.segmentation_losses import DiceBCEDistancePolygonLoss
+from src.losses.segmentation_losses import DiceBCEPolygonLoss, DiceBCEDistancePolygonLoss
 from src.metrics.segmentation_metrics import (
     BoundaryIoU,
     DiceScore,
@@ -13,7 +13,7 @@ from src.metrics.segmentation_metrics import (
     MeanIoU,
     PanopticQualityApprox,
 )
-from src.models.unet import DualHeadUNet
+from src.models.unet import DualHeadUNet, MaskOnlyUNet
 from src.trainers.field_trainer import FieldSegmentationTrainer
 
 
@@ -152,4 +152,43 @@ ftw_dual_head = dict(
     ),
     trainer_module=FieldSegmentationTrainer,
     trainer_config=_base_trainer("ftw_dual_head", epochs=5, early_stop=10),
+)
+
+
+ftw_mask_baseline = dict(
+    name="ftw_mask_baseline",
+    model_arch=MaskOnlyUNet,
+    model_args=dict(
+        in_channels=NUM_INPUT_CHANNELS,
+        base_channels=32,
+        num_classes=1,
+        bilinear=True,
+    ),
+    datamodule=FieldSegmentationDataModule,
+    data_args=dict(
+        data_dir=str(PROJECT_ROOT / "data" / "ftw"),
+        image_size=256,
+        batch_size=6,
+        shuffle=True,
+        max_train_samples=1000,
+        heldout_split=0.0,
+        num_workers=0,
+    ),
+    optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-4),
+    lr_scheduler=partial(torch.optim.lr_scheduler.CosineAnnealingLR, T_max=40),
+    criterion=DiceBCEPolygonLoss,
+    criterion_args=dict(
+        bce_weight=1.0,
+        dice_weight=1.0,
+        polygon_weight=0.06,
+    ),
+    metrics=dict(
+        miou=MeanIoU(threshold=0.5),
+        dice=DiceScore(threshold=0.5),
+        boundary_iou=BoundaryIoU(threshold=0.5, radius=2),
+        instance_f1=InstanceF1(threshold=0.5, iou_threshold=0.5),
+        pq=PanopticQualityApprox(threshold=0.5, iou_threshold=0.5),
+    ),
+    trainer_module=FieldSegmentationTrainer,
+    trainer_config=_base_trainer("ftw_mask_baseline", epochs=5, early_stop=10),
 )

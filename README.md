@@ -52,3 +52,26 @@ python run_experiment.py --config synthetic_debug
 ```
 
 The project is intentionally notebook-friendly, so the script is only a convenience wrapper.
+
+## Feedback-Driven Diagnostics
+
+Show the binary-mask merging/blob issue that motivates the auxiliary distance head:
+
+```bash
+python visualize_problem_setup.py --config ftw_dual_head --split val --num-samples 3
+```
+
+Train the fair mask-only ablation baseline and the proposed dual-head model:
+
+```bash
+python run_experiment.py --config ftw_mask_baseline
+python run_experiment.py --config ftw_dual_head
+```
+
+Compare their validation metrics after both runs:
+
+```bash
+python compare_experiments.py
+```
+
+See `docs/feedback_response.md` for the ablation protocol, post-processing fairness note, and related SDF/polygon literature pointers.

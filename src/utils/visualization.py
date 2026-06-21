@@ -61,7 +61,10 @@ def show_predictions(model, batch, device=None, threshold=0.5, max_items=4):
     images = batch["image"][:max_items].to(device)
     outputs = model(images)
     pred_mask = torch.sigmoid(outputs["mask_logits"]).detach().cpu()
-    pred_distance = torch.sigmoid(outputs["distance_logits"]).detach().cpu()
+    if "distance_logits" in outputs:
+        pred_distance = torch.sigmoid(outputs["distance_logits"]).detach().cpu()
+    else:
+        pred_distance = torch.zeros_like(batch["distance"][:max_items].detach().cpu())
     batch = {key: value[:max_items].detach().cpu() if torch.is_tensor(value) else value for key, value in batch.items()}
     n = images.shape[0]
     fig, axes = plt.subplots(n, 7, figsize=(21, 3 * n))
@@ -85,7 +88,7 @@ def show_predictions(model, batch, device=None, threshold=0.5, max_items=4):
         axes[i, 5].imshow(batch["distance"][i, 0], cmap="magma")
         axes[i, 5].set_title("target distance")
         axes[i, 6].imshow(pred_distance_in_target, cmap="magma", vmin=0, vmax=1)
-        axes[i, 6].set_title("pred distance in target")
+        axes[i, 6].set_title("pred distance in target" if "distance_logits" in outputs else "no distance head")
         for ax in axes[i]:
             ax.axis("off")
     plt.tight_layout()

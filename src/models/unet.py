@@ -80,3 +80,33 @@ class DualHeadUNet(BaseModel):
             "mask_logits": self.mask_head(x),
             "distance_logits": self.distance_head(x),
         }
+
+
+class MaskOnlyUNet(BaseModel):
+    """U-Net baseline with the same backbone but no auxiliary distance head."""
+
+    def __init__(self, in_channels=3, base_channels=32, num_classes=1, bilinear=True):
+        super().__init__()
+        c = base_channels
+        self.inc = DoubleConv(in_channels, c)
+        self.down1 = Down(c, c * 2)
+        self.down2 = Down(c * 2, c * 4)
+        self.down3 = Down(c * 4, c * 8)
+        self.down4 = Down(c * 8, c * 16)
+        self.up1 = Up(c * 16, c * 8, c * 8, bilinear=bilinear)
+        self.up2 = Up(c * 8, c * 4, c * 4, bilinear=bilinear)
+        self.up3 = Up(c * 4, c * 2, c * 2, bilinear=bilinear)
+        self.up4 = Up(c * 2, c, c, bilinear=bilinear)
+        self.mask_head = nn.Conv2d(c, num_classes, kernel_size=1)
+
+    def forward(self, x):
+        x1 = self.inc(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
+        x = self.up1(x5, x4)
+        x = self.up2(x, x3)
+        x = self.up3(x, x2)
+        x = self.up4(x, x1)
+        return {"mask_logits": self.mask_head(x)}
