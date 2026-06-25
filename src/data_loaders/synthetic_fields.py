@@ -4,10 +4,10 @@ import random
 import numpy as np
 import torch
 from PIL import Image, ImageDraw
-from scipy.ndimage import distance_transform_edt
 from torch.utils.data import Dataset
 
 from .base_data_modules import BaseDataModule
+from .distance_targets import signed_instance_distance_field
 
 
 class SyntheticFieldDataset(Dataset):
@@ -55,13 +55,14 @@ class SyntheticFieldDataset(Dataset):
 
         instance_mask = np.asarray(mask_image, dtype=np.int32)
         binary_mask = (instance_mask > 0).astype(np.float32)
-        distance = _instance_distance_transform(instance_mask)
+        distance = signed_instance_distance_field(instance_mask, outside_clip=size / 4)
         image = np.clip(image, 0.0, 1.0).astype(np.float32)
 
         return {
             "image": torch.from_numpy(image.transpose(2, 0, 1)),
             "mask": torch.from_numpy(binary_mask[None, ...]),
             "distance": torch.from_numpy(distance[None, ...]),
+            "sdf": torch.from_numpy(distance[None, ...]),
             "instance": torch.from_numpy(instance_mask.astype(np.int64)),
             "id": f"synthetic_{index:04d}",
         }
@@ -81,19 +82,6 @@ def _random_polygon(rng, size):
         y = cy + math.sin(angle) * radius_y * rng.uniform(0.75, 1.2)
         points.append((max(1, min(size - 2, x)), max(1, min(size - 2, y))))
     return points
-
-
-def _instance_distance_transform(instance_mask):
-    distance = np.zeros(instance_mask.shape, dtype=np.float32)
-    for instance_id in np.unique(instance_mask):
-        if instance_id == 0:
-            continue
-        current = instance_mask == instance_id
-        current_distance = distance_transform_edt(current).astype(np.float32)
-        if current_distance.max() > 0:
-            current_distance /= current_distance.max()
-        distance = np.maximum(distance, current_distance)
-    return distance
 
 
 class SyntheticFieldDataModule(BaseDataModule):

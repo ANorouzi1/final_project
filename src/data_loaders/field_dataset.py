@@ -3,10 +3,10 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn.functional as F
-from scipy.ndimage import distance_transform_edt
 from torch.utils.data import Dataset
 
 from .base_data_modules import BaseDataModule
+from .distance_targets import signed_instance_distance_field
 
 
 # Bands per Sentinel-2 GeoTIFF in FTW (Red, Green, Blue, NIR).
@@ -37,7 +37,7 @@ class FTWFieldDataset(Dataset):
 
     * ``image``    = concat(window_b, window_a) -> 8 channels (torchgeo order)
     * ``mask``     = binary field mask from ``semantic_2class``
-    * ``distance`` = per-instance normalized distance transform from ``instance``
+    * ``distance`` = signed distance field from ``instance`` in [-1, 1]
     * ``instance`` = raw instance-id map (used by InstanceF1 / PQ metrics)
 
     Train/val/test membership is read from the per-country parquet file. If the
@@ -97,12 +97,18 @@ class FTWFieldDataset(Dataset):
             country_dir = self.root / country
             window_a_dir = country_dir / "s2_images" / "window_a"
             window_b_dir = country_dir / "s2_images" / "window_b"
+            instance_dir = country_dir / "label_masks" / "instance"
+            mask_dir = country_dir / "label_masks" / self.mask_kind
             ids = self._split_ids(country_dir, country)
-            # Both temporal windows are required to build the 8-channel input;
-            # some chips ship with only one window and are skipped.
+            # Both temporal windows and both label targets are required.
+            # Some metadata rows reference chips that are incomplete on disk.
             for aoi_id in ids:
-                if (window_a_dir / f"{aoi_id}.tif").exists() and \
-                        (window_b_dir / f"{aoi_id}.tif").exists():
+                if (
+                    (window_a_dir / f"{aoi_id}.tif").exists()
+                    and (window_b_dir / f"{aoi_id}.tif").exists()
+                    and (instance_dir / f"{aoi_id}.tif").exists()
+                    and (mask_dir / f"{aoi_id}.tif").exists()
+                ):
                     samples.append((country, aoi_id))
         return samples
 
@@ -156,12 +162,13 @@ class FTWFieldDataset(Dataset):
         mask_arr = self._resize_hw(mask_arr, mode="nearest")
         binary_mask = (mask_arr > 0).astype(np.float32)
 
-        distance = _instance_distance_transform(instance)
+        distance = signed_instance_distance_field(instance)
 
         return {
             "image": torch.from_numpy(image),
             "mask": torch.from_numpy(binary_mask[None, ...]),
             "distance": torch.from_numpy(distance[None, ...]),
+            "sdf": torch.from_numpy(distance[None, ...]),
             "instance": torch.from_numpy(instance.astype(np.int64)),
             "id": f"{country}/{aoi_id}",
         }
@@ -218,20 +225,6 @@ def _relabel_instances(instance_mask):
         out[instance_mask == old_id] = next_id
         next_id += 1
     return out
-
-
-def _instance_distance_transform(instance_mask):
-    """Per-instance EDT normalized to [0, 1], peaking at field centers."""
-    distance = np.zeros(instance_mask.shape, dtype=np.float32)
-    for instance_id in np.unique(instance_mask):
-        if instance_id == 0:
-            continue
-        current = instance_mask == instance_id
-        current_distance = distance_transform_edt(current).astype(np.float32)
-        if current_distance.max() > 0:
-            current_distance /= current_distance.max()
-        distance = np.maximum(distance, current_distance)
-    return distance
 
 
 class FTWFieldDataModule(BaseDataModule):

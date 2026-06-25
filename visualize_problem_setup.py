@@ -56,6 +56,12 @@ def _load_checkpoint(model, checkpoint, device):
     model.load_state_dict(state)
 
 
+def _checkpoint_summary(path):
+    stat = path.stat()
+    modified = __import__("datetime").datetime.fromtimestamp(stat.st_mtime)
+    return f"{path} (modified {modified:%Y-%m-%d %H:%M:%S}, {stat.st_size / 1_000_000:.1f} MB)"
+
+
 def _base_dataset_and_index(dataset, index):
     while hasattr(dataset, "dataset") and hasattr(dataset, "indices"):
         index = dataset.indices[index]
@@ -78,6 +84,7 @@ def _read_label_arrays(dataset, index):
 
 def _find_blob_examples(dataset, n_items):
     candidates = []
+    fallback_candidates = []
     for index in range(len(dataset)):
         target_mask, target_instances = _read_label_arrays(dataset, index)
         if not target_mask.any():
@@ -85,25 +92,38 @@ def _find_blob_examples(dataset, n_items):
         n_instances = _count_instances(target_instances)
         binary_components, n_components = label(target_mask)
         merge_gap = n_instances - n_components
+        fallback_candidates.append((n_instances, n_components, index, binary_components))
         if merge_gap <= 0:
             continue
         candidates.append((merge_gap, n_instances, n_components, index, binary_components))
 
-    if not candidates:
-        raise ValueError("No examples found where binary components merge multiple instances.")
+    if candidates:
+        candidates.sort(reverse=True, key=lambda item: (item[0], item[1]))
+        selected = [
+            (merge_gap, n_instances, n_components, index, binary_components, f"SDF target separates {merge_gap}")
+            for merge_gap, n_instances, n_components, index, binary_components in candidates[:n_items]
+        ]
+    else:
+        if not fallback_candidates:
+            raise ValueError("No non-empty field examples found to visualize.")
+        fallback_candidates.sort(reverse=True, key=lambda item: item[0])
+        selected = [
+            (0, n_instances, n_components, index, binary_components, "SDF zeroes field boundaries")
+            for n_instances, n_components, index, binary_components in fallback_candidates[:n_items]
+        ]
 
-    candidates.sort(reverse=True, key=lambda item: (item[0], item[1]))
     examples = []
-    for merge_gap, n_instances, n_components, index, binary_components in candidates[:n_items]:
+    for _, n_instances, n_components, index, binary_components, score_title in selected:
         sample = dataset[index]
         examples.append({
+            "id": sample.get("id", f"sample_{index}"),
             "image": sample["image"],
             "mask": sample["mask"][0].numpy() > 0.5,
             "instance": sample["instance"].numpy(),
             "distance": sample["distance"][0].numpy(),
             "blob_labels": binary_components,
             "blob_title": f"{n_components} binary blobs",
-            "score_title": f"distance target separates {merge_gap}",
+            "score_title": score_title,
             "n_instances": n_instances,
             "pred_mask": None,
             "pred_labels": None,
@@ -144,6 +164,7 @@ def _find_prediction_blob_examples(model, loader, device, threshold, n_items):
                     worst_overlap,
                     {
                         "image": batch["image"][index],
+                        "id": batch.get("id", [f"sample_{index}"])[index],
                         "mask": batch["mask"][index, 0].numpy() > 0.5,
                         "instance": target_instances,
                         "distance": batch["distance"][index, 0].numpy(),
@@ -175,6 +196,7 @@ def main():
     parser.add_argument("--num-samples", type=int, default=3)
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--mask-kind", choices=["semantic_2class", "semantic_3class"], default=None)
     parser.add_argument("--no-model", action="store_true")
     args = parser.parse_args()
 
@@ -182,6 +204,8 @@ def main():
     config = deepcopy(getattr(field_segmentation, args.config))
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
+    if args.mask_kind is not None:
+        config["data_args"]["mask_kind"] = args.mask_kind
     data_module = config["datamodule"](**config["data_args"])
     dataset = data_module.heldout_set if args.split == "val" else data_module.dataset
 
@@ -197,9 +221,11 @@ def main():
         _load_checkpoint(model, checkpoint, device)
         loader = data_module.get_heldout_loader() if args.split == "val" else data_module.get_loader()
         examples = _find_prediction_blob_examples(model, loader, device, args.threshold, args.num_samples)
-        print(f"Loaded checkpoint: {checkpoint}")
+        print(f"Loaded checkpoint: {_checkpoint_summary(checkpoint)}")
     else:
         examples = _find_blob_examples(dataset, args.num_samples)
+        print("No checkpoint loaded; visualizing ground-truth label layout only.")
+    print(f"Mask source: {config['data_args'].get('mask_kind', 'semantic_2class')}")
 
     n_cols = 6 if examples[0]["pred_mask"] is not None else 5
     fig, axes = plt.subplots(len(examples), n_cols, figsize=(3.2 * n_cols, 3.4 * len(examples)))
@@ -216,14 +242,14 @@ def main():
         component_labels, component_cmap = _colorize_labels(example["blob_labels"])
 
         axes[row, 0].imshow(image)
-        axes[row, 0].set_title("image")
+        axes[row, 0].set_title(f"image\n{example['id']}")
         axes[row, 1].imshow(target_mask, cmap="gray")
         axes[row, 1].set_title("semantic mask")
         axes[row, 2].imshow(instance_labels, cmap=instance_cmap, interpolation="nearest")
         axes[row, 2].set_title(f"{example['n_instances']} field instances")
         axes[row, 3].imshow(component_labels, cmap=component_cmap, interpolation="nearest")
         axes[row, 3].set_title(example["blob_title"])
-        axes[row, 4].imshow(distance, cmap="magma", vmin=0, vmax=1)
+        axes[row, 4].imshow(distance, cmap="coolwarm", vmin=-1, vmax=1)
         axes[row, 4].set_title(example["score_title"])
         if example["pred_mask"] is not None:
             axes[row, 5].imshow(example["pred_mask"], cmap="gray")

@@ -4,13 +4,15 @@ import torch.nn.functional as F
 
 
 class DiceBCEDistancePolygonLoss(nn.Module):
+    """Mask loss plus an auxiliary signed distance field regression term."""
+
     def __init__(
         self,
         bce_weight=1.0,
         dice_weight=1.0,
         distance_weight=0.5,
         polygon_weight=0.05,
-        distance_foreground_only=True,
+        distance_foreground_only=False,
         distance_mask_threshold=0.5,
         eps=1e-6,
     ):
@@ -32,7 +34,7 @@ class DiceBCEDistancePolygonLoss(nn.Module):
         bce = F.binary_cross_entropy_with_logits(mask_logits, target_mask)
         mask_prob = torch.sigmoid(mask_logits)
         dice = self._dice_loss(mask_prob, target_mask)
-        distance = self._distance_loss(torch.sigmoid(distance_logits), target_distance, target_mask)
+        distance = self._distance_loss(torch.tanh(distance_logits), target_distance, target_mask)
         polygon = self._polygon_smoothness(mask_prob)
 
         total = (

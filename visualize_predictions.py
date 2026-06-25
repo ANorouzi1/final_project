@@ -61,6 +61,8 @@ def main():
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--num-samples", type=int, default=6)
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--min-area", type=int, default=0)
+    parser.add_argument("--mask-kind", choices=["semantic_2class", "semantic_3class"], default=None)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--include-empty", action="store_true")
     args = parser.parse_args()
@@ -70,6 +72,8 @@ def main():
     config = deepcopy(getattr(field_segmentation, args.config))
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
+    if args.mask_kind is not None:
+        config["data_args"]["mask_kind"] = args.mask_kind
 
     data_module = config["datamodule"](**config["data_args"])
     loader = data_module.get_heldout_loader() if args.split == "val" else data_module.get_loader()
@@ -91,12 +95,15 @@ def main():
         print("Warning: no checkpoint found; visualizing random, untrained predictions.")
 
     batch = _take_samples(loader, args.num_samples, include_empty=args.include_empty)
+    print("Visualized samples:", ", ".join(batch.get("id", [])))
+    print(f"Mask source: {config['data_args'].get('mask_kind', 'semantic_2class')}")
     fig = show_predictions(
         model,
         batch,
         device=device,
         threshold=args.threshold,
         max_items=args.num_samples,
+        min_area=args.min_area,
     )
 
     output_dir = Path(args.output_dir) if args.output_dir else project_root / "Visualizations" / config["name"]

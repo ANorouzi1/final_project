@@ -4,6 +4,13 @@ import torch.nn.functional as F
 
 from .base_model import BaseModel
 
+"""
+U-Net architecture.
+
+this code is moslty taken from "https://github.com/milesial/pytorch-unet" with some modifications to fit the dual-head design of this project.
+"""
+
+
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -49,7 +56,7 @@ class Up(nn.Module):
 
 
 class DualHeadUNet(BaseModel):
-    """U-Net backbone with mask and distance-transform prediction heads."""
+    """U-Net backbone with mask and signed-distance prediction heads."""
 
     def __init__(self, in_channels=3, base_channels=32, num_classes=1, bilinear=True):
         super().__init__()
@@ -64,7 +71,13 @@ class DualHeadUNet(BaseModel):
         self.up3 = Up(c * 4, c * 2, c * 2, bilinear=bilinear)
         self.up4 = Up(c * 2, c, c, bilinear=bilinear)
         self.mask_head = nn.Conv2d(c, num_classes, kernel_size=1)
-        self.distance_head = nn.Conv2d(c, 1, kernel_size=1)
+        # TODO: consider having a two layer MLP as well
+        self.distance_head = nn.Sequential( # TODO: consider having a two layer MLP as well
+            nn.Conv2d(c, c, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(c),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(c, 1, kernel_size=1),
+        )
 
     def forward(self, x):
         x1 = self.inc(x)
@@ -78,6 +91,7 @@ class DualHeadUNet(BaseModel):
         x = self.up4(x, x1)
         return {
             "mask_logits": self.mask_head(x),
+
             "distance_logits": self.distance_head(x),
         }
 

@@ -1,6 +1,6 @@
 # HLCV Project: Polygon-Aware Agricultural Field Segmentation
 
-This project implements the proposal in the CVPR-style PDF: agricultural field segmentation with a dual-head U-Net, distance-transform auxiliary learning, polygon-aware regularization, and region/boundary metrics.
+This project implements the proposal in the CVPR-style PDF: agricultural field segmentation with a dual-head U-Net, signed-distance-field auxiliary learning, polygon-aware regularization, and region/boundary metrics.
 
 The structure follows Assignment 3:
 
@@ -20,7 +20,7 @@ Open these notebooks:
 1. `notebooks/01_project_overview.ipynb`
 2. `notebooks/02_train_synthetic_demo.ipynb`
 
-The second notebook runs without downloading data by using a synthetic polygon-field dataset. This is useful for checking that the full training loop, loss, metrics, visualization, and checkpointing work before plugging in the real Fields of The World data.
+The second notebook runs without downloading data by using a synthetic polygon-field dataset. This is useful for checking that the full training loop, SDF loss, metrics, visualization, and checkpointing work before plugging in the real Fields of The World data.
 
 ## Real Data Layout
 
@@ -33,7 +33,7 @@ data/ftw/
       sample_001.png
     masks/
       sample_001.png
-    distances/              # optional; generated from masks when missing
+    distances/              # SDF targets are generated from instance masks
       sample_001.png
   val/
     images/
@@ -41,7 +41,7 @@ data/ftw/
     distances/
 ```
 
-Masks should be binary or instance masks. Any non-zero value is treated as field foreground. Distance maps are normalized to `[0, 1]`; if they are missing, the dataset computes them from the mask.
+The FTW loader uses the semantic mask for foreground supervision and the instance mask to build a signed distance field in `[-1, 1]`. Positive values are field interiors, negative values are background, and values near zero mark field boundaries, including borders between touching instances.
 
 ## Quick Start
 
@@ -55,7 +55,7 @@ The project is intentionally notebook-friendly, so the script is only a convenie
 
 ## Feedback-Driven Diagnostics
 
-Show the binary-mask merging/blob issue that motivates the auxiliary distance head:
+Show the binary-mask merging/blob issue that motivates the auxiliary SDF head:
 
 ```bash
 python visualize_problem_setup.py --config ftw_dual_head --split val --num-samples 3

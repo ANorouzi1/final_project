@@ -569,3 +569,579 @@ Trainable parameters by tensor:
   distance_head.bias: 1
 Total trainable parameters: 7,851,074
 2026-06-21 10:30:36,467:INFO:------------ New Training Session ------------
+2026-06-21 16:13:45,793:INFO:DualHeadUNet(
+  (inc): DoubleConv(
+    (block): Sequential(
+      (0): Conv2d(8, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (down1): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down2): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down3): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down4): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (up1): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(768, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up2): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(384, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up3): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(192, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up4): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(96, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (mask_head): Conv2d(32, 1, kernel_size=(1, 1), stride=(1, 1))
+  (distance_head): Conv2d(32, 1, kernel_size=(1, 1), stride=(1, 1))
+)
+Trainable parameters by tensor:
+  inc.block.0.weight: 2,304
+  inc.block.1.weight: 32
+  inc.block.1.bias: 32
+  inc.block.3.weight: 9,216
+  inc.block.4.weight: 32
+  inc.block.4.bias: 32
+  down1.block.1.block.0.weight: 18,432
+  down1.block.1.block.1.weight: 64
+  down1.block.1.block.1.bias: 64
+  down1.block.1.block.3.weight: 36,864
+  down1.block.1.block.4.weight: 64
+  down1.block.1.block.4.bias: 64
+  down2.block.1.block.0.weight: 73,728
+  down2.block.1.block.1.weight: 128
+  down2.block.1.block.1.bias: 128
+  down2.block.1.block.3.weight: 147,456
+  down2.block.1.block.4.weight: 128
+  down2.block.1.block.4.bias: 128
+  down3.block.1.block.0.weight: 294,912
+  down3.block.1.block.1.weight: 256
+  down3.block.1.block.1.bias: 256
+  down3.block.1.block.3.weight: 589,824
+  down3.block.1.block.4.weight: 256
+  down3.block.1.block.4.bias: 256
+  down4.block.1.block.0.weight: 1,179,648
+  down4.block.1.block.1.weight: 512
+  down4.block.1.block.1.bias: 512
+  down4.block.1.block.3.weight: 2,359,296
+  down4.block.1.block.4.weight: 512
+  down4.block.1.block.4.bias: 512
+  up1.conv.block.0.weight: 1,769,472
+  up1.conv.block.1.weight: 256
+  up1.conv.block.1.bias: 256
+  up1.conv.block.3.weight: 589,824
+  up1.conv.block.4.weight: 256
+  up1.conv.block.4.bias: 256
+  up2.conv.block.0.weight: 442,368
+  up2.conv.block.1.weight: 128
+  up2.conv.block.1.bias: 128
+  up2.conv.block.3.weight: 147,456
+  up2.conv.block.4.weight: 128
+  up2.conv.block.4.bias: 128
+  up3.conv.block.0.weight: 110,592
+  up3.conv.block.1.weight: 64
+  up3.conv.block.1.bias: 64
+  up3.conv.block.3.weight: 36,864
+  up3.conv.block.4.weight: 64
+  up3.conv.block.4.bias: 64
+  up4.conv.block.0.weight: 27,648
+  up4.conv.block.1.weight: 32
+  up4.conv.block.1.bias: 32
+  up4.conv.block.3.weight: 9,216
+  up4.conv.block.4.weight: 32
+  up4.conv.block.4.bias: 32
+  mask_head.weight: 32
+  mask_head.bias: 1
+  distance_head.weight: 32
+  distance_head.bias: 1
+Total trainable parameters: 7,851,074
+2026-06-21 16:13:45,794:INFO:------------ New Training Session ------------
+2026-06-23 14:56:34,047:INFO:DualHeadUNet(
+  (inc): DoubleConv(
+    (block): Sequential(
+      (0): Conv2d(3, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(8, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (4): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (down1): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(8, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down2): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(16, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down3): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down4): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (up1): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(192, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up2): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(96, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up3): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(48, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up4): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(24, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(8, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (mask_head): Conv2d(8, 1, kernel_size=(1, 1), stride=(1, 1))
+  (distance_head): Sequential(
+    (0): Conv2d(8, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    (1): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(8, 1, kernel_size=(1, 1), stride=(1, 1))
+  )
+)
+Trainable parameters by tensor:
+  inc.block.0.weight: 216
+  inc.block.1.weight: 8
+  inc.block.1.bias: 8
+  inc.block.3.weight: 576
+  inc.block.4.weight: 8
+  inc.block.4.bias: 8
+  down1.block.1.block.0.weight: 1,152
+  down1.block.1.block.1.weight: 16
+  down1.block.1.block.1.bias: 16
+  down1.block.1.block.3.weight: 2,304
+  down1.block.1.block.4.weight: 16
+  down1.block.1.block.4.bias: 16
+  down2.block.1.block.0.weight: 4,608
+  down2.block.1.block.1.weight: 32
+  down2.block.1.block.1.bias: 32
+  down2.block.1.block.3.weight: 9,216
+  down2.block.1.block.4.weight: 32
+  down2.block.1.block.4.bias: 32
+  down3.block.1.block.0.weight: 18,432
+  down3.block.1.block.1.weight: 64
+  down3.block.1.block.1.bias: 64
+  down3.block.1.block.3.weight: 36,864
+  down3.block.1.block.4.weight: 64
+  down3.block.1.block.4.bias: 64
+  down4.block.1.block.0.weight: 73,728
+  down4.block.1.block.1.weight: 128
+  down4.block.1.block.1.bias: 128
+  down4.block.1.block.3.weight: 147,456
+  down4.block.1.block.4.weight: 128
+  down4.block.1.block.4.bias: 128
+  up1.conv.block.0.weight: 110,592
+  up1.conv.block.1.weight: 64
+  up1.conv.block.1.bias: 64
+  up1.conv.block.3.weight: 36,864
+  up1.conv.block.4.weight: 64
+  up1.conv.block.4.bias: 64
+  up2.conv.block.0.weight: 27,648
+  up2.conv.block.1.weight: 32
+  up2.conv.block.1.bias: 32
+  up2.conv.block.3.weight: 9,216
+  up2.conv.block.4.weight: 32
+  up2.conv.block.4.bias: 32
+  up3.conv.block.0.weight: 6,912
+  up3.conv.block.1.weight: 16
+  up3.conv.block.1.bias: 16
+  up3.conv.block.3.weight: 2,304
+  up3.conv.block.4.weight: 16
+  up3.conv.block.4.bias: 16
+  up4.conv.block.0.weight: 1,728
+  up4.conv.block.1.weight: 8
+  up4.conv.block.1.bias: 8
+  up4.conv.block.3.weight: 576
+  up4.conv.block.4.weight: 8
+  up4.conv.block.4.bias: 8
+  mask_head.weight: 8
+  mask_head.bias: 1
+  distance_head.0.weight: 576
+  distance_head.1.weight: 8
+  distance_head.1.bias: 8
+  distance_head.3.weight: 8
+  distance_head.3.bias: 1
+Total trainable parameters: 492,474
+2026-06-25 11:15:48,384:INFO:DualHeadUNet(
+  (inc): DoubleConv(
+    (block): Sequential(
+      (0): Conv2d(8, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (down1): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down2): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down3): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down4): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (up1): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(768, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up2): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(384, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up3): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(192, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up4): Up(
+    (up): Upsample(scale_factor=2.0, mode='bilinear')
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(96, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (mask_head): Conv2d(32, 1, kernel_size=(1, 1), stride=(1, 1))
+  (distance_head): Sequential(
+    (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(32, 1, kernel_size=(1, 1), stride=(1, 1))
+  )
+)
+Trainable parameters by tensor:
+  inc.block.0.weight: 2,304
+  inc.block.1.weight: 32
+  inc.block.1.bias: 32
+  inc.block.3.weight: 9,216
+  inc.block.4.weight: 32
+  inc.block.4.bias: 32
+  down1.block.1.block.0.weight: 18,432
+  down1.block.1.block.1.weight: 64
+  down1.block.1.block.1.bias: 64
+  down1.block.1.block.3.weight: 36,864
+  down1.block.1.block.4.weight: 64
+  down1.block.1.block.4.bias: 64
+  down2.block.1.block.0.weight: 73,728
+  down2.block.1.block.1.weight: 128
+  down2.block.1.block.1.bias: 128
+  down2.block.1.block.3.weight: 147,456
+  down2.block.1.block.4.weight: 128
+  down2.block.1.block.4.bias: 128
+  down3.block.1.block.0.weight: 294,912
+  down3.block.1.block.1.weight: 256
+  down3.block.1.block.1.bias: 256
+  down3.block.1.block.3.weight: 589,824
+  down3.block.1.block.4.weight: 256
+  down3.block.1.block.4.bias: 256
+  down4.block.1.block.0.weight: 1,179,648
+  down4.block.1.block.1.weight: 512
+  down4.block.1.block.1.bias: 512
+  down4.block.1.block.3.weight: 2,359,296
+  down4.block.1.block.4.weight: 512
+  down4.block.1.block.4.bias: 512
+  up1.conv.block.0.weight: 1,769,472
+  up1.conv.block.1.weight: 256
+  up1.conv.block.1.bias: 256
+  up1.conv.block.3.weight: 589,824
+  up1.conv.block.4.weight: 256
+  up1.conv.block.4.bias: 256
+  up2.conv.block.0.weight: 442,368
+  up2.conv.block.1.weight: 128
+  up2.conv.block.1.bias: 128
+  up2.conv.block.3.weight: 147,456
+  up2.conv.block.4.weight: 128
+  up2.conv.block.4.bias: 128
+  up3.conv.block.0.weight: 110,592
+  up3.conv.block.1.weight: 64
+  up3.conv.block.1.bias: 64
+  up3.conv.block.3.weight: 36,864
+  up3.conv.block.4.weight: 64
+  up3.conv.block.4.bias: 64
+  up4.conv.block.0.weight: 27,648
+  up4.conv.block.1.weight: 32
+  up4.conv.block.1.bias: 32
+  up4.conv.block.3.weight: 9,216
+  up4.conv.block.4.weight: 32
+  up4.conv.block.4.bias: 32
+  mask_head.weight: 32
+  mask_head.bias: 1
+  distance_head.0.weight: 9,216
+  distance_head.1.weight: 32
+  distance_head.1.bias: 32
+  distance_head.3.weight: 32
+  distance_head.3.bias: 1
+Total trainable parameters: 7,860,354
+2026-06-25 11:15:48,386:INFO:------------ New Training Session ------------
