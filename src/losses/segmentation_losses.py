@@ -108,9 +108,8 @@ class DiceBCEDistancePolygonLoss(nn.Module):
     def _polygon_smoothness(self, prob):
         dx = prob[:, :, :, 1:] - prob[:, :, :, :-1]
         dy = prob[:, :, 1:, :] - prob[:, :, :-1, :]
-        ddx = dx[:, :, :, 1:] - dx[:, :, :, :-1]
-        ddy = dy[:, :, 1:, :] - dy[:, :, :-1, :]
-        return ddx.abs().mean() + ddy.abs().mean()
+        
+        return dx.abs().mean() + dy.abs().mean()
 
 
 class DiceBCEPolygonLoss(nn.Module):
@@ -167,6 +166,6 @@ class DiceBCEPolygonLoss(nn.Module):
     def _polygon_smoothness(self, prob):
         dx = prob[:, :, :, 1:] - prob[:, :, :, :-1]
         dy = prob[:, :, 1:, :] - prob[:, :, :-1, :]
-        ddx = dx[:, :, :, 1:] - dx[:, :, :, :-1]
-        ddy = dy[:, :, 1:, :] - dy[:, :, :-1, :]
-        return ddx.abs().mean() + ddy.abs().mean()
+        
+        # Penalize the first derivative instead of the second
+        return dx.abs().mean() + dy.abs().mean()
