@@ -122,7 +122,7 @@ ftw_dual_head = dict(
         in_channels=NUM_INPUT_CHANNELS,
         base_channels=32,
         num_classes=1,
-        bilinear=True,
+        bilinear=False,
     ),
     datamodule=FieldSegmentationDataModule,
     data_args=dict(
@@ -130,7 +130,7 @@ ftw_dual_head = dict(
         image_size=256,
         batch_size=16,
         shuffle=True,
-        max_train_samples=4000,
+        max_train_samples=8000,
         heldout_split=0.1,
         num_workers=6,
     ),
@@ -140,8 +140,12 @@ ftw_dual_head = dict(
     criterion_args=dict(
         bce_weight=1.0,
         dice_weight=1.0,
-        distance_weight=0.5,
-        polygon_weight=0.06,
+        distance_weight=2.0,
+        distance_positive_weight=3.0,
+        sdf_gradient_weight=0.25,
+        boundary_weight=0.30,
+        boundary_radius=2,
+        polygon_weight=0.02,
         distance_foreground_only=False,
     ),
     metrics=dict(
@@ -152,7 +156,12 @@ ftw_dual_head = dict(
         pq=PanopticQualityApprox(threshold=0.5, iou_threshold=0.5),
     ),
     trainer_module=FieldSegmentationTrainer,
-    trainer_config=_base_trainer("ftw_dual_head", epochs=30, early_stop=10),
+    trainer_config=_base_trainer(
+        "ftw_dual_head",
+        epochs=30,
+        monitor="max eval_boundary_iou",
+        early_stop=10,
+    ),
 )
 
 
@@ -163,7 +172,7 @@ ftw_mask_baseline = dict(
         in_channels=NUM_INPUT_CHANNELS,
         base_channels=32,
         num_classes=1,
-        bilinear=True,
+        bilinear=False,
     ),
     datamodule=FieldSegmentationDataModule,
     data_args=dict(
@@ -171,7 +180,7 @@ ftw_mask_baseline = dict(
         image_size=256,
         batch_size=16,
         shuffle=True,
-        max_train_samples=4000,
+        max_train_samples=8000,
         heldout_split=0.1,
         num_workers=6,
     ),

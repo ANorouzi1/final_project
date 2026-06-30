@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
+from matplotlib.colors import ListedColormap
 from scipy.ndimage import label
+
+from src.utils.postprocessing import instances_from_mask_and_sdf
 
 
 def _display_image(image):
@@ -45,6 +49,19 @@ def _remove_small_components(mask, min_area):
     return keep
 
 
+def _colorize_labels(labels):
+    labels = np.asarray(labels)
+    max_label = int(labels.max())
+    if max_label == 0:
+        return labels, "gray"
+    rng = np.random.default_rng(0)
+    colors = np.zeros((max_label + 1, 4), dtype=np.float32)
+    colors[0] = [0, 0, 0, 1]
+    colors[1:] = rng.uniform(0.2, 1.0, size=(max_label, 4))
+    colors[1:, 3] = 1.0
+    return labels, ListedColormap(colors)
+
+
 def show_batch(batch, max_items=4):
     images = batch["image"][:max_items].detach().cpu()
     masks = batch["mask"][:max_items].detach().cpu()
@@ -68,7 +85,19 @@ def show_batch(batch, max_items=4):
 
 
 @torch.no_grad()
-def show_predictions(model, batch, device=None, threshold=0.5, max_items=4, min_area=0):
+def show_predictions(
+    model,
+    batch,
+    device=None,
+    threshold=0.5,
+    max_items=4,
+    min_area=0,
+    use_sdf_instances=False,
+    sdf_mask_threshold=None,
+    sdf_core_threshold=0.15,
+    sdf_min_core_area=4,
+    sdf_min_instance_area=20,
+):
     if device is None:
         device = next(model.parameters()).device
     model.eval()
@@ -81,7 +110,8 @@ def show_predictions(model, batch, device=None, threshold=0.5, max_items=4, min_
         pred_distance = torch.zeros_like(batch["distance"][:max_items].detach().cpu())
     batch = {key: value[:max_items].detach().cpu() if torch.is_tensor(value) else value for key, value in batch.items()}
     n = images.shape[0]
-    fig, axes = plt.subplots(n, 7, figsize=(21, 3 * n))
+    n_cols = 8 if use_sdf_instances and "distance_logits" in outputs else 7
+    fig, axes = plt.subplots(n, n_cols, figsize=(3 * n_cols, 3 * n))
     if n == 1:
         axes = axes[None, :]
     for i in range(n):
@@ -102,6 +132,19 @@ def show_predictions(model, batch, device=None, threshold=0.5, max_items=4, min_
         axes[i, 5].set_title("target SDF")
         axes[i, 6].imshow(pred_distance[i, 0], cmap="coolwarm", vmin=-1, vmax=1)
         axes[i, 6].set_title("pred SDF" if "distance_logits" in outputs else "no SDF head")
+        if n_cols > 7:
+            fusion_mask_threshold = threshold if sdf_mask_threshold is None else sdf_mask_threshold
+            instances = instances_from_mask_and_sdf(
+                pred_mask[i, 0].numpy(),
+                pred_distance[i, 0].numpy(),
+                mask_threshold=fusion_mask_threshold,
+                core_threshold=sdf_core_threshold,
+                min_core_area=sdf_min_core_area,
+                min_instance_area=sdf_min_instance_area,
+            )
+            labels, cmap = _colorize_labels(instances)
+            axes[i, 7].imshow(labels, cmap=cmap, interpolation="nearest")
+            axes[i, 7].set_title(f"SDF-fused instances\nmask>{fusion_mask_threshold:.2f}, core>{sdf_core_threshold:.2f}")
         for ax in axes[i]:
             ax.axis("off")
     plt.tight_layout()

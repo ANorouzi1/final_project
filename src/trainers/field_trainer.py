@@ -21,7 +21,17 @@ class FieldSegmentationTrainer(BaseTrainer):
         self.metric_functions = config["metrics"]
         self.log_step = self.trainer_config.get("log_step", 20)
 
-        metric_keys = ["loss", "bce", "dice_loss", "distance_loss", "polygon_loss"] + list(self.metric_functions)
+        loss_keys = [
+            "loss",
+            "bce",
+            "dice_loss",
+            "distance_loss",
+            "sdf_gradient_loss",
+            "boundary_loss",
+            "polygon_loss",
+        ]
+        metric_keys = loss_keys + list(self.metric_functions)
+        self.loss_keys = loss_keys
         self.train_metrics = MetricTracker(metric_keys)
         self.eval_metrics = MetricTracker(metric_keys)
         self.logger.info(self.model)
@@ -71,8 +81,9 @@ class FieldSegmentationTrainer(BaseTrainer):
         return moved
 
     def _update_metrics(self, tracker, loss_dict, outputs, batch):
-        for key in ["loss", "bce", "dice_loss", "distance_loss", "polygon_loss"]:
-            value = loss_dict[key]
-            tracker.update(key, float(value.detach().cpu()))
+        for key in self.loss_keys:
+            if key in loss_dict:
+                value = loss_dict[key]
+                tracker.update(key, float(value.detach().cpu()))
         for metric_key, metric_fn in self.metric_functions.items():
             tracker.update(metric_key, metric_fn.compute(outputs, batch))
