@@ -1,0 +1,20 @@
+# Local/editor files
+.DS_Store
+.idea/
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+
+# Large local data and generated experiment artifacts
+data/ftw/
+Saved/
+Logs/
+Visualizations/
+
+# Temporary/incomplete downloads
+*.part
+data/
+
+*.pyc
