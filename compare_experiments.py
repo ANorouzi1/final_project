@@ -17,7 +17,8 @@ def _parse_log(path):
     for line in path.read_text().splitlines():
         if "epoch:" not in line:
             continue
-        pairs = dict(re.findall(r"([a-zA-Z_]+): ([+-]?(?:nan|inf|[0-9.]+))", line))
+        # allow digits in the key (e.g. instance_f1) so it isn't dropped
+        pairs = dict(re.findall(r"([a-zA-Z_][a-zA-Z_0-9]*): ([+-]?(?:nan|inf|[0-9.]+))", line))
         if "epoch" not in pairs:
             continue
         rows.append({key: float(value) for key, value in pairs.items()})
@@ -32,7 +33,7 @@ def _best_row(rows, metric):
 
 def main():
     parser = argparse.ArgumentParser(description="Compare trained experiment logs.")
-    parser.add_argument("--configs", nargs="+", default=["ftw_mask_baseline", "ftw_dual_head"])
+    parser.add_argument("--configs", nargs="+", default=["ftw_mask_baseline", "ftw_dual_head", "ftw_frame_field"])
     parser.add_argument("--log-dir", default="Logs")
     parser.add_argument("--select", default="eval_miou")
     args = parser.parse_args()

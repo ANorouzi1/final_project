@@ -1145,3 +1145,4 @@ Trainable parameters by tensor:
   distance_head.3.bias: 1
 Total trainable parameters: 7,860,354
 2026-06-25 11:15:48,386:INFO:------------ New Training Session ------------
+2026-07-01 13:05:38,000:INFO:epoch: 1 | eval_miou: 0.7177 | eval_dice: 0.7915 | eval_boundary_iou: 0.4842 | eval_instance_f1: 0.4196 | eval_pq: 0.3622
