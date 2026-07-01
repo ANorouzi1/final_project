@@ -88,7 +88,7 @@ def main():
 
     checkpoint = args.checkpoint
     if checkpoint is None:
-        candidate = project_root / "Saved" / config["name"] / "best_model.pth"
+        candidate = project_root / "Saved" / config["name"] / "last_model.pth"
         checkpoint = candidate if candidate.exists() else None
     else:
         checkpoint = Path(checkpoint)

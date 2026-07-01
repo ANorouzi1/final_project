@@ -38,7 +38,7 @@ class FTWFieldDataset(Dataset):
     * ``image``    = concat(window_b, window_a) -> 8 channels (torchgeo order)
     * ``mask``     = binary field mask from ``semantic_2class``
     * ``distance`` = signed distance field from ``instance`` in [-1, 1]
-    * ``instance`` = raw instance-id map (used by InstanceF1 / PQ metrics)
+    * ``instance`` = raw instance-id map (useful for visualization/post-processing)
 
     Train/val/test membership is read from the per-country parquet file. If the
     parquet is missing, every chip found under ``s2_images/window_a`` is used

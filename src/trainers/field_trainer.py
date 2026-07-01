@@ -3,7 +3,6 @@ from tqdm.auto import tqdm
 
 from .base_trainer import BaseTrainer
 from src.utils.utils import MetricTracker
-from src.metrics.segmentation_metrics import InstanceF1, PanopticQualityApprox
 
 
 class FieldSegmentationTrainer(BaseTrainer):
@@ -27,22 +26,11 @@ class FieldSegmentationTrainer(BaseTrainer):
             "bce",
             "dice_loss",
             "distance_loss",
-            "sdf_gradient_loss",
-            "boundary_loss",
-            "polygon_loss",
+            "tv_loss",
         ]
         self.loss_keys = loss_keys
-        # Instance-level metrics (InstanceF1, PanopticQuality) do connected-component
-        # labeling + instance matching on CPU -> very slow on the noisy predictions
-        # in training, and meaningless there anyway. Compute them only on eval;
-        # train logs just the cheap pixel metrics.
-        self._expensive_metrics = (InstanceF1, PanopticQualityApprox)
-        self.train_metric_functions = {
-            name: fn for name, fn in self.metric_functions.items()
-            if not isinstance(fn, self._expensive_metrics)
-        }
-        self.train_metrics = MetricTracker(loss_keys + list(self.train_metric_functions))
-        self.eval_metrics = MetricTracker(loss_keys + list(self.train_metric_functions)) #if you want instanceF1/PQ just write self.metric_functions instead
+        self.train_metrics = MetricTracker(loss_keys)
+        self.eval_metrics = MetricTracker(loss_keys + list(self.metric_functions))
         self.logger.info(self.model)
 
     def _train_epoch(self):
@@ -60,8 +48,7 @@ class FieldSegmentationTrainer(BaseTrainer):
             loss.backward()
             self.optimizer.step()
 
-            self._update_metrics(self.train_metrics, loss_dict, outputs, batch,
-                                 self.train_metric_functions)
+            self._update_losses(self.train_metrics, loss_dict)
             iterator.set_postfix(loss=f"{loss.item():.4f}")
 
         self.lr_scheduler.step()
@@ -80,8 +67,8 @@ class FieldSegmentationTrainer(BaseTrainer):
             batch = self._move_batch(batch)
             outputs = self.model(batch["image"])
             loss_dict = self.criterion(outputs, batch)
-            self._update_metrics(self.eval_metrics, loss_dict, outputs, batch,
-                                 self.metric_functions)
+            self._update_losses(self.eval_metrics, loss_dict)
+            self._update_metrics(self.eval_metrics, outputs, batch)
 
         return self.eval_metrics.result()
 
@@ -91,10 +78,12 @@ class FieldSegmentationTrainer(BaseTrainer):
             moved[key] = value.to(self.device) if torch.is_tensor(value) else value
         return moved
 
-    def _update_metrics(self, tracker, loss_dict, outputs, batch, metric_functions):
+    def _update_losses(self, tracker, loss_dict):
         for key in self.loss_keys:
             if key in loss_dict:
                 value = loss_dict[key]
                 tracker.update(key, float(value.detach().cpu()))
-        for metric_key, metric_fn in metric_functions.items():
+
+    def _update_metrics(self, tracker, outputs, batch):
+        for metric_key, metric_fn in self.metric_functions.items():
             tracker.update(metric_key, metric_fn.compute(outputs, batch))

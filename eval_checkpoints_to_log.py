@@ -7,10 +7,10 @@ the config's metrics on the validation (heldout) loader, and appends one
 shows every model, even ones trained elsewhere (only the .pth was copied in).
 
 Examples:
-    # all three, austria, first 20 val batches:
+    # default models, austria, first 20 val batches:
     python eval_checkpoints_to_log.py
     # a single model on the full val set:
-    python eval_checkpoints_to_log.py --configs ftw_frame_field --max-batches 0
+    python eval_checkpoints_to_log.py --configs ftw_dual_head --max-batches 0
 """
 import argparse
 from copy import deepcopy
@@ -21,7 +21,7 @@ import torch
 
 from cfgs import field_segmentation
 
-METRIC_ORDER = ["miou", "dice", "boundary_iou", "instance_f1", "pq"]
+METRIC_ORDER = ["miou", "boundary_iou"]
 
 
 def _find_checkpoint(save_dir, name):
@@ -79,7 +79,7 @@ def evaluate_config(name, args, device):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--configs", nargs="+",
-                    default=["ftw_mask_baseline", "ftw_dual_head", "ftw_frame_field"])
+                    default=["ftw_mask_baseline", "ftw_dual_head"])
     ap.add_argument("--data-dir", default=None, help="override data dir (else config's)")
     ap.add_argument("--countries", nargs="+", default=["austria"])
     ap.add_argument("--checkpoint", default=None,

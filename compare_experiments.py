@@ -5,10 +5,7 @@ from pathlib import Path
 
 METRICS = [
     "eval_miou",
-    "eval_dice",
     "eval_boundary_iou",
-    "eval_instance_f1",
-    "eval_pq",
 ]
 
 
@@ -33,7 +30,7 @@ def _best_row(rows, metric):
 
 def main():
     parser = argparse.ArgumentParser(description="Compare trained experiment logs.")
-    parser.add_argument("--configs", nargs="+", default=["ftw_mask_baseline", "ftw_dual_head", "ftw_frame_field"])
+    parser.add_argument("--configs", nargs="+", default=["ftw_mask_baseline", "ftw_dual_head"])
     parser.add_argument("--log-dir", default="Logs")
     parser.add_argument("--select", default="eval_miou")
     args = parser.parse_args()

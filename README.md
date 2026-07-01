@@ -1,6 +1,6 @@
-# HLCV Project: Polygon-Aware Agricultural Field Segmentation
+# HLCV Project: TV-Regularized Agricultural Field Segmentation
 
-This project implements the proposal in the CVPR-style PDF: agricultural field segmentation with a dual-head U-Net, signed-distance-field auxiliary learning, polygon-aware regularization, and region/boundary metrics.
+This project implements agricultural field segmentation with a dual-head U-Net, signed-distance-field auxiliary learning, total-variation regularization, and compact region/boundary metrics.
 
 The structure follows Assignment 3:
 
@@ -8,8 +8,8 @@ The structure follows Assignment 3:
 - `src/data_loaders/`: data modules and datasets
 - `src/models/`: model definitions
 - `src/losses/`: segmentation losses
-- `src/metrics/`: mIoU, Dice, Boundary IoU, instance F1, PQ-style score
-- `src/trainers/`: trainer with best/last checkpoint saving and early stopping
+- `src/metrics/`: mIoU and Boundary IoU
+- `src/trainers/`: trainer with last-checkpoint saving
 - `notebooks/`: notebook-first workflow
 - `Logs/` and `Saved/`: training logs and checkpoints
 
@@ -20,7 +20,7 @@ Open these notebooks:
 1. `notebooks/01_project_overview.ipynb`
 2. `notebooks/02_train_synthetic_demo.ipynb`
 
-The second notebook runs without downloading data by using a synthetic polygon-field dataset. This is useful for checking that the full training loop, SDF loss, metrics, visualization, and checkpointing work before plugging in the real Fields of The World data.
+The second notebook runs without downloading data by using a synthetic polygon-field dataset. This is useful for checking that the full training loop, SDF loss, TV regularization, compact metrics, visualization, and checkpointing work before plugging in the real Fields of The World data.
 
 ## Real Data Layout
 
@@ -74,4 +74,4 @@ Compare their validation metrics after both runs:
 python compare_experiments.py
 ```
 
-See `docs/feedback_response.md` for the ablation protocol, post-processing fairness note, and related SDF/polygon literature pointers.
+See `docs/feedback_response.md` for the ablation protocol, post-processing fairness note, and related SDF/TV literature pointers.

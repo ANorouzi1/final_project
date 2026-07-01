@@ -71,15 +71,14 @@ class DualHeadUNet(BaseModel):
         self.up3 = Up(c * 4, c * 2, c * 2, bilinear=bilinear)
         self.up4 = Up(c * 2, c, c, bilinear=bilinear)
         self.mask_head = nn.Conv2d(c, num_classes, kernel_size=1)
-        # TODO: consider having a two layer MLP as well
-        self.distance_head = nn.Sequential( # TODO: consider having a two layer MLP as well
+        self.distance_head = nn.Sequential(
             nn.Conv2d(c, c, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(c),
             nn.ReLU(inplace=True),
             nn.Conv2d(c, 1, kernel_size=1),
         )
 
-    def forward(self, x):
+    def _forward_features(self, x):
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
@@ -89,41 +88,27 @@ class DualHeadUNet(BaseModel):
         x = self.up2(x, x3)
         x = self.up3(x, x2)
         x = self.up4(x, x1)
-        return {
-            "mask_logits": self.mask_head(x),
+        return x
 
-            "distance_logits": self.distance_head(x),
+    def forward(self, x):
+        features = self._forward_features(x)
+        return {
+            "mask_logits": self.mask_head(features),
+            "distance_logits": self.distance_head(features),
         }
 
 
-class FrameFieldUNet(BaseModel):
-    """Dual-head U-Net plus a Frame Field head (Girard et al.).
-
-    Keeps the mask + signed-distance heads and adds a 4-channel frame field head
-    = [Re c0, Im c0, Re c2, Im c2], the two complex coefficients of f(z)=z^4+c2
-    z^2+c0 whose roots encode the local boundary directions. Supervised by the GT
-    boundary tangent; see src/losses/frame_field.py.
-    """
+class FrameFieldUNet(DualHeadUNet):
+    """Three-head U-Net with mask, signed-distance, and frame-field outputs."""
 
     def __init__(self, in_channels=3, base_channels=32, num_classes=1, bilinear=True):
-        super().__init__()
-        c = base_channels
-        self.inc = DoubleConv(in_channels, c)
-        self.down1 = Down(c, c * 2)
-        self.down2 = Down(c * 2, c * 4)
-        self.down3 = Down(c * 4, c * 8)
-        self.down4 = Down(c * 8, c * 16)
-        self.up1 = Up(c * 16, c * 8, c * 8, bilinear=bilinear)
-        self.up2 = Up(c * 8, c * 4, c * 4, bilinear=bilinear)
-        self.up3 = Up(c * 4, c * 2, c * 2, bilinear=bilinear)
-        self.up4 = Up(c * 2, c, c, bilinear=bilinear)
-        self.mask_head = nn.Conv2d(c, num_classes, kernel_size=1)
-        self.distance_head = nn.Sequential(
-            nn.Conv2d(c, c, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(c),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(c, 1, kernel_size=1),
+        super().__init__(
+            in_channels=in_channels,
+            base_channels=base_channels,
+            num_classes=num_classes,
+            bilinear=bilinear,
         )
+        c = base_channels
         self.frame_field_head = nn.Sequential(
             nn.Conv2d(c, c, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(c),
@@ -132,19 +117,11 @@ class FrameFieldUNet(BaseModel):
         )
 
     def forward(self, x):
-        x1 = self.inc(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
-        x5 = self.down4(x4)
-        x = self.up1(x5, x4)
-        x = self.up2(x, x3)
-        x = self.up3(x, x2)
-        x = self.up4(x, x1)
+        features = self._forward_features(x)
         return {
-            "mask_logits": self.mask_head(x),
-            "distance_logits": self.distance_head(x),
-            "frame_field": self.frame_field_head(x),
+            "mask_logits": self.mask_head(features),
+            "distance_logits": self.distance_head(features),
+            "frame_field": self.frame_field_head(features),
         }
 
 

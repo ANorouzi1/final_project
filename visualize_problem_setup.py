@@ -211,7 +211,7 @@ def main():
 
     checkpoint = None
     if not args.no_model:
-        checkpoint = Path(args.checkpoint) if args.checkpoint else project_root / "Saved" / config["name"] / "best_model.pth"
+        checkpoint = Path(args.checkpoint) if args.checkpoint else project_root / "Saved" / config["name"] / "last_model.pth"
         if not checkpoint.exists():
             checkpoint = None
 
