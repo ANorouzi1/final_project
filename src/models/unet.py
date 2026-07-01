@@ -58,7 +58,13 @@ class Up(nn.Module):
 class DualHeadUNet(BaseModel):
     """U-Net backbone with mask and signed-distance prediction heads."""
 
-    def __init__(self, in_channels=3, base_channels=32, num_classes=1, bilinear=True):
+    def __init__(
+        self,
+        in_channels=3,
+        base_channels=32,
+        num_classes=1,
+        bilinear=True,
+    ):
         super().__init__()
         c = base_channels
         self.inc = DoubleConv(in_channels, c)

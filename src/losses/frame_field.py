@@ -92,8 +92,11 @@ class FrameFieldLoss(nn.Module):
 class DiceBCEDistanceFrameFieldLoss(nn.Module):
     """Reference-only frame-field loss.
 
-    The active training configs should continue to use ``DiceBCEDistanceTVLoss``
-    unless this is deliberately wired up later.
+    The original pushed version wrapped an older geometric/polygon loss that is
+    intentionally not part of the active training path. This class is kept so
+    the file preserves the proposed frame-field objective, but configs should
+    continue to use ``DiceBCEDistanceTVLoss`` unless this is deliberately wired
+    up later.
     """
 
     def __init__(
