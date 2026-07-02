@@ -90,9 +90,17 @@ class SyntheticFieldDataModule(BaseDataModule):
         n_samples=128,
         image_size=128,
         heldout_split=0.2,
+        test_samples=None,
         seed=0,
         split_seed=42,
         **loader_kwargs,
     ):
         dataset = SyntheticFieldDataset(n_samples=n_samples, image_size=image_size, seed=seed)
         super().__init__(dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
+        if test_samples is None:
+            test_samples = max(1, int(round(n_samples * heldout_split)))
+        self.test_set = SyntheticFieldDataset(
+            n_samples=test_samples,
+            image_size=image_size,
+            seed=seed + 100000,
+        )

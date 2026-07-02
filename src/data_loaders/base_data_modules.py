@@ -11,12 +11,14 @@ class BaseDataModule:
         self.n_samples = len(dataset)
         self.heldout_split = heldout_split
         self.heldout_set = None
+        self.test_set = None
 
         if heldout_split:
             self.dataset, self.heldout_set = self._split_data(heldout_split, split_seed)
 
         self.heldout_kwargs = deepcopy(self.loader_kwargs)
         self.heldout_kwargs["shuffle"] = False
+        self.test_kwargs = deepcopy(self.heldout_kwargs)
 
     def get_loader(self):
         return DataLoader(self.dataset, **self.loader_kwargs)
@@ -25,6 +27,11 @@ class BaseDataModule:
         if self.heldout_set is None:
             raise ValueError("No heldout split was configured.")
         return DataLoader(self.heldout_set, **self.heldout_kwargs)
+
+    def get_test_loader(self):
+        if self.test_set is None:
+            raise ValueError("No test split was configured.")
+        return DataLoader(self.test_set, **self.test_kwargs)
 
     def _split_data(self, split, seed):
         if isinstance(split, int):

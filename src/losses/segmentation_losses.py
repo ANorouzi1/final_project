@@ -3,11 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def total_variation_loss(prob):
-    """Anisotropic TV penalty over neighboring mask probabilities."""
-    dx = prob[:, :, :, 1:] - prob[:, :, :, :-1]
-    dy = prob[:, :, 1:, :] - prob[:, :, :-1, :]
-    return dx.abs().mean() + dy.abs().mean()
+def total_variation_loss(prob, eps=1e-6):
+    """Isotropic TV penalty over neighboring mask probabilities."""
+    dx = prob[:, :, :-1, 1:] - prob[:, :, :-1, :-1]
+    dy = prob[:, :, 1:, :-1] - prob[:, :, :-1, :-1]
+
+    tv = torch.sqrt(dx.pow(2) + dy.pow(2) + eps)
+    return tv.sum(dim=(-2, -1)).mean()
 
 
 class DiceBCEDistanceTVLoss(nn.Module):
@@ -39,7 +41,7 @@ class DiceBCEDistanceTVLoss(nn.Module):
         dice = self._dice_loss(mask_prob, target_mask)
         pred_distance = torch.tanh(distance_logits)
         distance = F.smooth_l1_loss(pred_distance, target_distance)
-        tv = total_variation_loss(mask_prob)
+        tv = total_variation_loss(mask_prob, eps=self.eps)
 
         total = (
             self.bce_weight * bce
@@ -87,7 +89,7 @@ class DiceBCETVLoss(nn.Module):
         bce = F.binary_cross_entropy_with_logits(mask_logits, target_mask)
         mask_prob = torch.sigmoid(mask_logits)
         dice = self._dice_loss(mask_prob, target_mask)
-        tv = total_variation_loss(mask_prob)
+        tv = total_variation_loss(mask_prob, eps=self.eps)
         distance = mask_logits.sum() * 0.0
 
         total = (

@@ -7,6 +7,7 @@ import torch
 from tqdm.auto import tqdm
 
 from cfgs import field_segmentation
+from src.utils.prediction import mask_probability_from_outputs
 from src.utils.utils import seed_everything
 
 
@@ -26,8 +27,8 @@ def _mask_boundary(mask, radius=2):
     return (mask.float() - eroded).clamp(min=0.0)
 
 
-def _fast_mask_metric_sums(outputs, batch, threshold):
-    pred = torch.sigmoid(outputs["mask_logits"]) > threshold
+def _fast_mask_metric_sums(outputs, batch, threshold, prediction_args=None):
+    pred = mask_probability_from_outputs(outputs, **(prediction_args or {})) > threshold
     target = batch["mask"] > 0.5
     intersection = (pred & target).flatten(1).sum(dim=1).float()
     union = (pred | target).flatten(1).sum(dim=1).float()
@@ -70,6 +71,7 @@ def evaluate_model(
     device,
     thresholds,
     max_batches,
+    prediction_args=None,
 ):
     model.eval()
     metric_sums = {
@@ -91,7 +93,7 @@ def evaluate_model(
         n_samples += batch_size
 
         for threshold in thresholds:
-            for name, value in _fast_mask_metric_sums(outputs, batch, threshold).items():
+            for name, value in _fast_mask_metric_sums(outputs, batch, threshold, prediction_args).items():
                 metric_sums[threshold][name] += value
 
         for key, value in _sdf_quality(outputs, batch).items():
@@ -112,14 +114,22 @@ def evaluate_model(
     return mask_results, sdf_results, n_samples
 
 
-def _build_loader(config_name, batch_size):
+def _build_loader(config_name, batch_size, split):
     config = deepcopy(getattr(field_segmentation, config_name))
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
+    if "train_augment" in config["data_args"]:
+        config["data_args"]["train_augment"] = False
     if batch_size is not None:
         config["data_args"]["batch_size"] = batch_size
     data_module = config["datamodule"](**config["data_args"])
-    return config, data_module.get_heldout_loader()
+    if split == "val":
+        loader = data_module.get_heldout_loader()
+    elif split == "test":
+        loader = data_module.get_test_loader()
+    else:
+        raise ValueError(f"Unknown split: {split}")
+    return config, loader
 
 
 def _print_mask_table(results, thresholds):
@@ -143,6 +153,7 @@ def main():
     parser.add_argument("--baseline-checkpoint", default="Saved/ftw_mask_baseline/last_model.pth")
     parser.add_argument("--dual-checkpoint", default="Saved/ftw_dual_head/last_model.pth")
     parser.add_argument("--thresholds", nargs="+", type=float, default=[0.4, 0.5, 0.6, 0.7])
+    parser.add_argument("--split", choices=["val", "test"], default="test")
     parser.add_argument("--max-batches", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--seed", type=int, default=0)
@@ -150,11 +161,12 @@ def main():
 
     seed_everything(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-    config, loader = _build_loader("ftw_dual_head", args.batch_size)
+    config, loader = _build_loader("ftw_dual_head", args.batch_size, args.split)
 
     models = {
         "baseline": ("ftw_mask_baseline", Path(args.baseline_checkpoint)),
         "dual_mask": ("ftw_dual_head", Path(args.dual_checkpoint)),
+        "dual_sdf_pred": ("ftw_dual_head_sdf_prediction", Path(args.dual_checkpoint)),
     }
 
     mask_results = {}
@@ -171,12 +183,14 @@ def main():
             device,
             args.thresholds,
             args.max_batches,
+            model_config.get("prediction_args", {}),
         )
         mask_results[label_name] = results
         if sdf:
             sdf_results[label_name] = sdf
 
-    print(f"\nEvaluated samples: {n_samples}")
+    print(f"\nEvaluated split: {args.split}")
+    print(f"Evaluated samples: {n_samples}")
     print("\nMask-threshold metrics")
     _print_mask_table(mask_results, args.thresholds)
 

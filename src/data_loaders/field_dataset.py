@@ -56,12 +56,16 @@ class FTWFieldDataset(Dataset):
         normalize_scale=DEFAULT_S2_SCALE,
         mask_kind="semantic_2class",
         sdf_cache_dir=None,
+        augment=False,
+        color_jitter=0.12,
     ):
         self.root = Path(data_dir)
         self.split = split
         self.image_size = image_size
         self.normalize_scale = float(normalize_scale)
         self.mask_kind = mask_kind
+        self.augment = augment
+        self.color_jitter = float(color_jitter)
         # Optional on-disk cache for the SDF target (compute once, reuse each epoch).
         self.sdf_cache_dir = Path(sdf_cache_dir) if sdf_cache_dir else None
         if self.sdf_cache_dir is not None:
@@ -153,6 +157,8 @@ class FTWFieldDataset(Dataset):
         image = image.astype(np.float32) / self.normalize_scale
         image = np.clip(image, 0.0, 1.0)
         image = self._resize_chw(image, mode="bilinear")
+        if self.augment:
+            image = _color_jitter_rgb(image, strength=self.color_jitter)
 
         instance = self._read_tif(
             country_dir / "label_masks" / "instance" / f"{aoi_id}.tif"
@@ -257,6 +263,28 @@ def _relabel_instances(instance_mask):
     return out
 
 
+def _color_jitter_rgb(image, strength=0.12):
+    """Apply light brightness/contrast/color jitter to RGB bands only."""
+    if strength <= 0:
+        return image
+
+    out = image.copy()
+    rgb_indices = [idx for idx in (0, 1, 2, 4, 5, 6) if idx < out.shape[0]]
+    if not rgb_indices:
+        return out
+
+    rgb = out[rgb_indices]
+    brightness = np.random.uniform(1.0 - strength, 1.0 + strength)
+    contrast = np.random.uniform(1.0 - strength, 1.0 + strength)
+    channel_scale = np.random.uniform(1.0 - strength, 1.0 + strength, size=(len(rgb_indices), 1, 1))
+
+    mean = rgb.mean(axis=(1, 2), keepdims=True)
+    rgb = (rgb - mean) * contrast + mean
+    rgb = rgb * brightness * channel_scale.astype(np.float32)
+    out[rgb_indices] = np.clip(rgb, 0.0, 1.0)
+    return out.astype(np.float32, copy=False)
+
+
 class FTWFieldDataModule(BaseDataModule):
     """Data module over the official FTW train/val splits.
 
@@ -273,14 +301,18 @@ class FTWFieldDataModule(BaseDataModule):
         split=None,
         train_split="train",
         val_split="val",
+        test_split="test",
         normalize_scale=DEFAULT_S2_SCALE,
         mask_kind="semantic_2class",
         max_samples=None,
         max_train_samples=None,
         max_val_samples=None,
+        max_test_samples=None,
         heldout_split=0.0,
         split_seed=42,
         sdf_cache_dir=None,
+        train_augment=False,
+        color_jitter=0.12,
         **loader_kwargs,
     ):
         if split is not None:
@@ -297,6 +329,8 @@ class FTWFieldDataModule(BaseDataModule):
             normalize_scale=normalize_scale,
             mask_kind=mask_kind,
             sdf_cache_dir=sdf_cache_dir,
+            augment=train_augment,
+            color_jitter=color_jitter,
         )
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
 
@@ -314,6 +348,23 @@ class FTWFieldDataModule(BaseDataModule):
             )
             if len(val_dataset) > 0:
                 self.heldout_set = val_dataset
+
+        if test_split is not None:
+            try:
+                test_dataset = FTWFieldDataset(
+                    data_dir=data_dir,
+                    split=test_split,
+                    countries=countries,
+                    image_size=image_size,
+                    max_samples=max_test_samples,
+                    normalize_scale=normalize_scale,
+                    mask_kind=mask_kind,
+                    sdf_cache_dir=sdf_cache_dir,
+                )
+            except FileNotFoundError:
+                test_dataset = None
+            if test_dataset is not None and len(test_dataset) > 0:
+                self.test_set = test_dataset
 
 
 # Backwards-compatible aliases (the config and notebooks import these names).

@@ -5,6 +5,7 @@ from matplotlib.colors import ListedColormap
 from scipy.ndimage import label
 
 from src.utils.postprocessing import instances_from_mask_and_sdf
+from src.utils.prediction import mask_probability_from_outputs
 
 
 def _display_image(image):
@@ -97,20 +98,34 @@ def show_predictions(
     sdf_core_threshold=0.15,
     sdf_min_core_area=4,
     sdf_min_instance_area=20,
+    prediction_args=None,
+    baseline_model=None,
+    baseline_label="baseline",
 ):
     if device is None:
         device = next(model.parameters()).device
     model.eval()
+    if baseline_model is not None:
+        baseline_model.eval()
     images = batch["image"][:max_items].to(device)
     outputs = model(images)
-    pred_mask = torch.sigmoid(outputs["mask_logits"]).detach().cpu()
+    prediction_args = prediction_args or {}
+    pred_mask = mask_probability_from_outputs(outputs, **prediction_args).detach().cpu()
+    baseline_mask = None
+    if baseline_model is not None:
+        baseline_outputs = baseline_model(images)
+        baseline_mask = mask_probability_from_outputs(baseline_outputs).detach().cpu()
     if "distance_logits" in outputs:
         pred_distance = torch.tanh(outputs["distance_logits"]).detach().cpu()
     else:
         pred_distance = torch.zeros_like(batch["distance"][:max_items].detach().cpu())
     batch = {key: value[:max_items].detach().cpu() if torch.is_tensor(value) else value for key, value in batch.items()}
     n = images.shape[0]
-    n_cols = 8 if use_sdf_instances and "distance_logits" in outputs else 7
+    n_cols = 7
+    if baseline_mask is not None:
+        n_cols += 3
+    if use_sdf_instances and "distance_logits" in outputs:
+        n_cols += 1
     fig, axes = plt.subplots(n, n_cols, figsize=(3 * n_cols, 3 * n))
     if n == 1:
         axes = axes[None, :]
@@ -118,21 +133,41 @@ def show_predictions(
         sample_id = batch.get("id", [""] * n)[i]
         target = batch["mask"][i, 0] > threshold
         pred = _remove_small_components(pred_mask[i, 0] > threshold, min_area=min_area)
-        axes[i, 0].imshow(_display_image(batch["image"][i]), cmap="gray" if batch["image"][i].shape[0] == 1 else None)
-        axes[i, 0].set_title(f"image\n{sample_id}" if sample_id else "image")
-        axes[i, 1].imshow(target, cmap="gray")
-        axes[i, 1].set_title("target mask")
-        axes[i, 2].imshow(pred_mask[i, 0], cmap="viridis", vmin=0, vmax=1)
-        axes[i, 2].set_title(f"pred prob max {pred_mask[i, 0].max():.2f}")
-        axes[i, 3].imshow(pred, cmap="gray")
-        axes[i, 3].set_title("pred mask" if min_area <= 0 else f"pred mask >= {min_area}px")
-        axes[i, 4].imshow(_error_overlay(target, pred))
-        axes[i, 4].set_title("green ok / blue fp / red fn")
-        axes[i, 5].imshow(batch["distance"][i, 0], cmap="coolwarm", vmin=-1, vmax=1)
-        axes[i, 5].set_title("target SDF")
-        axes[i, 6].imshow(pred_distance[i, 0], cmap="coolwarm", vmin=-1, vmax=1)
-        axes[i, 6].set_title("pred SDF" if "distance_logits" in outputs else "no SDF head")
-        if n_cols > 7:
+        col = 0
+        axes[i, col].imshow(_display_image(batch["image"][i]), cmap="gray" if batch["image"][i].shape[0] == 1 else None)
+        axes[i, col].set_title(f"image\n{sample_id}" if sample_id else "image")
+        col += 1
+        axes[i, col].imshow(target, cmap="gray")
+        axes[i, col].set_title("target mask")
+        col += 1
+        if baseline_mask is not None:
+            baseline_pred = _remove_small_components(baseline_mask[i, 0] > threshold, min_area=min_area)
+            axes[i, col].imshow(baseline_mask[i, 0], cmap="viridis", vmin=0, vmax=1)
+            axes[i, col].set_title(f"{baseline_label} prob\nmax {baseline_mask[i, 0].max():.2f}")
+            col += 1
+            axes[i, col].imshow(baseline_pred, cmap="gray")
+            axes[i, col].set_title(f"{baseline_label} mask")
+            col += 1
+            axes[i, col].imshow(_error_overlay(target, baseline_pred))
+            axes[i, col].set_title(f"{baseline_label} error")
+            col += 1
+        pred_title = "SDF-fused prob" if prediction_args.get("use_sdf", False) else "pred prob"
+        axes[i, col].imshow(pred_mask[i, 0], cmap="viridis", vmin=0, vmax=1)
+        axes[i, col].set_title(f"{pred_title}\nmax {pred_mask[i, 0].max():.2f}")
+        col += 1
+        axes[i, col].imshow(pred, cmap="gray")
+        axes[i, col].set_title("pred mask" if min_area <= 0 else f"pred mask >= {min_area}px")
+        col += 1
+        axes[i, col].imshow(_error_overlay(target, pred))
+        axes[i, col].set_title("pred error")
+        col += 1
+        axes[i, col].imshow(batch["distance"][i, 0], cmap="coolwarm", vmin=-1, vmax=1)
+        axes[i, col].set_title("target SDF")
+        col += 1
+        axes[i, col].imshow(pred_distance[i, 0], cmap="coolwarm", vmin=-1, vmax=1)
+        axes[i, col].set_title("pred SDF" if "distance_logits" in outputs else "no SDF head")
+        col += 1
+        if use_sdf_instances and "distance_logits" in outputs:
             fusion_mask_threshold = threshold if sdf_mask_threshold is None else sdf_mask_threshold
             instances = instances_from_mask_and_sdf(
                 pred_mask[i, 0].numpy(),
@@ -143,8 +178,8 @@ def show_predictions(
                 min_instance_area=sdf_min_instance_area,
             )
             labels, cmap = _colorize_labels(instances)
-            axes[i, 7].imshow(labels, cmap=cmap, interpolation="nearest")
-            axes[i, 7].set_title(f"SDF-fused instances\nmask>{fusion_mask_threshold:.2f}, core>{sdf_core_threshold:.2f}")
+            axes[i, col].imshow(labels, cmap=cmap, interpolation="nearest")
+            axes[i, col].set_title(f"SDF-fused instances\nmask>{fusion_mask_threshold:.2f}, core>{sdf_core_threshold:.2f}")
         for ax in axes[i]:
             ax.axis("off")
     plt.tight_layout()

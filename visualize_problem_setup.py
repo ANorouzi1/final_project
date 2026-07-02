@@ -192,7 +192,7 @@ def main():
     parser = argparse.ArgumentParser(description="Visualize the binary-mask blob/merging problem.")
     parser.add_argument("--config", default="ftw_dual_head")
     parser.add_argument("--checkpoint", default=None)
-    parser.add_argument("--split", choices=["train", "val"], default="val")
+    parser.add_argument("--split", choices=["train", "val", "test"], default="test")
     parser.add_argument("--num-samples", type=int, default=3)
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--threshold", type=float, default=0.5)
@@ -204,10 +204,17 @@ def main():
     config = deepcopy(getattr(field_segmentation, args.config))
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
+    if "train_augment" in config["data_args"]:
+        config["data_args"]["train_augment"] = False
     if args.mask_kind is not None:
         config["data_args"]["mask_kind"] = args.mask_kind
     data_module = config["datamodule"](**config["data_args"])
-    dataset = data_module.heldout_set if args.split == "val" else data_module.dataset
+    if args.split == "test":
+        dataset = data_module.test_set
+    elif args.split == "val":
+        dataset = data_module.heldout_set
+    else:
+        dataset = data_module.dataset
 
     checkpoint = None
     if not args.no_model:
@@ -219,7 +226,12 @@ def main():
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = config["model_arch"](**config["model_args"]).to(device)
         _load_checkpoint(model, checkpoint, device)
-        loader = data_module.get_heldout_loader() if args.split == "val" else data_module.get_loader()
+        if args.split == "test":
+            loader = data_module.get_test_loader()
+        elif args.split == "val":
+            loader = data_module.get_heldout_loader()
+        else:
+            loader = data_module.get_loader()
         examples = _find_prediction_blob_examples(model, loader, device, args.threshold, args.num_samples)
         print(f"Loaded checkpoint: {_checkpoint_summary(checkpoint)}")
     else:

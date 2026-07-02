@@ -24,15 +24,18 @@ from cfgs import field_segmentation
 METRIC_ORDER = ["miou", "boundary_iou"]
 
 
-def _find_checkpoint(save_dir, name):
-    d = Path(save_dir) / name
-    best = d / "best_model.pth"
-    if best.exists():
-        return best
-    cands = sorted(d.glob("*.pth"))
-    if not cands:
-        raise FileNotFoundError(f"No .pth checkpoint under {d}")
-    return cands[0]
+def _find_checkpoint(save_dir, name, fallback_name=None):
+    for candidate_name in (name, fallback_name):
+        if candidate_name is None:
+            continue
+        d = Path(save_dir) / candidate_name
+        last = d / "last_model.pth"
+        if last.exists():
+            return last
+        cands = sorted(d.glob("*.pth"))
+        if cands:
+            return cands[0]
+    raise FileNotFoundError(f"No .pth checkpoint under {Path(save_dir) / name}")
 
 
 def _load_model(config, checkpoint, device):
@@ -51,15 +54,20 @@ def evaluate_config(name, args, device):
     config["data_args"]["data_dir"] = args.data_dir or config["data_args"]["data_dir"]
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
+    if "train_augment" in config["data_args"]:
+        config["data_args"]["train_augment"] = False
     if args.countries:
         config["data_args"]["countries"] = args.countries
 
     checkpoint = Path(args.checkpoint) if args.checkpoint else _find_checkpoint(
-        config["trainer_config"]["save_dir"], name)
+        config["trainer_config"]["save_dir"],
+        name,
+        config.get("checkpoint_fallback_name"),
+    )
     model = _load_model(config, checkpoint, device)
 
     data_module = config["datamodule"](**config["data_args"])
-    loader = data_module.get_heldout_loader()
+    loader = data_module.get_test_loader() if args.split == "test" else data_module.get_heldout_loader()
     metrics = config["metrics"]
 
     sums = {k: 0.0 for k in metrics}
@@ -79,9 +87,10 @@ def evaluate_config(name, args, device):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--configs", nargs="+",
-                    default=["ftw_mask_baseline", "ftw_dual_head"])
+                    default=["ftw_mask_baseline", "ftw_dual_head", "ftw_dual_head_sdf_prediction"])
     ap.add_argument("--data-dir", default=None, help="override data dir (else config's)")
     ap.add_argument("--countries", nargs="+", default=["austria"])
+    ap.add_argument("--split", choices=["val", "test"], default="test")
     ap.add_argument("--checkpoint", default=None,
                     help="explicit .pth (only valid with a single --configs)")
     ap.add_argument("--max-batches", type=int, default=20, help="0 = whole val set")

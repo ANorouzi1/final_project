@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import partial
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from src.trainers.field_trainer import FieldSegmentationTrainer
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SDF_PREDICTION_ARGS = dict(use_sdf=True, sdf_weight=0.35, sdf_scale=4.0)
 
 
 def _base_trainer(name, epochs, eval_period=5):
@@ -52,7 +54,7 @@ synthetic_debug = dict(
         bce_weight=1.0,
         dice_weight=1.0,
         distance_weight=0.35,
-        tv_weight=0.02,
+        tv_weight=1e-6,
     ),
     metrics=dict(
         miou=MeanIoU(threshold=0.5),
@@ -89,7 +91,7 @@ synthetic_full = dict(
         bce_weight=1.0,
         dice_weight=1.0,
         distance_weight=0.4,
-        tv_weight=0.02,
+        tv_weight=1e-6,
     ),
     metrics=dict(
         miou=MeanIoU(threshold=0.5),
@@ -116,9 +118,11 @@ ftw_dual_head = dict(
         batch_size=16,
         shuffle=True,
         max_train_samples=8000,
-        heldout_split=0.1,
+        heldout_split=0.0,
         num_workers=6,
         sdf_cache_dir=str(PROJECT_ROOT / "sdf_cache"),
+        train_augment=True,
+        color_jitter=0.12,
     ),
     optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-4),
     lr_scheduler=partial(torch.optim.lr_scheduler.CosineAnnealingLR, T_max=40),
@@ -127,7 +131,7 @@ ftw_dual_head = dict(
         bce_weight=1.0,
         dice_weight=1.0,
         distance_weight=0.5,
-        tv_weight=0.02,
+        tv_weight=1e-6,
     ),
     metrics=dict(
         miou=MeanIoU(threshold=0.5),
@@ -135,6 +139,21 @@ ftw_dual_head = dict(
     ),
     trainer_module=FieldSegmentationTrainer,
     trainer_config=_base_trainer("ftw_dual_head", epochs=30, eval_period=5),
+)
+
+
+ftw_dual_head_sdf_prediction = deepcopy(ftw_dual_head)
+ftw_dual_head_sdf_prediction["name"] = "ftw_dual_head_sdf_prediction"
+ftw_dual_head_sdf_prediction["checkpoint_fallback_name"] = "ftw_dual_head"
+ftw_dual_head_sdf_prediction["prediction_args"] = SDF_PREDICTION_ARGS
+ftw_dual_head_sdf_prediction["metrics"] = dict(
+    miou=MeanIoU(threshold=0.5, **SDF_PREDICTION_ARGS),
+    boundary_iou=BoundaryIoU(threshold=0.5, radius=2, **SDF_PREDICTION_ARGS),
+)
+ftw_dual_head_sdf_prediction["trainer_config"] = _base_trainer(
+    "ftw_dual_head_sdf_prediction",
+    epochs=30,
+    eval_period=5,
 )
 
 
@@ -154,9 +173,11 @@ ftw_mask_baseline = dict(
         batch_size=16,
         shuffle=True,
         max_train_samples=8000,
-        heldout_split=0.1,
+        heldout_split=0.0,
         num_workers=6,
         sdf_cache_dir=str(PROJECT_ROOT / "sdf_cache"),
+        train_augment=True,
+        color_jitter=0.12,
     ),
     optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-4),
     lr_scheduler=partial(torch.optim.lr_scheduler.CosineAnnealingLR, T_max=40),
@@ -164,7 +185,7 @@ ftw_mask_baseline = dict(
     criterion_args=dict(
         bce_weight=1.0,
         dice_weight=1.0,
-        tv_weight=0.02,
+        tv_weight=1e-6,
     ),
     metrics=dict(
         miou=MeanIoU(threshold=0.5),

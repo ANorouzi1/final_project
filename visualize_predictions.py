@@ -25,6 +25,14 @@ def _load_checkpoint(model, checkpoint, device):
     model.load_state_dict(state)
 
 
+def _resolve_checkpoint(project_root, config, checkpoint):
+    if checkpoint is not None:
+        return Path(checkpoint)
+
+    candidate = project_root / "Saved" / config["name"] / "last_model.pth"
+    return candidate if candidate.exists() else None
+
+
 def _take_value(value, index):
     if torch.is_tensor(value):
         return value[index:index + 1]
@@ -53,11 +61,24 @@ def _take_samples(loader, n_items, include_empty=False):
     return merged
 
 
+def _select_loader(data_module, split):
+    if split == "train":
+        return data_module.get_loader()
+    if split == "val":
+        return data_module.get_heldout_loader()
+    if split == "test":
+        return data_module.get_test_loader()
+    raise ValueError(f"Unknown split: {split}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Save prediction-vs-ground-truth debug panels.")
     parser.add_argument("--config", default="ftw_dual_head")
     parser.add_argument("--checkpoint", default=None)
-    parser.add_argument("--split", choices=["train", "val"], default="val")
+    parser.add_argument("--baseline-config", default="ftw_mask_baseline")
+    parser.add_argument("--baseline-checkpoint", default=None)
+    parser.add_argument("--no-baseline", action="store_true")
+    parser.add_argument("--split", choices=["train", "val", "test"], default="test")
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--num-samples", type=int, default=6)
     parser.add_argument("--threshold", type=float, default=0.5)
@@ -77,27 +98,35 @@ def main():
     config = deepcopy(getattr(field_segmentation, args.config))
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
+    if "train_augment" in config["data_args"]:
+        config["data_args"]["train_augment"] = False
     if args.mask_kind is not None:
         config["data_args"]["mask_kind"] = args.mask_kind
 
     data_module = config["datamodule"](**config["data_args"])
-    loader = data_module.get_heldout_loader() if args.split == "val" else data_module.get_loader()
+    loader = _select_loader(data_module, args.split)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = config["model_arch"](**config["model_args"]).to(device)
 
-    checkpoint = args.checkpoint
-    if checkpoint is None:
-        candidate = project_root / "Saved" / config["name"] / "last_model.pth"
-        checkpoint = candidate if candidate.exists() else None
-    else:
-        checkpoint = Path(checkpoint)
-
+    checkpoint = _resolve_checkpoint(project_root, config, args.checkpoint)
     if checkpoint is not None:
         _load_checkpoint(model, checkpoint, device)
         print(f"Loaded checkpoint: {checkpoint}")
     else:
         print("Warning: no checkpoint found; visualizing random, untrained predictions.")
+
+    baseline_model = None
+    if not args.no_baseline:
+        baseline_config = deepcopy(getattr(field_segmentation, args.baseline_config))
+        baseline_model = baseline_config["model_arch"](**baseline_config["model_args"]).to(device)
+        baseline_checkpoint = _resolve_checkpoint(project_root, baseline_config, args.baseline_checkpoint)
+        if baseline_checkpoint is not None:
+            _load_checkpoint(baseline_model, baseline_checkpoint, device)
+            print(f"Loaded baseline checkpoint: {baseline_checkpoint}")
+        else:
+            baseline_model = None
+            print("Warning: no baseline checkpoint found; skipping baseline columns.")
 
     batch = _take_samples(loader, args.num_samples, include_empty=args.include_empty)
     print("Visualized samples:", ", ".join(batch.get("id", [])))
@@ -114,6 +143,9 @@ def main():
         sdf_core_threshold=args.sdf_core_threshold,
         sdf_min_core_area=args.sdf_min_core_area,
         sdf_min_instance_area=args.sdf_min_instance_area,
+        prediction_args=config.get("prediction_args", {}),
+        baseline_model=baseline_model,
+        baseline_label=baseline_config["name"] if baseline_model is not None else "baseline",
     )
 
     output_dir = Path(args.output_dir) if args.output_dir else project_root / "Visualizations" / config["name"]
