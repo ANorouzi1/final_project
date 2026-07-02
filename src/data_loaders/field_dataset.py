@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import numpy as np
@@ -54,12 +55,17 @@ class FTWFieldDataset(Dataset):
         max_samples=None,
         normalize_scale=DEFAULT_S2_SCALE,
         mask_kind="semantic_2class",
+        sdf_cache_dir=None,
     ):
         self.root = Path(data_dir)
         self.split = split
         self.image_size = image_size
         self.normalize_scale = float(normalize_scale)
         self.mask_kind = mask_kind
+        # Optional on-disk cache for the SDF target (compute once, reuse each epoch).
+        self.sdf_cache_dir = Path(sdf_cache_dir) if sdf_cache_dir else None
+        if self.sdf_cache_dir is not None:
+            self.sdf_cache_dir.mkdir(parents=True, exist_ok=True)
 
         if not self.root.exists():
             raise FileNotFoundError(
@@ -162,7 +168,7 @@ class FTWFieldDataset(Dataset):
         mask_arr = self._resize_hw(mask_arr, mode="nearest")
         binary_mask = (mask_arr > 0).astype(np.float32)
 
-        distance = signed_instance_distance_field(instance)
+        distance = self._sdf(country, aoi_id, instance)
 
         return {
             "image": torch.from_numpy(image),
@@ -172,6 +178,30 @@ class FTWFieldDataset(Dataset):
             "instance": torch.from_numpy(instance.astype(np.int64)),
             "id": f"{country}/{aoi_id}",
         }
+
+    def _sdf(self, country, aoi_id, instance):
+        """Signed distance field with an optional on-disk cache (compute once)."""
+        if self.sdf_cache_dir is None:
+            return signed_instance_distance_field(instance)
+        key = f"{country}_{aoi_id}_s{self.image_size}.npy".replace("/", "_")
+        path = self.sdf_cache_dir / key
+        if path.exists():
+            try:
+                return np.load(path)
+            except Exception:
+                pass  # corrupt/partial write -> recompute
+        dist = signed_instance_distance_field(instance)
+        tmp = path.parent / (path.name + f".tmp{os.getpid()}")  # atomic write
+        try:
+            with open(tmp, "wb") as fh:
+                np.save(fh, dist)
+            os.replace(tmp, path)
+        except Exception:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+        return dist
 
     def _read_tif(self, path):
         if not path.exists():
@@ -250,6 +280,7 @@ class FTWFieldDataModule(BaseDataModule):
         max_val_samples=None,
         heldout_split=0.0,
         split_seed=42,
+        sdf_cache_dir=None,
         **loader_kwargs,
     ):
         if split is not None:
@@ -265,6 +296,7 @@ class FTWFieldDataModule(BaseDataModule):
             max_samples=max_train_samples,
             normalize_scale=normalize_scale,
             mask_kind=mask_kind,
+            sdf_cache_dir=sdf_cache_dir,
         )
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
 
@@ -278,6 +310,7 @@ class FTWFieldDataModule(BaseDataModule):
                 max_samples=max_val_samples,
                 normalize_scale=normalize_scale,
                 mask_kind=mask_kind,
+                sdf_cache_dir=sdf_cache_dir,
             )
             if len(val_dataset) > 0:
                 self.heldout_set = val_dataset
