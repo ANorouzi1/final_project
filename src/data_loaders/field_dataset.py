@@ -8,6 +8,7 @@ from torch.utils.data import Dataset
 
 from .base_data_modules import BaseDataModule
 from .distance_targets import signed_instance_distance_field
+from src.utils.segmentation_transform_presets import presets
 
 
 # Bands per Sentinel-2 GeoTIFF in FTW (Red, Green, Blue, NIR).
@@ -56,16 +57,14 @@ class FTWFieldDataset(Dataset):
         normalize_scale=DEFAULT_S2_SCALE,
         mask_kind="semantic_2class",
         sdf_cache_dir=None,
-        augment=False,
-        color_jitter=0.12,
+        transform=None,
     ):
         self.root = Path(data_dir)
         self.split = split
         self.image_size = image_size
         self.normalize_scale = float(normalize_scale)
         self.mask_kind = mask_kind
-        self.augment = augment
-        self.color_jitter = float(color_jitter)
+        self.transform = transform
         # Optional on-disk cache for the SDF target (compute once, reuse each epoch).
         self.sdf_cache_dir = Path(sdf_cache_dir) if sdf_cache_dir else None
         if self.sdf_cache_dir is not None:
@@ -157,8 +156,6 @@ class FTWFieldDataset(Dataset):
         image = image.astype(np.float32) / self.normalize_scale
         image = np.clip(image, 0.0, 1.0)
         image = self._resize_chw(image, mode="bilinear")
-        if self.augment:
-            image = _color_jitter_rgb(image, strength=self.color_jitter)
 
         instance = self._read_tif(
             country_dir / "label_masks" / "instance" / f"{aoi_id}.tif"
@@ -176,13 +173,23 @@ class FTWFieldDataset(Dataset):
 
         distance = self._sdf(country, aoi_id, instance)
 
-        return {
-            "image": torch.from_numpy(image),
-            "mask": torch.from_numpy(binary_mask[None, ...]),
-            "distance": torch.from_numpy(distance[None, ...]),
-            "sdf": torch.from_numpy(distance[None, ...]),
-            "instance": torch.from_numpy(instance.astype(np.int64)),
+        sample = {
+            "image": image,
+            "mask": binary_mask[None, ...],
+            "distance": distance[None, ...],
+            "sdf": distance[None, ...],
+            "instance": instance.astype(np.int64),
             "id": f"{country}/{aoi_id}",
+        }
+        if self.transform is not None:
+            sample = self.transform(sample)
+        return {
+            "image": torch.from_numpy(sample["image"]),
+            "mask": torch.from_numpy(sample["mask"]),
+            "distance": torch.from_numpy(sample["distance"]),
+            "sdf": torch.from_numpy(sample["sdf"]),
+            "instance": torch.from_numpy(sample["instance"]),
+            "id": sample["id"],
         }
 
     def _sdf(self, country, aoi_id, instance):
@@ -263,28 +270,6 @@ def _relabel_instances(instance_mask):
     return out
 
 
-def _color_jitter_rgb(image, strength=0.12):
-    """Apply light brightness/contrast/color jitter to RGB bands only."""
-    if strength <= 0:
-        return image
-
-    out = image.copy()
-    rgb_indices = [idx for idx in (0, 1, 2, 4, 5, 6) if idx < out.shape[0]]
-    if not rgb_indices:
-        return out
-
-    rgb = out[rgb_indices]
-    brightness = np.random.uniform(1.0 - strength, 1.0 + strength)
-    contrast = np.random.uniform(1.0 - strength, 1.0 + strength)
-    channel_scale = np.random.uniform(1.0 - strength, 1.0 + strength, size=(len(rgb_indices), 1, 1))
-
-    mean = rgb.mean(axis=(1, 2), keepdims=True)
-    rgb = (rgb - mean) * contrast + mean
-    rgb = rgb * brightness * channel_scale.astype(np.float32)
-    out[rgb_indices] = np.clip(rgb, 0.0, 1.0)
-    return out.astype(np.float32, copy=False)
-
-
 class FTWFieldDataModule(BaseDataModule):
     """Data module over the official FTW train/val splits.
 
@@ -311,14 +296,20 @@ class FTWFieldDataModule(BaseDataModule):
         heldout_split=0.0,
         split_seed=42,
         sdf_cache_dir=None,
-        train_augment=False,
-        color_jitter=0.12,
+        transform_preset=None,
         **loader_kwargs,
     ):
         if split is not None:
             train_split = split
         if max_train_samples is None:
             max_train_samples = max_samples
+        train_transform = None
+        eval_transform = None
+        if transform_preset is not None:
+            train_transform = presets[transform_preset]["train"]
+            eval_transform = presets[transform_preset]["eval"]
+            print(f"transforms for preset {transform_preset} for split train are {train_transform}")
+            print(f"transforms for preset {transform_preset} for split eval are {eval_transform}")
 
         train_dataset = FTWFieldDataset(
             data_dir=data_dir,
@@ -329,8 +320,7 @@ class FTWFieldDataModule(BaseDataModule):
             normalize_scale=normalize_scale,
             mask_kind=mask_kind,
             sdf_cache_dir=sdf_cache_dir,
-            augment=train_augment,
-            color_jitter=color_jitter,
+            transform=train_transform,
         )
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
 
@@ -345,6 +335,7 @@ class FTWFieldDataModule(BaseDataModule):
                 normalize_scale=normalize_scale,
                 mask_kind=mask_kind,
                 sdf_cache_dir=sdf_cache_dir,
+                transform=eval_transform,
             )
             if len(val_dataset) > 0:
                 self.heldout_set = val_dataset
@@ -360,6 +351,7 @@ class FTWFieldDataModule(BaseDataModule):
                     normalize_scale=normalize_scale,
                     mask_kind=mask_kind,
                     sdf_cache_dir=sdf_cache_dir,
+                    transform=eval_transform,
                 )
             except FileNotFoundError:
                 test_dataset = None

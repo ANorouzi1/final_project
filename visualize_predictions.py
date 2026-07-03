@@ -98,8 +98,6 @@ def main():
     config = deepcopy(getattr(field_segmentation, args.config))
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
-    if "train_augment" in config["data_args"]:
-        config["data_args"]["train_augment"] = False
     if args.mask_kind is not None:
         config["data_args"]["mask_kind"] = args.mask_kind
 

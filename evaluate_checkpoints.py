@@ -118,8 +118,6 @@ def _build_loader(config_name, batch_size, split):
     config = deepcopy(getattr(field_segmentation, config_name))
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
-    if "train_augment" in config["data_args"]:
-        config["data_args"]["train_augment"] = False
     if batch_size is not None:
         config["data_args"]["batch_size"] = batch_size
     data_module = config["datamodule"](**config["data_args"])

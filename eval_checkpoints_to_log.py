@@ -54,8 +54,6 @@ def evaluate_config(name, args, device):
     config["data_args"]["data_dir"] = args.data_dir or config["data_args"]["data_dir"]
     config["data_args"]["shuffle"] = False
     config["data_args"]["num_workers"] = 0
-    if "train_augment" in config["data_args"]:
-        config["data_args"]["train_augment"] = False
     if args.countries:
         config["data_args"]["countries"] = args.countries
 
