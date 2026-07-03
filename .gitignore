@@ -1,0 +1,13 @@
+# Local/editor files
+.DS_Store
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+
+# Large local data
+data/
+
+# Temporary/incomplete downloads
+*.part
