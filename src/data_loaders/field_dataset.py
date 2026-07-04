@@ -160,13 +160,7 @@ class FTWFieldDataset(Dataset):
         if self.augment:
             image = _color_jitter_rgb(image, strength=self.color_jitter)
 
-        instance = self._read_tif(
-            country_dir / "label_masks" / "instance" / f"{aoi_id}.tif"
-        )[0]
-        # FTW stores instance ids as huge uint64 values; relabel to compact
-        # 0..N ints (0 = background) so they survive int casts and resizing.
-        instance = _relabel_instances(instance)
-        instance = self._resize_hw(instance, mode="nearest").astype(np.int32)
+        instance = self._read_instance(country, aoi_id)
 
         mask_arr = self._read_tif(
             country_dir / "label_masks" / self.mask_kind / f"{aoi_id}.tif"
@@ -189,8 +183,7 @@ class FTWFieldDataset(Dataset):
         """Signed distance field with an optional on-disk cache (compute once)."""
         if self.sdf_cache_dir is None:
             return signed_instance_distance_field(instance)
-        key = f"{country}_{aoi_id}_s{self.image_size}.npy".replace("/", "_")
-        path = self.sdf_cache_dir / key
+        path = self._sdf_cache_path(country, aoi_id)
         if path.exists():
             try:
                 return np.load(path)
@@ -208,6 +201,42 @@ class FTWFieldDataset(Dataset):
             except OSError:
                 pass
         return dist
+
+    def _sdf_cache_path(self, country, aoi_id):
+        key = f"{country}_{aoi_id}_s{self.image_size}.npy".replace("/", "_")
+        return self.sdf_cache_dir / key
+
+    def _read_instance(self, country, aoi_id):
+        country_dir = self.root / country
+        instance = self._read_tif(
+            country_dir / "label_masks" / "instance" / f"{aoi_id}.tif"
+        )[0]
+        instance = _relabel_instances(instance)
+        return self._resize_hw(instance, mode="nearest").astype(np.int32)
+
+    def precompute_sdf_cache(self, overwrite=False, max_items=None):
+        """Populate the SDF cache without reading model input imagery."""
+        if self.sdf_cache_dir is None:
+            return {"computed": 0, "skipped": 0, "total": 0, "cache_dir": None}
+
+        computed = 0
+        skipped = 0
+        samples = self.samples[:max_items] if max_items is not None else self.samples
+        for country, aoi_id in samples:
+            cache_path = self._sdf_cache_path(country, aoi_id)
+            if cache_path.exists() and not overwrite:
+                skipped += 1
+                continue
+            instance = self._read_instance(country, aoi_id)
+            self._sdf(country, aoi_id, instance)
+            computed += 1
+
+        return {
+            "computed": computed,
+            "skipped": skipped,
+            "total": len(samples),
+            "cache_dir": str(self.sdf_cache_dir),
+        }
 
     def _read_tif(self, path):
         if not path.exists():
@@ -332,6 +361,7 @@ class FTWFieldDataModule(BaseDataModule):
             augment=train_augment,
             color_jitter=color_jitter,
         )
+        self._sdf_datasets = [train_dataset]
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
 
         # Prefer the official validation split unless a random heldout was requested.
@@ -348,6 +378,7 @@ class FTWFieldDataModule(BaseDataModule):
             )
             if len(val_dataset) > 0:
                 self.heldout_set = val_dataset
+                self._sdf_datasets.append(val_dataset)
 
         if test_split is not None:
             try:
@@ -365,6 +396,30 @@ class FTWFieldDataModule(BaseDataModule):
                 test_dataset = None
             if test_dataset is not None and len(test_dataset) > 0:
                 self.test_set = test_dataset
+                self._test_sdf_dataset = test_dataset
+            else:
+                self._test_sdf_dataset = None
+        else:
+            self._test_sdf_dataset = None
+
+    def precompute_sdf_cache(self, include_heldout=True, include_test=False, overwrite=False):
+        """Precompute SDF targets for configured FTW datasets."""
+        datasets = list(self._sdf_datasets if include_heldout else self._sdf_datasets[:1])
+        if include_test and self._test_sdf_dataset is not None:
+            datasets.append(self._test_sdf_dataset)
+
+        total = {"computed": 0, "skipped": 0, "total": 0, "cache_dir": None}
+        seen = set()
+        for dataset in datasets:
+            if id(dataset) in seen:
+                continue
+            seen.add(id(dataset))
+            result = dataset.precompute_sdf_cache(overwrite=overwrite)
+            total["computed"] += result["computed"]
+            total["skipped"] += result["skipped"]
+            total["total"] += result["total"]
+            total["cache_dir"] = result["cache_dir"] or total["cache_dir"]
+        return total
 
 
 # Backwards-compatible aliases (the config and notebooks import these names).
