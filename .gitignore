@@ -1,8 +1,10 @@
 # Local/editor files
 .DS_Store
+src/.DS_Store
 
 # Python caches and local environments
 __pycache__/
+sdf_cache/
 *.py[cod]
 .venv/
 
