@@ -33,7 +33,7 @@ def main():
     parser.add_argument(
         "--configs",
         nargs="+",
-        default=["ftw_mask_baseline", "ftw_dual_head", "ftw_dual_head_sdf_prediction"],
+        default=["ftw_mask_baseline", "ftw_dual_head"],
     )
     parser.add_argument("--log-dir", default="Logs")
     parser.add_argument("--select", default="eval_miou")

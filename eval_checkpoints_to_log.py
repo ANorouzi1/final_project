@@ -85,7 +85,7 @@ def evaluate_config(name, args, device):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--configs", nargs="+",
-                    default=["ftw_mask_baseline", "ftw_dual_head", "ftw_dual_head_sdf_prediction"])
+                    default=["ftw_mask_baseline", "ftw_dual_head"])
     ap.add_argument("--data-dir", default=None, help="override data dir (else config's)")
     ap.add_argument("--countries", nargs="+", default=["austria"])
     ap.add_argument("--split", choices=["val", "test"], default="test")

@@ -24,9 +24,11 @@ class FieldSegmentationTrainer(BaseTrainer):
         loss_keys = [
             "loss",
             "bce",
+            "raw_bce",
             "dice_loss",
             "distance_loss",
             "tv_loss",
+            "boundary_weight_mean",
         ]
         self.loss_keys = loss_keys
         self.train_metrics = MetricTracker(loss_keys)

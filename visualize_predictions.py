@@ -84,11 +84,6 @@ def main():
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--min-area", type=int, default=0)
     parser.add_argument("--mask-kind", choices=["semantic_2class", "semantic_3class"], default=None)
-    parser.add_argument("--use-sdf-instances", action="store_true")
-    parser.add_argument("--sdf-mask-threshold", type=float, default=0.5)
-    parser.add_argument("--sdf-core-threshold", type=float, default=0.15)
-    parser.add_argument("--sdf-min-core-area", type=int, default=4)
-    parser.add_argument("--sdf-min-instance-area", type=int, default=20)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--include-empty", action="store_true")
     args = parser.parse_args()
@@ -136,12 +131,6 @@ def main():
         threshold=args.threshold,
         max_items=args.num_samples,
         min_area=args.min_area,
-        use_sdf_instances=args.use_sdf_instances,
-        sdf_mask_threshold=args.sdf_mask_threshold,
-        sdf_core_threshold=args.sdf_core_threshold,
-        sdf_min_core_area=args.sdf_min_core_area,
-        sdf_min_instance_area=args.sdf_min_instance_area,
-        prediction_args=config.get("prediction_args", {}),
         baseline_model=baseline_model,
         baseline_label=baseline_config["name"] if baseline_model is not None else "baseline",
     )

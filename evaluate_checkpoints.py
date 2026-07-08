@@ -1,5 +1,4 @@
 import argparse
-import math
 from copy import deepcopy
 from pathlib import Path
 
@@ -27,8 +26,8 @@ def _mask_boundary(mask, radius=2):
     return (mask.float() - eroded).clamp(min=0.0)
 
 
-def _fast_mask_metric_sums(outputs, batch, threshold, prediction_args=None):
-    pred = mask_probability_from_outputs(outputs, **(prediction_args or {})) > threshold
+def _fast_mask_metric_sums(outputs, batch, threshold):
+    pred = mask_probability_from_outputs(outputs) > threshold
     target = batch["mask"] > 0.5
     intersection = (pred & target).flatten(1).sum(dim=1).float()
     union = (pred | target).flatten(1).sum(dim=1).float()
@@ -43,27 +42,6 @@ def _fast_mask_metric_sums(outputs, batch, threshold, prediction_args=None):
     }
 
 
-def _sdf_quality(outputs, batch):
-    if "distance_logits" not in outputs:
-        return {}
-
-    pred = torch.tanh(outputs["distance_logits"]).detach().cpu()
-    target = batch["distance"].detach().cpu()
-    foreground = batch["mask"].detach().cpu() > 0.5
-    center = target > 0.6
-    boundary = target.abs() < 0.12
-
-    values = {
-        "sdf_mae": torch.abs(pred - target).mean().item(),
-        "sdf_fg_mae": torch.abs(pred[foreground] - target[foreground]).mean().item()
-        if foreground.any() else float("nan"),
-        "sdf_center_pred": pred[center].mean().item() if center.any() else float("nan"),
-        "sdf_center_target": target[center].mean().item() if center.any() else float("nan"),
-        "sdf_boundary_abs": pred[boundary].abs().mean().item() if boundary.any() else float("nan"),
-    }
-    return values
-
-
 @torch.no_grad()
 def evaluate_model(
     model,
@@ -71,14 +49,12 @@ def evaluate_model(
     device,
     thresholds,
     max_batches,
-    prediction_args=None,
 ):
     model.eval()
     metric_sums = {
         threshold: {"miou": 0.0, "boundary_iou": 0.0}
         for threshold in thresholds
     }
-    sdf_sums = {}
     n_samples = 0
 
     for batch_idx, batch in enumerate(tqdm(loader, desc="eval", leave=False)):
@@ -93,12 +69,8 @@ def evaluate_model(
         n_samples += batch_size
 
         for threshold in thresholds:
-            for name, value in _fast_mask_metric_sums(outputs, batch, threshold, prediction_args).items():
+            for name, value in _fast_mask_metric_sums(outputs, batch, threshold).items():
                 metric_sums[threshold][name] += value
-
-        for key, value in _sdf_quality(outputs, batch).items():
-            if not math.isnan(value):
-                sdf_sums[key] = sdf_sums.get(key, 0.0) + value * batch_size
 
     mask_results = {
         threshold: {
@@ -107,11 +79,7 @@ def evaluate_model(
         }
         for threshold, values in metric_sums.items()
     }
-    sdf_results = {
-        key: value / max(1, n_samples)
-        for key, value in sdf_sums.items()
-    }
-    return mask_results, sdf_results, n_samples
+    return mask_results, n_samples
 
 
 def _build_loader(config_name, batch_size, split):
@@ -164,38 +132,28 @@ def main():
     models = {
         "baseline": ("ftw_mask_baseline", Path(args.baseline_checkpoint)),
         "dual_mask": ("ftw_dual_head", Path(args.dual_checkpoint)),
-        "dual_sdf_pred": ("ftw_dual_head_sdf_prediction", Path(args.dual_checkpoint)),
     }
 
     mask_results = {}
-    sdf_results = {}
     n_samples = 0
     for label_name, (config_name, checkpoint) in models.items():
         model_config = deepcopy(getattr(field_segmentation, config_name))
         model = model_config["model_arch"](**model_config["model_args"]).to(device)
         _load_checkpoint(model, checkpoint, device)
         print(f"Loaded {label_name}: {checkpoint}")
-        results, sdf, n_samples = evaluate_model(
+        results, n_samples = evaluate_model(
             model,
             loader,
             device,
             args.thresholds,
             args.max_batches,
-            model_config.get("prediction_args", {}),
         )
         mask_results[label_name] = results
-        if sdf:
-            sdf_results[label_name] = sdf
 
     print(f"\nEvaluated split: {args.split}")
     print(f"Evaluated samples: {n_samples}")
     print("\nMask-threshold metrics")
     _print_mask_table(mask_results, args.thresholds)
-
-    if sdf_results:
-        print("\nDual-head SDF quality")
-        for model_name, values in sdf_results.items():
-            print(model_name + " | " + " | ".join(f"{key}: {value:.4f}" for key, value in values.items()))
 
 
 if __name__ == "__main__":

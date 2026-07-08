@@ -12,6 +12,29 @@ def total_variation_loss(prob, eps=1e-6):
     return tv.sum(dim=(-2, -1)).mean()
 
 
+def _dice_loss(pred, target, eps=1e-6):
+    pred = pred.flatten(1)
+    target = target.flatten(1)
+    intersection = (pred * target).sum(dim=1)
+    denominator = pred.sum(dim=1) + target.sum(dim=1)
+    dice = (2 * intersection + eps) / (denominator + eps)
+    return 1.0 - dice.mean()
+
+
+def sdf_boundary_weight(target_distance, boundary_weight=3.0, boundary_sigma=0.12):
+    """Higher pixel weights near SDF zero level sets."""
+    boundary_sigma = max(float(boundary_sigma), 1e-6)
+    return 1.0 + float(boundary_weight) * torch.exp(
+        -target_distance.abs() / boundary_sigma
+    )
+
+
+def sdf_boundary_focus_weight(target_distance, boundary_sigma=0.12):
+    """Soft focus mask for pixels near SDF zero level sets."""
+    boundary_sigma = max(float(boundary_sigma), 1e-6)
+    return torch.exp(-target_distance.abs() / boundary_sigma)
+
+
 class DiceBCEDistanceTVLoss(nn.Module):
     """Compact dual-head loss: mask terms, SDF regression, and TV smoothing."""
 
@@ -38,7 +61,7 @@ class DiceBCEDistanceTVLoss(nn.Module):
 
         bce = F.binary_cross_entropy_with_logits(mask_logits, target_mask)
         mask_prob = torch.sigmoid(mask_logits)
-        dice = self._dice_loss(mask_prob, target_mask)
+        dice = _dice_loss(mask_prob, target_mask, eps=self.eps)
         pred_distance = torch.tanh(distance_logits)
         distance = F.smooth_l1_loss(pred_distance, target_distance)
         tv = total_variation_loss(mask_prob, eps=self.eps)
@@ -57,13 +80,130 @@ class DiceBCEDistanceTVLoss(nn.Module):
             "tv_loss": tv.detach(),
         }
 
-    def _dice_loss(self, pred, target):
-        pred = pred.flatten(1)
-        target = target.flatten(1)
-        intersection = (pred * target).sum(dim=1)
-        denominator = pred.sum(dim=1) + target.sum(dim=1)
-        dice = (2 * intersection + self.eps) / (denominator + self.eps)
-        return 1.0 - dice.mean()
+
+class BoundaryWeightedSDFDiceBCEDistanceTVLoss(nn.Module):
+    """Dual-head loss with SDF regression focused near field boundaries."""
+
+    def __init__(
+        self,
+        bce_weight=1.0,
+        dice_weight=1.0,
+        distance_weight=0.5,
+        tv_weight=0.02,
+        sdf_boundary_sigma=0.12,
+        eps=1e-6,
+    ):
+        super().__init__()
+        self.bce_weight = bce_weight
+        self.dice_weight = dice_weight
+        self.distance_weight = distance_weight
+        self.tv_weight = tv_weight
+        self.sdf_boundary_sigma = sdf_boundary_sigma
+        self.eps = eps
+
+    def forward(self, outputs, targets):
+        mask_logits = outputs["mask_logits"]
+        distance_logits = outputs["distance_logits"]
+        target_mask = targets["mask"].float()
+        target_distance = targets["distance"].float()
+
+        bce = F.binary_cross_entropy_with_logits(mask_logits, target_mask)
+        mask_prob = torch.sigmoid(mask_logits)
+        dice = _dice_loss(mask_prob, target_mask, eps=self.eps)
+
+        pred_distance = torch.tanh(distance_logits)
+        raw_distance = F.smooth_l1_loss(
+            pred_distance,
+            target_distance,
+            reduction="none",
+        )
+        sdf_weights = sdf_boundary_focus_weight(
+            target_distance,
+            boundary_sigma=self.sdf_boundary_sigma,
+        )
+        distance = (
+            (raw_distance * sdf_weights).sum()
+            / sdf_weights.sum().clamp_min(self.eps)
+        )
+        tv = total_variation_loss(mask_prob, eps=self.eps)
+
+        total = (
+            self.bce_weight * bce
+            + self.dice_weight * dice
+            + self.distance_weight * distance
+            + self.tv_weight * tv
+        )
+        return {
+            "loss": total,
+            "bce": bce.detach(),
+            "dice_loss": dice.detach(),
+            "distance_loss": distance.detach(),
+            "tv_loss": tv.detach(),
+            "boundary_weight_mean": sdf_weights.mean().detach(),
+        }
+
+
+class BoundaryWeightedDiceBCEDistanceTVLoss(nn.Module):
+    """Dual-head loss with BCE focused near field boundaries."""
+
+    def __init__(
+        self,
+        bce_weight=1.0,
+        dice_weight=1.0,
+        distance_weight=0.5,
+        tv_weight=0.02,
+        boundary_weight=3.0,
+        boundary_sigma=0.12,
+        eps=1e-6,
+    ):
+        super().__init__()
+        self.bce_weight = bce_weight
+        self.dice_weight = dice_weight
+        self.distance_weight = distance_weight
+        self.tv_weight = tv_weight
+        self.boundary_weight = boundary_weight
+        self.boundary_sigma = boundary_sigma
+        self.eps = eps
+
+    def forward(self, outputs, targets):
+        mask_logits = outputs["mask_logits"]
+        distance_logits = outputs["distance_logits"]
+        target_mask = targets["mask"].float()
+        target_distance = targets["distance"].float()
+
+        raw_bce = F.binary_cross_entropy_with_logits(
+            mask_logits,
+            target_mask,
+            reduction="none",
+        )
+        bce_weights = sdf_boundary_weight(
+            target_distance,
+            boundary_weight=self.boundary_weight,
+            boundary_sigma=self.boundary_sigma,
+        )
+        bce = (raw_bce * bce_weights).sum() / bce_weights.sum().clamp_min(self.eps)
+
+        mask_prob = torch.sigmoid(mask_logits)
+        dice = _dice_loss(mask_prob, target_mask, eps=self.eps)
+        pred_distance = torch.tanh(distance_logits)
+        distance = F.smooth_l1_loss(pred_distance, target_distance)
+        tv = total_variation_loss(mask_prob, eps=self.eps)
+
+        total = (
+            self.bce_weight * bce
+            + self.dice_weight * dice
+            + self.distance_weight * distance
+            + self.tv_weight * tv
+        )
+        return {
+            "loss": total,
+            "bce": bce.detach(),
+            "raw_bce": raw_bce.mean().detach(),
+            "dice_loss": dice.detach(),
+            "distance_loss": distance.detach(),
+            "tv_loss": tv.detach(),
+            "boundary_weight_mean": bce_weights.mean().detach(),
+        }
 
 
 class DiceBCETVLoss(nn.Module):
@@ -88,7 +228,7 @@ class DiceBCETVLoss(nn.Module):
 
         bce = F.binary_cross_entropy_with_logits(mask_logits, target_mask)
         mask_prob = torch.sigmoid(mask_logits)
-        dice = self._dice_loss(mask_prob, target_mask)
+        dice = _dice_loss(mask_prob, target_mask, eps=self.eps)
         tv = total_variation_loss(mask_prob, eps=self.eps)
         distance = mask_logits.sum() * 0.0
 
@@ -104,11 +244,3 @@ class DiceBCETVLoss(nn.Module):
             "distance_loss": distance.detach(),
             "tv_loss": tv.detach(),
         }
-
-    def _dice_loss(self, pred, target):
-        pred = pred.flatten(1)
-        target = target.flatten(1)
-        intersection = (pred * target).sum(dim=1)
-        denominator = pred.sum(dim=1) + target.sum(dim=1)
-        dice = (2 * intersection + self.eps) / (denominator + self.eps)
-        return 1.0 - dice.mean()

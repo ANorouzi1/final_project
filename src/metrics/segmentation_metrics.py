@@ -9,23 +9,12 @@ class MeanIoU:
         self,
         threshold=0.5,
         eps=1e-6,
-        use_sdf=False,
-        sdf_weight=0.35,
-        sdf_scale=4.0,
     ):
         self.threshold = threshold
         self.eps = eps
-        self.use_sdf = use_sdf
-        self.sdf_weight = sdf_weight
-        self.sdf_scale = sdf_scale
 
     def compute(self, outputs, targets):
-        pred = mask_probability_from_outputs(
-            outputs,
-            use_sdf=self.use_sdf,
-            sdf_weight=self.sdf_weight,
-            sdf_scale=self.sdf_scale,
-        ) > self.threshold
+        pred = mask_probability_from_outputs(outputs) > self.threshold
         target = targets["mask"] > 0.5
         intersection = (pred & target).flatten(1).sum(dim=1).float()
         union = (pred | target).flatten(1).sum(dim=1).float()
@@ -38,26 +27,13 @@ class BoundaryIoU:
         threshold=0.5,
         radius=2,
         eps=1e-6,
-        use_sdf=False,
-        sdf_weight=0.35,
-        sdf_scale=4.0,
     ):
         self.threshold = threshold
         self.radius = radius
         self.eps = eps
-        self.use_sdf = use_sdf
-        self.sdf_weight = sdf_weight
-        self.sdf_scale = sdf_scale
 
     def compute(self, outputs, targets):
-        pred = (
-            mask_probability_from_outputs(
-                outputs,
-                use_sdf=self.use_sdf,
-                sdf_weight=self.sdf_weight,
-                sdf_scale=self.sdf_scale,
-            ) > self.threshold
-        ).float()
+        pred = (mask_probability_from_outputs(outputs) > self.threshold).float()
         target = (targets["mask"] > 0.5).float()
         pred_boundary = _mask_boundary(pred, self.radius)
         target_boundary = _mask_boundary(target, self.radius)
