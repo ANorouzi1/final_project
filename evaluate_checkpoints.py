@@ -39,6 +39,8 @@ def _fast_mask_metric_sums(outputs, batch, threshold):
     return {
         "miou": ((intersection + eps) / (union + eps)).sum().item(),
         "boundary_iou": ((boundary_intersection + eps) / (boundary_union + eps)).sum().item(),
+        "pixel_intersection": intersection.sum().item(),
+        "pixel_union": union.sum().item(),
     }
 
 
@@ -52,7 +54,12 @@ def evaluate_model(
 ):
     model.eval()
     metric_sums = {
-        threshold: {"miou": 0.0, "boundary_iou": 0.0}
+        threshold: {
+            "miou": 0.0,
+            "boundary_iou": 0.0,
+            "pixel_intersection": 0.0,
+            "pixel_union": 0.0,
+        }
         for threshold in thresholds
     }
     n_samples = 0
@@ -72,13 +79,17 @@ def evaluate_model(
             for name, value in _fast_mask_metric_sums(outputs, batch, threshold).items():
                 metric_sums[threshold][name] += value
 
-    mask_results = {
-        threshold: {
-            name: value / max(1, n_samples)
-            for name, value in values.items()
+    eps = 1e-6
+    mask_results = {}
+    for threshold, values in metric_sums.items():
+        mask_results[threshold] = {
+            "pixel_iou": (
+                (values["pixel_intersection"] + eps)
+                / (values["pixel_union"] + eps)
+            ),
+            "miou": values["miou"] / max(1, n_samples),
+            "boundary_iou": values["boundary_iou"] / max(1, n_samples),
         }
-        for threshold, values in metric_sums.items()
-    }
     return mask_results, n_samples
 
 
@@ -99,7 +110,7 @@ def _build_loader(config_name, batch_size, split):
 
 
 def _print_mask_table(results, thresholds):
-    header = ["model", "threshold", "miou", "boundary_iou"]
+    header = ["model", "threshold", "pixel_iou", "miou", "boundary_iou"]
     print(" | ".join(header))
     print(" | ".join(["---"] * len(header)))
     for model_name, model_results in results.items():
@@ -108,6 +119,7 @@ def _print_mask_table(results, thresholds):
             values = [
                 model_name,
                 f"{threshold:.2f}",
+                f"{row['pixel_iou']:.4f}",
                 f"{row['miou']:.4f}",
                 f"{row['boundary_iou']:.4f}",
             ]

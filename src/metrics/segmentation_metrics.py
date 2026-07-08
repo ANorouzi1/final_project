@@ -21,6 +21,25 @@ class MeanIoU:
         return ((intersection + self.eps) / (union + self.eps)).mean().item()
 
 
+class PixelIoU:
+    """Global foreground pixel IoU, matching the paper-style pixel metric."""
+
+    def __init__(
+        self,
+        threshold=0.5,
+        eps=1e-6,
+    ):
+        self.threshold = threshold
+        self.eps = eps
+
+    def compute(self, outputs, targets):
+        pred = mask_probability_from_outputs(outputs) > self.threshold
+        target = targets["mask"] > 0.5
+        intersection = (pred & target).sum().float()
+        union = (pred | target).sum().float()
+        return ((intersection + self.eps) / (union + self.eps)).item()
+
+
 class BoundaryIoU:
     def __init__(
         self,

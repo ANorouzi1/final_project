@@ -11,7 +11,7 @@ from src.losses.segmentation_losses import (
     DiceBCETVLoss,
     DiceBCEDistanceTVLoss,
 )
-from src.metrics.segmentation_metrics import BoundaryIoU, MeanIoU
+from src.metrics.segmentation_metrics import BoundaryIoU, MeanIoU, PixelIoU
 from src.models.unet import DualHeadUNet, FrameFieldUNet, MaskOnlyUNet
 from src.trainers.field_trainer import FieldSegmentationTrainer
 
@@ -62,6 +62,7 @@ synthetic_debug = dict(
         tv_weight=1e-6,
     ),
     metrics=dict(
+        pixel_iou=PixelIoU(threshold=0.5),
         miou=MeanIoU(threshold=0.5),
         boundary_iou=BoundaryIoU(threshold=0.5, radius=2),
     ),
@@ -99,6 +100,7 @@ synthetic_full = dict(
         tv_weight=1e-6,
     ),
     metrics=dict(
+        pixel_iou=PixelIoU(threshold=0.5),
         miou=MeanIoU(threshold=0.5),
         boundary_iou=BoundaryIoU(threshold=0.5, radius=2),
     ),
@@ -138,6 +140,7 @@ ftw_dual_head = dict(
         tv_weight=FTW_TV_WEIGHT,
     ),
     metrics=dict(
+        pixel_iou=PixelIoU(threshold=0.5),
         miou=MeanIoU(threshold=0.5),
         boundary_iou=BoundaryIoU(threshold=0.5, radius=2),
     ),
@@ -193,6 +196,7 @@ ftw_mask_baseline = dict(
         tv_weight=FTW_TV_WEIGHT,
     ),
     metrics=dict(
+        pixel_iou=PixelIoU(threshold=0.5),
         miou=MeanIoU(threshold=0.5),
         boundary_iou=BoundaryIoU(threshold=0.5, radius=2),
     ),

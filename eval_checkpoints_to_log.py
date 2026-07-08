@@ -7,10 +7,12 @@ the config's metrics on the validation (heldout) loader, and appends one
 shows every model, even ones trained elsewhere (only the .pth was copied in).
 
 Examples:
-    # default models, austria, first 20 val batches:
+    # default models, all configured countries, first 20 test batches:
     python eval_checkpoints_to_log.py
     # a single model on the full val set:
     python eval_checkpoints_to_log.py --configs ftw_dual_head --max-batches 0
+    # force Austria-only evaluation:
+    python eval_checkpoints_to_log.py --configs ftw_dual_head --countries austria
 """
 import argparse
 from copy import deepcopy
@@ -20,8 +22,9 @@ from pathlib import Path
 import torch
 
 from cfgs import field_segmentation
+from src.utils.prediction import mask_probability_from_outputs
 
-METRIC_ORDER = ["miou", "boundary_iou"]
+METRIC_ORDER = ["pixel_iou", "miou", "boundary_iou"]
 
 
 def _find_checkpoint(save_dir, name, fallback_name=None):
@@ -68,18 +71,33 @@ def evaluate_config(name, args, device):
     loader = data_module.get_test_loader() if args.split == "test" else data_module.get_heldout_loader()
     metrics = config["metrics"]
 
-    sums = {k: 0.0 for k in metrics}
+    sums = {k: 0.0 for k in metrics if k != "pixel_iou"}
     n_batches = 0
+    n_samples = 0
+    pixel_intersection = 0.0
+    pixel_union = 0.0
     for batch in loader:
         batch = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
         outputs = model(batch["image"])
+        n_samples += batch["image"].shape[0]
+
+        if "pixel_iou" in metrics:
+            pred = mask_probability_from_outputs(outputs) > 0.5
+            target = batch["mask"] > 0.5
+            pixel_intersection += (pred & target).sum().float().item()
+            pixel_union += (pred | target).sum().float().item()
+
         for k, fn in metrics.items():
+            if k == "pixel_iou":
+                continue
             sums[k] += float(fn.compute(outputs, batch))
         n_batches += 1
         if args.max_batches and n_batches >= args.max_batches:
             break
-    means = {k: sums[k] / max(n_batches, 1) for k in metrics}
-    return checkpoint, means, n_batches * config["data_args"]["batch_size"]
+    means = {k: value / max(n_batches, 1) for k, value in sums.items()}
+    if "pixel_iou" in metrics:
+        means["pixel_iou"] = (pixel_intersection + 1e-6) / (pixel_union + 1e-6)
+    return checkpoint, means, n_samples
 
 
 def main():
@@ -87,7 +105,12 @@ def main():
     ap.add_argument("--configs", nargs="+",
                     default=["ftw_mask_baseline", "ftw_dual_head"])
     ap.add_argument("--data-dir", default=None, help="override data dir (else config's)")
-    ap.add_argument("--countries", nargs="+", default=["austria"])
+    ap.add_argument(
+        "--countries",
+        nargs="+",
+        default=None,
+        help="countries to evaluate; default uses the config/data-module default, usually all discovered countries",
+    )
     ap.add_argument("--split", choices=["val", "test"], default="test")
     ap.add_argument("--checkpoint", default=None,
                     help="explicit .pth (only valid with a single --configs)")

@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 METRICS = [
+    "eval_pixel_iou",
     "eval_miou",
     "eval_boundary_iou",
 ]
