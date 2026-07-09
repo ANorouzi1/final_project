@@ -59,6 +59,10 @@ class FTWFieldDataset(Dataset):
         augment=False,
         color_jitter=0.12,
         transform=None,
+        with_seam_weight=False,
+        seam_cache_dir=None,
+        seam_w0=10.0,
+        seam_sigma=5.0,
     ):
         self.root = Path(data_dir)
         self.split = split
@@ -68,10 +72,16 @@ class FTWFieldDataset(Dataset):
         self.augment = augment
         self.color_jitter = float(color_jitter)
         self.transform = transform
+        self.with_seam_weight = bool(with_seam_weight)
+        self.seam_w0 = float(seam_w0)
+        self.seam_sigma = float(seam_sigma)
         # Optional on-disk cache for the SDF target (compute once, reuse each epoch).
         self.sdf_cache_dir = Path(sdf_cache_dir) if sdf_cache_dir else None
         if self.sdf_cache_dir is not None:
             self.sdf_cache_dir.mkdir(parents=True, exist_ok=True)
+        self.seam_cache_dir = Path(seam_cache_dir) if seam_cache_dir else None
+        if self.seam_cache_dir is not None:
+            self.seam_cache_dir.mkdir(parents=True, exist_ok=True)
 
         if not self.root.exists():
             raise FileNotFoundError(
@@ -182,7 +192,9 @@ class FTWFieldDataset(Dataset):
         }
         if self.transform is not None:
             sample = self.transform(sample)
-        return {
+        if self.with_seam_weight:
+            sample["seam_weight"] = self._seam_weight(country, aoi_id, sample["instance"])
+        output = {
             "image": torch.as_tensor(sample["image"]),
             "mask": torch.as_tensor(sample["mask"]),
             "distance": torch.as_tensor(sample["distance"]),
@@ -190,6 +202,9 @@ class FTWFieldDataset(Dataset):
             "instance": torch.as_tensor(sample["instance"]).long(),
             "id": sample["id"],
         }
+        if self.with_seam_weight:
+            output["seam_weight"] = torch.as_tensor(sample["seam_weight"]).float()
+        return output
 
     def _sdf(self, country, aoi_id, instance):
         """Signed distance field with an optional on-disk cache (compute once)."""
@@ -250,6 +265,36 @@ class FTWFieldDataset(Dataset):
             "cache_dir": str(self.sdf_cache_dir),
         }
 
+    def _seam_weight(self, country, aoi_id, instance):
+        """Instance-seam BCE weights, cached only when no transform is active."""
+        if self.seam_cache_dir is None or self.transform is not None:
+            return seam_weight_map(instance, w0=self.seam_w0, sigma=self.seam_sigma)[None, ...]
+        path = self._seam_cache_path(country, aoi_id)
+        if path.exists():
+            try:
+                return np.load(path)[None, ...]
+            except Exception:
+                pass
+        weight = seam_weight_map(instance, w0=self.seam_w0, sigma=self.seam_sigma)
+        tmp = path.parent / (path.name + f".tmp{os.getpid()}")
+        try:
+            with open(tmp, "wb") as fh:
+                np.save(fh, weight)
+            os.replace(tmp, path)
+        except Exception:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+        return weight[None, ...]
+
+    def _seam_cache_path(self, country, aoi_id):
+        key = (
+            f"{country}_{aoi_id}_s{self.image_size}"
+            f"_w{self.seam_w0:g}_sig{self.seam_sigma:g}.npy"
+        ).replace("/", "_")
+        return self.seam_cache_dir / key
+
     def _read_tif(self, path):
         if not path.exists():
             raise FileNotFoundError(f"Missing FTW tile: {path}")
@@ -304,6 +349,38 @@ def _relabel_instances(instance_mask):
     return out
 
 
+def seam_weight_map(instance_mask, w0=10.0, sigma=5.0):
+    """U-Net-style seam weights from an instance mask.
+
+    The map is 1 everywhere plus a Gaussian bump where two different instance
+    regions are close. It follows the Ronneberger et al. idea of using the sum
+    of distances to the two nearest objects.
+    """
+    try:
+        from scipy.ndimage import distance_transform_edt
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError(
+            "Building seam weights needs scipy. Install via `pip install -r requirements.txt`."
+        ) from exc
+
+    instance_mask = np.asarray(instance_mask).squeeze()
+    instance_ids = [instance_id for instance_id in np.unique(instance_mask) if instance_id != 0]
+    if len(instance_ids) < 2 or w0 <= 0:
+        return np.ones(instance_mask.shape, dtype=np.float32)
+
+    nearest = np.full(instance_mask.shape, np.inf, dtype=np.float32)
+    second_nearest = np.full(instance_mask.shape, np.inf, dtype=np.float32)
+    for instance_id in instance_ids:
+        distance = distance_transform_edt(instance_mask != instance_id).astype(np.float32)
+        closer = distance < nearest
+        second_nearest = np.where(closer, nearest, np.minimum(second_nearest, distance))
+        nearest = np.where(closer, distance, nearest)
+
+    sigma = max(float(sigma), 1e-6)
+    seam = float(w0) * np.exp(-((nearest + second_nearest) ** 2) / (2.0 * sigma ** 2))
+    return (1.0 + seam).astype(np.float32)
+
+
 def _color_jitter_rgb(image, strength=0.12):
     """Apply light brightness/contrast/color jitter to RGB bands only."""
     if strength <= 0:
@@ -352,6 +429,10 @@ class FTWFieldDataModule(BaseDataModule):
         heldout_split=0.0,
         split_seed=42,
         sdf_cache_dir=None,
+        with_seam_weight=False,
+        seam_cache_dir=None,
+        seam_w0=10.0,
+        seam_sigma=5.0,
         train_augment=False,
         color_jitter=0.12,
         transform_preset=None,
@@ -381,6 +462,10 @@ class FTWFieldDataModule(BaseDataModule):
             augment=train_augment,
             color_jitter=color_jitter,
             transform=train_transform,
+            with_seam_weight=with_seam_weight,
+            seam_cache_dir=seam_cache_dir,
+            seam_w0=seam_w0,
+            seam_sigma=seam_sigma,
         )
         self._sdf_datasets = [train_dataset]
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
@@ -397,6 +482,10 @@ class FTWFieldDataModule(BaseDataModule):
                 mask_kind=mask_kind,
                 sdf_cache_dir=sdf_cache_dir,
                 transform=eval_transform,
+                with_seam_weight=with_seam_weight,
+                seam_cache_dir=seam_cache_dir,
+                seam_w0=seam_w0,
+                seam_sigma=seam_sigma,
             )
             if len(val_dataset) > 0:
                 self.heldout_set = val_dataset
@@ -414,6 +503,10 @@ class FTWFieldDataModule(BaseDataModule):
                     mask_kind=mask_kind,
                     sdf_cache_dir=sdf_cache_dir,
                     transform=eval_transform,
+                    with_seam_weight=with_seam_weight,
+                    seam_cache_dir=seam_cache_dir,
+                    seam_w0=seam_w0,
+                    seam_sigma=seam_sigma,
                 )
             except FileNotFoundError:
                 test_dataset = None

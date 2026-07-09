@@ -9,6 +9,7 @@ from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
 from src.losses.segmentation_losses import (
     BoundaryWeightedDiceBCEDistanceTVLoss,
     BoundaryWeightedSDFDiceBCEDistanceTVLoss,
+    DiceBCESeamLoss,
     DiceBCETVLoss,
     DiceBCEDistanceTVLoss,
 )
@@ -191,6 +192,70 @@ ftw_dual_head_boundary_bce_w10["trainer_config"] = _base_trainer(
     eval_period=5,
 )
 
+ftw_dual_head_boundary_bce_w15 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w15["name"] = "ftw_dual_head_boundary_bce_w15"
+ftw_dual_head_boundary_bce_w15["criterion_args"]["boundary_weight"] = 15.0
+ftw_dual_head_boundary_bce_w15["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w15",
+    epochs=30,
+    eval_period=5,
+)
+
+ftw_dual_head_boundary_bce_w18 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w18["name"] = "ftw_dual_head_boundary_bce_w18"
+ftw_dual_head_boundary_bce_w18["criterion_args"]["boundary_weight"] = 18.0
+ftw_dual_head_boundary_bce_w18["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w18",
+    epochs=30,
+    eval_period=2,
+)
+
+
+ftw_dual_head_boundary_bce_w20 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w20["name"] = "ftw_dual_head_boundary_bce_w20"
+ftw_dual_head_boundary_bce_w20["criterion_args"]["boundary_weight"] = 20.0
+ftw_dual_head_boundary_bce_w20["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20",
+    epochs=30,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_bce_w25 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w25["name"] = "ftw_dual_head_boundary_bce_w25"
+ftw_dual_head_boundary_bce_w25["criterion_args"]["boundary_weight"] = 25.0
+ftw_dual_head_boundary_bce_w25["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w25",
+    epochs=30,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_bce_w25_d10 = deepcopy(ftw_dual_head_boundary_bce_w25)
+ftw_dual_head_boundary_bce_w25_d10["name"] = "ftw_dual_head_boundary_bce_w25_d10"
+ftw_dual_head_boundary_bce_w25_d10["criterion_args"]["distance_weight"] = 1.0
+ftw_dual_head_boundary_bce_w25_d10["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w25_d10",
+    epochs=30,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_bce_w25_d50 = deepcopy(ftw_dual_head_boundary_bce_w25)
+ftw_dual_head_boundary_bce_w25_d50["name"] = "ftw_dual_head_boundary_bce_w25_d50"
+ftw_dual_head_boundary_bce_w25_d50["criterion_args"]["distance_weight"] = 5.0
+ftw_dual_head_boundary_bce_w25_d50["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w25_d50",
+    epochs=30,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_bce_w30 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w30["name"] = "ftw_dual_head_boundary_bce_w30"
+ftw_dual_head_boundary_bce_w30["criterion_args"]["boundary_weight"] = 30.0
+ftw_dual_head_boundary_bce_w30["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w30",
+    epochs=30,
+    eval_period=2,
+)
+
 
 
 ftw_dual_head_boundary_sdf = deepcopy(ftw_dual_head)
@@ -243,3 +308,21 @@ ftw_mask_baseline = dict(
     trainer_module=FieldSegmentationTrainer,
     trainer_config=_base_trainer("ftw_mask_baseline", epochs=30, eval_period=5),
 )
+
+
+# Seam-weighted variant of the mask baseline: same MaskOnlyUNet + BCE/Dice/TV,
+# but per-pixel BCE is multiplied by an instance-derived U-Net seam weight map.
+ftw_seam = deepcopy(ftw_mask_baseline)
+ftw_seam["name"] = "ftw_seam"
+ftw_seam["data_args"] = dict(ftw_seam["data_args"])
+ftw_seam["data_args"]["with_seam_weight"] = True
+ftw_seam["data_args"]["seam_cache_dir"] = str(PROJECT_ROOT / "seam_cache")
+ftw_seam["data_args"]["seam_w0"] = 10.0
+ftw_seam["data_args"]["seam_sigma"] = 5.0
+ftw_seam["criterion"] = DiceBCESeamLoss
+ftw_seam["criterion_args"] = dict(
+    bce_weight=1.0,
+    dice_weight=1.0,
+    tv_weight=FTW_TV_WEIGHT,
+)
+ftw_seam["trainer_config"] = _base_trainer("ftw_seam", epochs=30, eval_period=5)

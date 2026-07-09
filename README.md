@@ -69,6 +69,11 @@ python scripts/data/precompute_sdf_cache.py \
   --splits train val test
 ```
 
+## show ftw_dual_head_boundary_bce results on different boundary weights
+```shell
+python scripts/evaluation/compare_boundary_weights.py
+```
+
 ## Quick Start
 
 From the project root, run the notebooks. If you prefer a short script:

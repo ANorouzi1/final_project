@@ -29,6 +29,7 @@ class FieldSegmentationTrainer(BaseTrainer):
             "distance_loss",
             "tv_loss",
             "boundary_weight_mean",
+            "seam_weight_mean",
         ]
         self.loss_keys = loss_keys
         self.train_metrics = MetricTracker(loss_keys)

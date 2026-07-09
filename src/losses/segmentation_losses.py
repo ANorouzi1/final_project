@@ -244,3 +244,56 @@ class DiceBCETVLoss(nn.Module):
             "distance_loss": distance.detach(),
             "tv_loss": tv.detach(),
         }
+
+
+class DiceBCESeamLoss(nn.Module):
+    """Mask-only loss with an instance-derived seam weight map.
+
+    This keeps the same BCE + Dice (+ TV) structure as ``DiceBCETVLoss``, but
+    weights per-pixel BCE by ``targets["seam_weight"]``. The dataset builds that
+    map from the instance labels so pixels between neighboring fields can matter
+    more during mask training.
+    """
+
+    def __init__(
+        self,
+        bce_weight=1.0,
+        dice_weight=1.0,
+        tv_weight=0.02,
+        eps=1e-6,
+    ):
+        super().__init__()
+        self.bce_weight = bce_weight
+        self.dice_weight = dice_weight
+        self.tv_weight = tv_weight
+        self.eps = eps
+
+    def forward(self, outputs, targets):
+        mask_logits = outputs["mask_logits"]
+        target_mask = targets["mask"].float()
+        seam_weight = targets["seam_weight"].float()
+
+        raw_bce = F.binary_cross_entropy_with_logits(
+            mask_logits,
+            target_mask,
+            reduction="none",
+        )
+        bce = (raw_bce * seam_weight).sum() / seam_weight.sum().clamp_min(self.eps)
+        mask_prob = torch.sigmoid(mask_logits)
+        dice = _dice_loss(mask_prob, target_mask, eps=self.eps)
+        tv = total_variation_loss(mask_prob, eps=self.eps)
+        distance = mask_logits.sum() * 0.0
+
+        total = (
+            self.bce_weight * bce
+            + self.dice_weight * dice
+            + self.tv_weight * tv
+        )
+        return {
+            "loss": total,
+            "bce": bce.detach(),
+            "dice_loss": dice.detach(),
+            "distance_loss": distance.detach(),
+            "tv_loss": tv.detach(),
+            "seam_weight_mean": seam_weight.mean().detach(),
+        }
