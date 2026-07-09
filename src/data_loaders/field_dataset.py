@@ -58,6 +58,10 @@ class FTWFieldDataset(Dataset):
         mask_kind="semantic_2class",
         sdf_cache_dir=None,
         transform=None,
+        with_seam_weight=False,
+        seam_cache_dir=None,
+        seam_w0=10.0,
+        seam_sigma=5.0,
     ):
         self.root = Path(data_dir)
         self.split = split
@@ -65,6 +69,13 @@ class FTWFieldDataset(Dataset):
         self.normalize_scale = float(normalize_scale)
         self.mask_kind = mask_kind
         self.transform = transform
+        # Optional U-Net seam weight map target (Ronneberger 2015) for separation.
+        self.with_seam_weight = with_seam_weight
+        self.seam_w0 = float(seam_w0)
+        self.seam_sigma = float(seam_sigma)
+        self.seam_cache_dir = Path(seam_cache_dir) if seam_cache_dir else None
+        if self.seam_cache_dir is not None:
+            self.seam_cache_dir.mkdir(parents=True, exist_ok=True)
         # Optional on-disk cache for the SDF target (compute once, reuse each epoch).
         self.sdf_cache_dir = Path(sdf_cache_dir) if sdf_cache_dir else None
         if self.sdf_cache_dir is not None:
@@ -183,7 +194,7 @@ class FTWFieldDataset(Dataset):
         }
         if self.transform is not None:
             sample = self.transform(sample)
-        return {
+        out = {
             "image": torch.from_numpy(sample["image"]),
             "mask": torch.from_numpy(sample["mask"]),
             "distance": torch.from_numpy(sample["distance"]),
@@ -191,6 +202,38 @@ class FTWFieldDataset(Dataset):
             "instance": torch.from_numpy(sample["instance"]),
             "id": sample["id"],
         }
+        if self.with_seam_weight:
+            # A random transform warps the instance map, so a cached seam map
+            # would no longer line up -> only cache when no transform is active.
+            cache_ok = self.transform is None
+            seam = self._seam_weight(
+                country, aoi_id, np.asarray(sample["instance"]), cache_ok=cache_ok
+            )
+            out["seam_weight"] = torch.from_numpy(seam)
+        return out
+
+    def _seam_weight(self, country, aoi_id, instance, cache_ok=True):
+        if self.seam_cache_dir is None or not cache_ok:
+            return seam_weight_map(instance, self.seam_w0, self.seam_sigma)
+        key = f"{country}_{aoi_id}_s{self.image_size}_w{self.seam_w0}_g{self.seam_sigma}.npy".replace("/", "_")
+        path = self.seam_cache_dir / key
+        if path.exists():
+            try:
+                return np.load(path)
+            except Exception:
+                pass  # corrupt/partial write -> recompute
+        weight = seam_weight_map(instance, self.seam_w0, self.seam_sigma)
+        tmp = path.parent / (path.name + f".tmp{os.getpid()}")  # atomic write
+        try:
+            with open(tmp, "wb") as fh:
+                np.save(fh, weight)
+            os.replace(tmp, path)
+        except Exception:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+        return weight
 
     def _sdf(self, country, aoi_id, instance):
         """Signed distance field with an optional on-disk cache (compute once)."""
@@ -270,6 +313,37 @@ def _relabel_instances(instance_mask):
     return out
 
 
+def seam_weight_map(instance, w0=10.0, sigma=5.0):
+    """(1,H,W) float32 per-pixel BCE weight, peaking at seams between instances.
+
+    U-Net weight map (Ronneberger et al. 2015), invented for touching cells:
+    ``w = 1 + w0 * exp(-(d1+d2)^2 / (2 sigma^2))``, where d1/d2 are the distances
+    to the nearest and second-nearest instance. ``d1+d2`` is small only where a
+    pixel is close to TWO different fields at once — the thin seam between them —
+    so only those pixels get boosted (up to 1+w0). A field's outer edge (next to
+    background) keeps weight ~1. Chips with <2 instances give a flat map of 1.
+    """
+    from scipy.ndimage import distance_transform_edt
+
+    instance = np.asarray(instance)
+    if instance.ndim == 3:
+        instance = instance[0]
+    h, w = instance.shape
+    ids = np.unique(instance)
+    ids = ids[ids > 0]
+    if len(ids) < 2:
+        return np.ones((1, h, w), dtype=np.float32)
+    d1 = np.full((h, w), np.inf)
+    d2 = np.full((h, w), np.inf)
+    for i in ids:
+        d = distance_transform_edt(instance != i)
+        closer = d < d1
+        d2 = np.where(closer, d1, np.minimum(d2, d))
+        d1 = np.where(closer, d, d1)
+    weight = 1.0 + w0 * np.exp(-((d1 + d2) ** 2) / (2.0 * sigma ** 2))
+    return weight[None].astype(np.float32)
+
+
 class FTWFieldDataModule(BaseDataModule):
     """Data module over the official FTW train/val splits.
 
@@ -297,8 +371,18 @@ class FTWFieldDataModule(BaseDataModule):
         split_seed=42,
         sdf_cache_dir=None,
         transform_preset=None,
+        with_seam_weight=False,
+        seam_cache_dir=None,
+        seam_w0=10.0,
+        seam_sigma=5.0,
         **loader_kwargs,
     ):
+        seam_args = dict(
+            with_seam_weight=with_seam_weight,
+            seam_cache_dir=seam_cache_dir,
+            seam_w0=seam_w0,
+            seam_sigma=seam_sigma,
+        )
         if split is not None:
             train_split = split
         if max_train_samples is None:
@@ -321,6 +405,7 @@ class FTWFieldDataModule(BaseDataModule):
             mask_kind=mask_kind,
             sdf_cache_dir=sdf_cache_dir,
             transform=train_transform,
+            **seam_args,
         )
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
 
@@ -336,6 +421,7 @@ class FTWFieldDataModule(BaseDataModule):
                 mask_kind=mask_kind,
                 sdf_cache_dir=sdf_cache_dir,
                 transform=eval_transform,
+                **seam_args,
             )
             if len(val_dataset) > 0:
                 self.heldout_set = val_dataset
@@ -352,6 +438,7 @@ class FTWFieldDataModule(BaseDataModule):
                     mask_kind=mask_kind,
                     sdf_cache_dir=sdf_cache_dir,
                     transform=eval_transform,
+                    **seam_args,
                 )
             except FileNotFoundError:
                 test_dataset = None

@@ -8,6 +8,7 @@ from src.data_loaders.field_dataset import FieldSegmentationDataModule, NUM_INPU
 from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
 from src.losses.segmentation_losses import (
     BoundaryWeightedSDFDiceBCEDistanceTVLoss,
+    DiceBCESeamLoss,
     DiceBCETVLoss,
     DiceBCEDistanceTVLoss,
 )
@@ -203,3 +204,21 @@ ftw_mask_baseline = dict(
     trainer_module=FieldSegmentationTrainer,
     trainer_config=_base_trainer("ftw_mask_baseline", epochs=30, eval_period=5),
 )
+
+
+# Seam-weighted variant of the mask baseline: same MaskOnlyUNet + BCE/Dice/TV,
+# but the per-pixel BCE is multiplied by the U-Net seam weight map (Ronneberger
+# 2015), so merging two touching fields becomes the most expensive mistake.
+# See DiceBCESeamLoss and seam_weight_map. Note: under FTW_WithAugmentation the
+# seam map is rebuilt each epoch (a warped instance map cannot reuse the cache);
+# set transform_preset=None in data_args to make it cache once instead.
+ftw_seam = deepcopy(ftw_mask_baseline)
+ftw_seam["name"] = "ftw_seam"
+ftw_seam["data_args"] = dict(ftw_seam["data_args"])
+ftw_seam["data_args"]["with_seam_weight"] = True
+ftw_seam["data_args"]["seam_cache_dir"] = str(PROJECT_ROOT / "seam_cache")
+ftw_seam["data_args"]["seam_w0"] = 10.0
+ftw_seam["data_args"]["seam_sigma"] = 5.0
+ftw_seam["criterion"] = DiceBCESeamLoss
+ftw_seam["criterion_args"] = dict(bce_weight=1.0, dice_weight=1.0, tv_weight=FTW_TV_WEIGHT)
+ftw_seam["trainer_config"] = _base_trainer("ftw_seam", epochs=30, eval_period=5)
