@@ -12,36 +12,33 @@ from src.losses.segmentation_losses import (
     DiceBCETVLoss,
     DiceBCEDistanceTVLoss,
 )
-from src.metrics.segmentation_metrics import BoundaryIoU, MeanIoU
+from src.metrics.segmentation_metrics import BoundaryIoU, MeanIoU, PixelIoU
 from src.models.unet import DualHeadUNet, FrameFieldUNet, MaskOnlyUNet
 from src.trainers.field_trainer import FieldSegmentationTrainer
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SDF_PREDICTION_ARGS = dict(use_sdf=True, sdf_weight=0.35, sdf_scale=4.0)
+FTW_DISTANCE_WEIGHT = 0.1
+FTW_TV_WEIGHT = 0.0
 
 
-def _base_trainer(name, epochs, eval_period=5, monitor_metric="eval_boundary_iou"):
+def _base_trainer(name, epochs, eval_period=5):
     return dict(
         n_gpu=1,
         epochs=epochs,
         eval_period=eval_period,
         save_dir=str(PROJECT_ROOT / "Saved"),
-        save_checkpoints=False,
-        save_best=True,
-        monitor_metric=monitor_metric,
-        monitor_mode="max",
         log_step=20,
         tensorboard=False,
         wandb=False,
     )
 
 
-def _segmentation_metrics(prediction_args=None):
-    prediction_args = prediction_args or {}
+def _segmentation_metrics():
     return dict(
-        miou=MeanIoU(threshold=0.5, **prediction_args),
-        boundary_iou=BoundaryIoU(threshold=0.5, radius=2, **prediction_args),
+        pixel_iou=PixelIoU(threshold=0.5),
+        miou=MeanIoU(threshold=0.5),
+        boundary_iou=BoundaryIoU(threshold=0.5, radius=2),
     )
 
 
@@ -128,44 +125,72 @@ ftw_dual_head = dict(
         image_size=256,
         batch_size=16,
         shuffle=True,
-        max_train_samples=8000,
+        max_train_samples=1000000,
         heldout_split=0.0,
         num_workers=6,
         sdf_cache_dir=str(PROJECT_ROOT / "sdf_cache"),
-        train_augment=True,
-        color_jitter=0.12,
+        transform_preset="FTW_WithAugmentation",
     ),
-    optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-4),
+    optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-3),
     lr_scheduler=partial(torch.optim.lr_scheduler.CosineAnnealingLR, T_max=40),
     criterion=DiceBCEDistanceTVLoss,
     criterion_args=dict(
         bce_weight=1.0,
         dice_weight=1.0,
-        distance_weight=0.5,
-        tv_weight=1e-6,
+        distance_weight=FTW_DISTANCE_WEIGHT,
+        tv_weight=FTW_TV_WEIGHT,
     ),
     metrics=_segmentation_metrics(),
     trainer_module=FieldSegmentationTrainer,
-    trainer_config=_base_trainer("ftw_dual_head", epochs=50, eval_period=5),
+    trainer_config=_base_trainer("ftw_dual_head", epochs=30, eval_period=5),
 )
 
-
+# currently maybe the best 
 ftw_dual_head_boundary_bce = deepcopy(ftw_dual_head)
 ftw_dual_head_boundary_bce["name"] = "ftw_dual_head_boundary_bce"
 ftw_dual_head_boundary_bce["criterion"] = BoundaryWeightedDiceBCEDistanceTVLoss
 ftw_dual_head_boundary_bce["criterion_args"] = dict(
     bce_weight=1.0,
     dice_weight=1.0,
-    distance_weight=0.5,
-    tv_weight=1e-6,
+    distance_weight=FTW_DISTANCE_WEIGHT,
+    tv_weight=FTW_TV_WEIGHT,
     boundary_weight=3.0,
     boundary_sigma=0.12,
 )
 ftw_dual_head_boundary_bce["trainer_config"] = _base_trainer(
     "ftw_dual_head_boundary_bce",
-    epochs=50,
+    epochs=30,
     eval_period=5,
 )
+
+# try different weights on the boundary loss to see if it helps
+ftw_dual_head_boundary_bce_w1 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w1["name"] = "ftw_dual_head_boundary_bce_w1"
+ftw_dual_head_boundary_bce_w1["criterion_args"]["boundary_weight"] = 1.0
+ftw_dual_head_boundary_bce_w1["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w1",
+    epochs=30,
+    eval_period=5,
+)
+
+ftw_dual_head_boundary_bce_w5 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w5["name"] = "ftw_dual_head_boundary_bce_w5"
+ftw_dual_head_boundary_bce_w5["criterion_args"]["boundary_weight"] = 5.0
+ftw_dual_head_boundary_bce_w5["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w5",
+    epochs=30,
+    eval_period=5,
+)
+
+ftw_dual_head_boundary_bce_w10 = deepcopy(ftw_dual_head_boundary_bce)
+ftw_dual_head_boundary_bce_w10["name"] = "ftw_dual_head_boundary_bce_w10"
+ftw_dual_head_boundary_bce_w10["criterion_args"]["boundary_weight"] = 10.0
+ftw_dual_head_boundary_bce_w10["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w10",
+    epochs=30,
+    eval_period=5,
+)
+
 
 
 ftw_dual_head_boundary_sdf = deepcopy(ftw_dual_head)
@@ -174,26 +199,12 @@ ftw_dual_head_boundary_sdf["criterion"] = BoundaryWeightedSDFDiceBCEDistanceTVLo
 ftw_dual_head_boundary_sdf["criterion_args"] = dict(
     bce_weight=1.0,
     dice_weight=1.0,
-    distance_weight=0.5,
-    tv_weight=1e-6,
+    distance_weight=FTW_DISTANCE_WEIGHT,
+    tv_weight=FTW_TV_WEIGHT,
     sdf_boundary_sigma=0.12,
 )
 ftw_dual_head_boundary_sdf["trainer_config"] = _base_trainer(
     "ftw_dual_head_boundary_sdf",
-    epochs=50,
-    eval_period=5,
-)
-
-
-ftw_dual_head_sdf_prediction = deepcopy(ftw_dual_head)
-ftw_dual_head_sdf_prediction["name"] = "ftw_dual_head_sdf_prediction"
-ftw_dual_head_sdf_prediction["checkpoint_fallback_name"] = "ftw_dual_head"
-ftw_dual_head_sdf_prediction["prediction_args"] = SDF_PREDICTION_ARGS
-ftw_dual_head_sdf_prediction["metrics"] = _segmentation_metrics(
-    prediction_args=SDF_PREDICTION_ARGS,
-)
-ftw_dual_head_sdf_prediction["trainer_config"] = _base_trainer(
-    "ftw_dual_head_sdf_prediction",
     epochs=30,
     eval_period=5,
 )
@@ -214,22 +225,21 @@ ftw_mask_baseline = dict(
         image_size=256,
         batch_size=16,
         shuffle=True,
-        max_train_samples=8000,
+        max_train_samples=1000000,
         heldout_split=0.0,
         num_workers=6,
         sdf_cache_dir=str(PROJECT_ROOT / "sdf_cache"),
-        train_augment=True,
-        color_jitter=0.12,
+        transform_preset="FTW_WithAugmentation",
     ),
-    optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-4),
+    optimizer=partial(torch.optim.AdamW, lr=2e-4, weight_decay=1e-3),
     lr_scheduler=partial(torch.optim.lr_scheduler.CosineAnnealingLR, T_max=40),
     criterion=DiceBCETVLoss,
     criterion_args=dict(
         bce_weight=1.0,
         dice_weight=1.0,
-        tv_weight=1e-6,
+        tv_weight=FTW_TV_WEIGHT,
     ),
     metrics=_segmentation_metrics(),
     trainer_module=FieldSegmentationTrainer,
-    trainer_config=_base_trainer("ftw_mask_baseline", epochs=50, eval_period=5),
+    trainer_config=_base_trainer("ftw_mask_baseline", epochs=30, eval_period=5),
 )

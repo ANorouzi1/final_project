@@ -82,7 +82,7 @@ class DiceBCEDistanceTVLoss(nn.Module):
 
 
 class BoundaryWeightedSDFDiceBCEDistanceTVLoss(nn.Module):
-    """Dual-head loss with the SDF regression focused near field boundaries."""
+    """Dual-head loss with SDF regression focused near field boundaries."""
 
     def __init__(
         self,
@@ -121,7 +121,10 @@ class BoundaryWeightedSDFDiceBCEDistanceTVLoss(nn.Module):
             target_distance,
             boundary_sigma=self.sdf_boundary_sigma,
         )
-        distance = (raw_distance * sdf_weights).sum() / sdf_weights.sum().clamp_min(self.eps)
+        distance = (
+            (raw_distance * sdf_weights).sum()
+            / sdf_weights.sum().clamp_min(self.eps)
+        )
         tv = total_variation_loss(mask_prob, eps=self.eps)
 
         total = (
@@ -141,7 +144,7 @@ class BoundaryWeightedSDFDiceBCEDistanceTVLoss(nn.Module):
 
 
 class BoundaryWeightedDiceBCEDistanceTVLoss(nn.Module):
-    """Dual-head loss with BCE focused near field and instance boundaries."""
+    """Dual-head loss with BCE focused near field boundaries."""
 
     def __init__(
         self,

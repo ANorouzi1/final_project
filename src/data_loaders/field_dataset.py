@@ -58,6 +58,7 @@ class FTWFieldDataset(Dataset):
         sdf_cache_dir=None,
         augment=False,
         color_jitter=0.12,
+        transform=None,
     ):
         self.root = Path(data_dir)
         self.split = split
@@ -66,6 +67,7 @@ class FTWFieldDataset(Dataset):
         self.mask_kind = mask_kind
         self.augment = augment
         self.color_jitter = float(color_jitter)
+        self.transform = transform
         # Optional on-disk cache for the SDF target (compute once, reuse each epoch).
         self.sdf_cache_dir = Path(sdf_cache_dir) if sdf_cache_dir else None
         if self.sdf_cache_dir is not None:
@@ -170,13 +172,23 @@ class FTWFieldDataset(Dataset):
 
         distance = self._sdf(country, aoi_id, instance)
 
-        return {
-            "image": torch.from_numpy(image),
-            "mask": torch.from_numpy(binary_mask[None, ...]),
-            "distance": torch.from_numpy(distance[None, ...]),
-            "sdf": torch.from_numpy(distance[None, ...]),
-            "instance": torch.from_numpy(instance.astype(np.int64)),
+        sample = {
+            "image": image,
+            "mask": binary_mask[None, ...],
+            "distance": distance[None, ...],
+            "sdf": distance[None, ...],
+            "instance": instance.astype(np.int64),
             "id": f"{country}/{aoi_id}",
+        }
+        if self.transform is not None:
+            sample = self.transform(sample)
+        return {
+            "image": torch.as_tensor(sample["image"]),
+            "mask": torch.as_tensor(sample["mask"]),
+            "distance": torch.as_tensor(sample["distance"]),
+            "sdf": torch.as_tensor(sample["sdf"]),
+            "instance": torch.as_tensor(sample["instance"]).long(),
+            "id": sample["id"],
         }
 
     def _sdf(self, country, aoi_id, instance):
@@ -342,12 +354,20 @@ class FTWFieldDataModule(BaseDataModule):
         sdf_cache_dir=None,
         train_augment=False,
         color_jitter=0.12,
+        transform_preset=None,
+        train_transform=None,
+        eval_transform=None,
         **loader_kwargs,
     ):
         if split is not None:
             train_split = split
         if max_train_samples is None:
             max_train_samples = max_samples
+        train_transform, eval_transform = self._resolve_transforms(
+            transform_preset,
+            train_transform,
+            eval_transform,
+        )
 
         train_dataset = FTWFieldDataset(
             data_dir=data_dir,
@@ -360,6 +380,7 @@ class FTWFieldDataModule(BaseDataModule):
             sdf_cache_dir=sdf_cache_dir,
             augment=train_augment,
             color_jitter=color_jitter,
+            transform=train_transform,
         )
         self._sdf_datasets = [train_dataset]
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
@@ -375,6 +396,7 @@ class FTWFieldDataModule(BaseDataModule):
                 normalize_scale=normalize_scale,
                 mask_kind=mask_kind,
                 sdf_cache_dir=sdf_cache_dir,
+                transform=eval_transform,
             )
             if len(val_dataset) > 0:
                 self.heldout_set = val_dataset
@@ -391,6 +413,7 @@ class FTWFieldDataModule(BaseDataModule):
                     normalize_scale=normalize_scale,
                     mask_kind=mask_kind,
                     sdf_cache_dir=sdf_cache_dir,
+                    transform=eval_transform,
                 )
             except FileNotFoundError:
                 test_dataset = None
@@ -401,6 +424,24 @@ class FTWFieldDataModule(BaseDataModule):
                 self._test_sdf_dataset = None
         else:
             self._test_sdf_dataset = None
+
+    def _resolve_transforms(self, transform_preset, train_transform, eval_transform):
+        if transform_preset is None:
+            return train_transform, eval_transform
+        from src.utils.segmentation_transform_presets import presets as transform_presets
+
+        if transform_preset not in transform_presets:
+            available = ", ".join(sorted(transform_presets))
+            raise ValueError(
+                f"Unknown transform_preset={transform_preset!r}. "
+                f"Available presets: {available}"
+            )
+        preset = transform_presets[transform_preset]
+        if train_transform is None:
+            train_transform = preset.get("train")
+        if eval_transform is None:
+            eval_transform = preset.get("eval")
+        return train_transform, eval_transform
 
     def precompute_sdf_cache(self, include_heldout=True, include_test=False, overwrite=False):
         """Precompute SDF targets for configured FTW datasets."""

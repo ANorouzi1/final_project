@@ -50,6 +50,25 @@ data/ftw/
 
 The FTW loader uses the semantic mask for foreground supervision and the instance mask to build a signed distance field in `[-1, 1]`. Positive values are field interiors, negative values are background, and values near zero mark field boundaries, including borders between touching instances.
 
+## download dataset
+
+the default is france in download_ftw_subset.py
+```shell
+python download_ftw_subset.py --root data/ftw --country france--include-val
+python src/utils/download_ftw_all.py --workers 16
+
+```
+
+## precompute the sdf
+
+```shell
+python scripts/data/precompute_sdf_cache.py \
+  --data-dir data/ftw \
+  --cache-dir sdf_cache \
+  --countries france \
+  --splits train val test
+```
+
 ## Quick Start
 
 From the project root, run the notebooks. If you prefer a short script:
