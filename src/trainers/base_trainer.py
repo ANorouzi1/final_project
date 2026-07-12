@@ -15,6 +15,9 @@ class BaseTrainer:
         self.epochs = self.trainer_config["epochs"]
         self.eval_period = self.trainer_config.get("eval_period", 0)
         self.save_checkpoints = self.trainer_config.get("save_checkpoints", False)
+        self.checkpoint_period = max(
+            1, int(self.trainer_config.get("checkpoint_period", 1))
+        )
         self.save_best = self.trainer_config.get("save_best", True)
         self.monitor_metric = self.trainer_config.get("monitor_metric", "eval_boundary_iou")
         self.monitor_mode = self.trainer_config.get("monitor_mode", "max")
@@ -55,7 +58,7 @@ class BaseTrainer:
             self.history.append(log)
             self._update_best(log)
             self._log_epoch(log)
-            if self.save_checkpoints:
+            if self.save_checkpoints and epoch % self.checkpoint_period == 0:
                 self.save_checkpoint(self.checkpoint_dir / f"checkpoint_epoch_{epoch:03d}.pth")
                 self.save_checkpoint(self.checkpoint_dir / "checkpoint_last.pth")
 

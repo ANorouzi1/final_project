@@ -1,0 +1,19 @@
+{
+  "france_only": [
+    {"config":"ftw_dual_head_boundary_bce_w20_s012","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":56,"boundary_iou":0.3863,"miou":0.7543},
+    {"config":"ftw_dual_head_boundary_bce_w20_s024","boundary_weight":20.0,"boundary_sigma":0.24,"distance_weight":0.1,"best_epoch":56,"boundary_iou":0.3841,"miou":0.7597},
+    {"config":"ftw_dual_head_boundary_bce_w20_s009","boundary_weight":20.0,"boundary_sigma":0.09,"distance_weight":0.1,"best_epoch":54,"boundary_iou":0.3839,"miou":0.7615},
+    {"config":"ftw_dual_head_boundary_bce_w20_s012_d0","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.0,"best_epoch":54,"boundary_iou":0.3816,"miou":0.7580},
+    {"config":"ftw_dual_head_boundary_bce_w25_d10","boundary_weight":25.0,"boundary_sigma":0.12,"distance_weight":1.0,"best_epoch":48,"boundary_iou":0.3812,"miou":0.7639},
+    {"config":"ftw_dual_head_boundary_bce_w30","boundary_weight":30.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":46,"boundary_iou":0.3811,"miou":0.7580},
+    {"config":"ftw_dual_head_boundary_bce_w20","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":46,"boundary_iou":0.3805,"miou":0.7597},
+    {"config":"ftw_dual_head_boundary_bce_w20_s018","boundary_weight":20.0,"boundary_sigma":0.18,"distance_weight":0.1,"best_epoch":56,"boundary_iou":0.3802,"miou":0.7543},
+    {"config":"ftw_dual_head_boundary_bce_w25","boundary_weight":25.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":36,"boundary_iou":0.3801,"miou":0.7633},
+    {"config":"ftw_dual_head_boundary_bce_w18","boundary_weight":18.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":48,"boundary_iou":0.3797,"miou":0.7597},
+    {"config":"ftw_mask_baseline","boundary_weight":null,"boundary_sigma":null,"distance_weight":null,"best_epoch":40,"boundary_iou":0.3469,"miou":0.7541}
+  ],
+  "austria_croatia_denmark": [
+    {"config":"ftw_dual_head_boundary_bce_w20_s012","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":54,"boundary_iou":0.3591,"miou":0.6811},
+    {"config":"ftw_mask_baseline","boundary_weight":null,"boundary_sigma":null,"distance_weight":null,"best_epoch":40,"boundary_iou":0.3155,"miou":0.6672}
+  ]
+}

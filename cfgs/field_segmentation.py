@@ -220,6 +220,67 @@ ftw_dual_head_boundary_bce_w20["trainer_config"] = _base_trainer(
     eval_period=2,
 )
 
+# Boundary-width sweep: keep boundary and SDF-distance weights fixed so only
+# boundary_sigma changes between runs.
+ftw_dual_head_boundary_bce_w20_s004 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_s004["name"] = "ftw_dual_head_boundary_bce_w20_s004"
+ftw_dual_head_boundary_bce_w20_s004["criterion_args"]["distance_weight"] = 0.1
+ftw_dual_head_boundary_bce_w20_s004["criterion_args"]["boundary_sigma"] = 0.04
+ftw_dual_head_boundary_bce_w20_s004["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s004", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s006 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_s006["name"] = "ftw_dual_head_boundary_bce_w20_s006"
+ftw_dual_head_boundary_bce_w20_s006["criterion_args"]["distance_weight"] = 0.1
+ftw_dual_head_boundary_bce_w20_s006["criterion_args"]["boundary_sigma"] = 0.06
+ftw_dual_head_boundary_bce_w20_s006["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s006", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s009 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_s009["name"] = "ftw_dual_head_boundary_bce_w20_s009"
+ftw_dual_head_boundary_bce_w20_s009["criterion_args"]["distance_weight"] = 0.1
+ftw_dual_head_boundary_bce_w20_s009["criterion_args"]["boundary_sigma"] = 0.09
+ftw_dual_head_boundary_bce_w20_s009["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s009", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s012 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_s012["name"] = "ftw_dual_head_boundary_bce_w20_s012"
+ftw_dual_head_boundary_bce_w20_s012["criterion_args"]["distance_weight"] = 0.1
+ftw_dual_head_boundary_bce_w20_s012["criterion_args"]["boundary_sigma"] = 0.12
+ftw_dual_head_boundary_bce_w20_s012["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s012", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s012_d0 = deepcopy(
+    ftw_dual_head_boundary_bce_w20_s012
+)
+ftw_dual_head_boundary_bce_w20_s012_d0["name"] = (
+    "ftw_dual_head_boundary_bce_w20_s012_d0"
+)
+ftw_dual_head_boundary_bce_w20_s012_d0["criterion_args"]["distance_weight"] = 0.0
+ftw_dual_head_boundary_bce_w20_s012_d0["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s012_d0", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s018 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_s018["name"] = "ftw_dual_head_boundary_bce_w20_s018"
+ftw_dual_head_boundary_bce_w20_s018["criterion_args"]["distance_weight"] = 0.1
+ftw_dual_head_boundary_bce_w20_s018["criterion_args"]["boundary_sigma"] = 0.18
+ftw_dual_head_boundary_bce_w20_s018["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s018", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s024 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_s024["name"] = "ftw_dual_head_boundary_bce_w20_s024"
+ftw_dual_head_boundary_bce_w20_s024["criterion_args"]["distance_weight"] = 0.1
+ftw_dual_head_boundary_bce_w20_s024["criterion_args"]["boundary_sigma"] = 0.24
+ftw_dual_head_boundary_bce_w20_s024["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s024", epochs=50, eval_period=2
+)
+
 ftw_dual_head_boundary_bce_w25 = deepcopy(ftw_dual_head_boundary_bce)
 ftw_dual_head_boundary_bce_w25["name"] = "ftw_dual_head_boundary_bce_w25"
 ftw_dual_head_boundary_bce_w25["criterion_args"]["boundary_weight"] = 25.0
@@ -246,6 +307,41 @@ ftw_dual_head_boundary_bce_w25_d50["trainer_config"] = _base_trainer(
     epochs=30,
     eval_period=2,
 )
+
+ftw_dual_head_boundary_bce_w20_d70 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_d70["name"] = "ftw_dual_head_boundary_bce_w20_d70"
+ftw_dual_head_boundary_bce_w20_d70["criterion_args"]["distance_weight"] = 7.0
+ftw_dual_head_boundary_bce_w20_d70["lr_scheduler"] = partial(
+    torch.optim.lr_scheduler.CosineAnnealingLR,
+    T_max=80,
+)
+ftw_dual_head_boundary_bce_w20_d70["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_d70",
+    epochs=50,
+    eval_period=2,
+)
+ftw_dual_head_boundary_bce_w20_d70["trainer_config"]["save_checkpoints"] = True
+
+
+
+ftw_dual_head_boundary_bce_w20_d150 = deepcopy(ftw_dual_head_boundary_bce_w20)
+ftw_dual_head_boundary_bce_w20_d150["name"] = "ftw_dual_head_boundary_bce_w20_d150"
+ftw_dual_head_boundary_bce_w20_d150["criterion_args"]["distance_weight"] = 15.0
+ftw_dual_head_boundary_bce_w20_d150["lr_scheduler"] = partial(
+    torch.optim.lr_scheduler.CosineAnnealingLR,
+    T_max=80,
+)
+ftw_dual_head_boundary_bce_w20_d150["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_d150",
+    epochs=50,
+    eval_period=2,
+)
+ftw_dual_head_boundary_bce_w20_d150["trainer_config"]["save_checkpoints"] = True
+ftw_dual_head_boundary_bce_w20_d150["trainer_config"]["checkpoint_period"] = 5
+
+
+
+
 
 ftw_dual_head_boundary_bce_w30 = deepcopy(ftw_dual_head_boundary_bce)
 ftw_dual_head_boundary_bce_w30["name"] = "ftw_dual_head_boundary_bce_w30"
