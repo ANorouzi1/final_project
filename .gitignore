@@ -1,6 +1,7 @@
 # Local/editor files
 .DS_Store
 src/.DS_Store
+Saved/.DS_Store
 
 # Python caches and local environments
 __pycache__/

@@ -260,6 +260,10 @@ ftw_dual_head_boundary_bce_w20_s012_d0 = deepcopy(
 ftw_dual_head_boundary_bce_w20_s012_d0["name"] = (
     "ftw_dual_head_boundary_bce_w20_s012_d0"
 )
+ftw_dual_head_boundary_bce_w20_s012_d0["model_args"] = dict(
+    ftw_dual_head_boundary_bce_w20_s012_d0["model_args"]
+)
+ftw_dual_head_boundary_bce_w20_s012_d0["model_args"]["predict_distance"] = False
 ftw_dual_head_boundary_bce_w20_s012_d0["criterion_args"]["distance_weight"] = 0.0
 ftw_dual_head_boundary_bce_w20_s012_d0["trainer_config"] = _base_trainer(
     "ftw_dual_head_boundary_bce_w20_s012_d0", epochs=50, eval_period=2

@@ -64,8 +64,10 @@ class DualHeadUNet(BaseModel):
         base_channels=32,
         num_classes=1,
         bilinear=True,
+        predict_distance=True,
     ):
         super().__init__()
+        self.predict_distance = predict_distance
         c = base_channels
         self.inc = DoubleConv(in_channels, c)
         self.down1 = Down(c, c * 2)
@@ -77,12 +79,15 @@ class DualHeadUNet(BaseModel):
         self.up3 = Up(c * 4, c * 2, c * 2, bilinear=bilinear)
         self.up4 = Up(c * 2, c, c, bilinear=bilinear)
         self.mask_head = nn.Conv2d(c, num_classes, kernel_size=1)
-        self.distance_head = nn.Sequential(
-            nn.Conv2d(c, c, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(c),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(c, 1, kernel_size=1),
-        )
+        if self.predict_distance:
+            self.distance_head = nn.Sequential(
+                nn.Conv2d(c, c, kernel_size=3, padding=1, bias=False),
+                nn.BatchNorm2d(c),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(c, 1, kernel_size=1),
+            )
+        else:
+            self.distance_head = None
 
     def _forward_features(self, x):
         x1 = self.inc(x)
@@ -98,10 +103,10 @@ class DualHeadUNet(BaseModel):
 
     def forward(self, x):
         features = self._forward_features(x)
-        return {
-            "mask_logits": self.mask_head(features),
-            "distance_logits": self.distance_head(features),
-        }
+        outputs = {"mask_logits": self.mask_head(features)}
+        if self.distance_head is not None:
+            outputs["distance_logits"] = self.distance_head(features)
+        return outputs
 
 
 class FrameFieldUNet(DualHeadUNet):
