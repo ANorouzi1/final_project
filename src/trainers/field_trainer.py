@@ -29,11 +29,16 @@ class FieldSegmentationTrainer(BaseTrainer):
             "distance_loss",
             "tv_loss",
             "boundary_weight_mean",
+            "seam_weight_mean",
         ]
         self.loss_keys = loss_keys
         self.train_metrics = MetricTracker(loss_keys)
         self.eval_metrics = MetricTracker(loss_keys + list(self.metric_functions))
         self.logger.info(self.model)
+
+        resume_from = self.trainer_config.get("resume_from")
+        if resume_from:
+            self.load_checkpoint(resume_from)
 
     def _train_epoch(self):
         self.model.train()

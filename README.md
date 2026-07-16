@@ -9,9 +9,16 @@ The structure follows Assignment 3:
 - `src/models/`: model definitions
 - `src/losses/`: segmentation losses
 - `src/metrics/`: mIoU and Boundary IoU
-- `src/trainers/`: trainer with last-checkpoint saving
+- `src/trainers/`: shared training loop
+- `src/utils/`: prediction, post-processing, and plotting helpers
+- `scripts/evaluation/`: checkpoint/log comparison scripts
+- `scripts/visualization/`: project diagnostic visualizations
 - `notebooks/`: notebook-first workflow
-- `Logs/` and `Saved/`: training logs and checkpoints
+- `docs/`: proposal and course feedback
+- `Logs/`: training logs
+- `Visualizations/`: generated figures
+- `Saved/`: optional/legacy checkpoints
+- `sdf_cache/`: generated signed-distance-field targets
 
 ## Recommended Workflow
 
@@ -24,31 +31,55 @@ The second notebook runs without downloading data by using a synthetic polygon-f
 
 ## Real Data Layout
 
-For FTW-style data, place files like this:
+For Fields of The World data, place files like this:
 
 ```text
 data/ftw/
-  train/
-    images/
-      sample_001.png
-    masks/
-      sample_001.png
-    distances/              # SDF targets are generated from instance masks
-      sample_001.png
-  val/
-    images/
-    masks/
-    distances/
+  france/
+    s2_images/
+      window_a/
+        <aoi_id>.tif
+      window_b/
+        <aoi_id>.tif
+    label_masks/
+      semantic_2class/
+        <aoi_id>.tif
+      instance/
+        <aoi_id>.tif
 ```
 
 The FTW loader uses the semantic mask for foreground supervision and the instance mask to build a signed distance field in `[-1, 1]`. Positive values are field interiors, negative values are background, and values near zero mark field boundaries, including borders between touching instances.
 
+## download dataset
+
+the default is france in download_ftw_subset.py
+```shell
+python download_ftw_subset.py --root data/ftw --country france--include-val
+python src/utils/download_ftw_all.py --workers 16
+
+```
+
+## precompute the sdf
+
+```shell
+python scripts/data/precompute_sdf_cache.py \
+  --data-dir data/ftw \
+  --cache-dir sdf_cache \
+  --countries france \
+  --splits train val test
+```
+
+## show ftw_dual_head_boundary_bce results on different boundary weights
+```shell
+python scripts/evaluation/compare_boundary_weights.py
+```
+
 ## Quick Start
 
-From inside `outputs/hlcv`, run the notebooks. If you prefer a short script:
+From the project root, run the notebooks. If you prefer a short script:
 
 ```bash
-python run_experiment.py --config synthetic_debug
+.venv/bin/python run_experiment.py --config synthetic_debug
 ```
 
 The project is intentionally notebook-friendly, so the script is only a convenience wrapper.
@@ -58,20 +89,33 @@ The project is intentionally notebook-friendly, so the script is only a convenie
 Show the binary-mask merging/blob issue that motivates the auxiliary SDF head:
 
 ```bash
-python visualize_problem_setup.py --config ftw_dual_head --split val --num-samples 3
+.venv/bin/python scripts/visualization/visualize_problem_setup.py --config ftw_dual_head --split val --num-samples 3 --no-model
 ```
 
 Train the fair mask-only ablation baseline and the proposed dual-head model:
 
 ```bash
-python run_experiment.py --config ftw_mask_baseline
-python run_experiment.py --config ftw_dual_head
+.venv/bin/python run_experiment.py --config ftw_mask_baseline
+.venv/bin/python run_experiment.py --config ftw_dual_head
+.venv/bin/python run_experiment.py --config ftw_dual_head_boundary_bce
 ```
 
-Compare their validation metrics after both runs:
+Compare validation metrics after the runs:
 
 ```bash
-python compare_experiments.py
+.venv/bin/python scripts/evaluation/compare_experiments.py
 ```
 
-See `docs/feedback_response.md` for the ablation protocol, post-processing fairness note, and related SDF/TV literature pointers.
+Evaluate saved checkpoints directly, if you decide to keep checkpoints for a run:
+
+```bash
+.venv/bin/python scripts/evaluation/evaluate_checkpoints.py --models baseline dual_mask --split test
+```
+
+Generate prediction panels:
+
+```bash
+.venv/bin/python scripts/visualization/visualize_predictions.py --config ftw_dual_head --split test --num-samples 6
+```
+
+See `docs/proposal.pdf` for the original project idea and `docs/feedback.txt` for the course feedback that motivated the current baseline/ablation work.

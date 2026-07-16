@@ -33,6 +33,8 @@ class MetricTracker:
         self.data = {key: {"sum": 0.0, "count": 0} for key in self.keys}
 
     def update(self, key, value):
+        if key not in self.data:
+            self.data[key] = {"sum": 0.0, "count": 0}
         self.data[key]["sum"] += float(value)
         self.data[key]["count"] += 1
 
@@ -40,4 +42,5 @@ class MetricTracker:
         return {
             key: values["sum"] / max(1, values["count"])
             for key, values in self.data.items()
+            if values["count"] > 0
         }

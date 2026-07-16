@@ -1,0 +1,117 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Boundary-IoU experiment review by training geography",
+    "description": "Separates France-only experiments from Austria–Croatia–Denmark experiments.",
+    "generatedAt": "2026-07-12T12:00:00+02:00",
+    "cards": [],
+    "charts": [
+      {
+        "id": "france_ranking",
+        "title": "France-only boundary-IoU ranking",
+        "subtitle": "Peak evaluation boundary IoU in each log's latest session",
+        "type": "horizontalBar",
+        "dataset": "france_boundary",
+        "sourceId": "france_logs",
+        "intent": "ranking",
+        "question": "Which configurations achieved the highest peak boundary IoU on France, including the mask-only baseline?",
+        "rationale": "A sorted horizontal bar chart makes small differences across long configuration names readable.",
+        "valueFormat": "decimal",
+        "encodings": {
+          "x": {"field":"config","type":"nominal","label":"Configuration"},
+          "y": {"field":"boundary_iou","type":"quantitative","label":"Boundary IoU"},
+          "tooltip": [
+            {"field":"boundary_weight","type":"quantitative","label":"Boundary weight"},
+            {"field":"boundary_sigma","type":"quantitative","label":"Boundary sigma"},
+            {"field":"distance_weight","type":"quantitative","label":"Distance weight"},
+            {"field":"best_epoch","type":"quantitative","label":"Best epoch"}
+          ]
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "france_table",
+        "title": "France-only configuration details",
+        "subtitle": "Boundary-BCE runs and mask-only baseline, ranked by peak evaluation boundary IoU",
+        "dataset": "france_boundary",
+        "sourceId": "france_logs",
+        "defaultSort": {"field":"boundary_iou","direction":"desc"},
+        "columns": [
+          {"field":"config","label":"Configuration","type":"text"},
+          {"field":"boundary_weight","label":"Boundary weight","format":"number"},
+          {"field":"boundary_sigma","label":"Boundary sigma","format":"decimal"},
+          {"field":"distance_weight","label":"Distance weight","format":"decimal"},
+          {"field":"best_epoch","label":"Best epoch","format":"number"},
+          {"field":"boundary_iou","label":"Boundary IoU","format":"decimal"},
+          {"field":"miou","label":"mIoU","format":"decimal"}
+        ]
+      },
+      {
+        "id": "multi_table",
+        "title": "Austria–Croatia–Denmark results",
+        "subtitle": "Currently available boundary-BCE runs in Logs/",
+        "dataset": "multi_boundary",
+        "sourceId": "multi_logs",
+        "defaultSort": {"field":"boundary_iou","direction":"desc"},
+        "columns": [
+          {"field":"config","label":"Configuration","type":"text"},
+          {"field":"boundary_weight","label":"Boundary weight","format":"number"},
+          {"field":"boundary_sigma","label":"Boundary sigma","format":"decimal"},
+          {"field":"distance_weight","label":"Distance weight","format":"decimal"},
+          {"field":"best_epoch","label":"Best epoch","format":"number"},
+          {"field":"boundary_iou","label":"Boundary IoU","format":"decimal"},
+          {"field":"miou","label":"mIoU","format":"decimal"}
+        ]
+      }
+    ],
+    "sources": [
+      {"id":"france_logs","label":"France-only training logs"},
+      {"id":"multi_logs","label":"Austria–Croatia–Denmark training logs"}
+    ],
+    "blocks": [
+      {"id":"title","type":"markdown","body":"# Boundary-IoU experiment review by training geography"},
+      {"id":"technical_summary","type":"markdown","body":"## Technical summary\n\n**Do not pool these folders.** `Logs_france/` contains France-only training; `Logs/` contains Austria, Croatia, and Denmark. France's strongest boundary-BCE checkpoint is `w20_s012`; the same parameter set is also the only boundary-BCE result currently available for the three-country dataset. Differences between their absolute metrics describe different evaluation populations, not a model regression."},
+      {"id":"scope","type":"markdown","body":"## Scope and comparison basis\n\nEach row uses the maximum evaluation boundary IoU from the latest detected training session in its source log. France has a broad sweep; the three-country folder currently has only one matching boundary-BCE configuration, so within-dataset ranking is available only for France."},
+      {"id":"france_finding","type":"markdown","body":"## Sigma 0.12 remains the France leader\n\nWith boundary weight 20 and distance weight 0.1, sigma 0.12 leads the France-only sweep at 0.3863 boundary IoU. Sigma 0.24 and 0.09 are close behind, while setting distance weight to zero reaches 0.3816. The mask-only baseline reaches 0.3469, so the leading boundary-BCE run improves peak boundary IoU by 0.0394 absolute (11.4% relative).","sourceId":"france_logs"},
+      {"id":"france_chart","type":"chart","chartId":"france_ranking"},
+      {"id":"france_details","type":"table","tableId":"france_table"},
+      {"id":"multi_finding","type":"markdown","body":"## The three-country run establishes a new baseline\n\nFor Austria–Croatia–Denmark, `w20_s012` peaks at boundary IoU 0.3591 and mIoU 0.6811. The mask-only baseline peaks at boundary IoU 0.3155 and mIoU 0.6672. The boundary-BCE configuration therefore improves peak boundary IoU by 0.0436 absolute (13.8% relative) while also improving mIoU by 0.0139.","sourceId":"multi_logs"},
+      {"id":"multi_details","type":"table","tableId":"multi_table"},
+      {"id":"limitations","type":"markdown","body":"## Limitations and uncertainty\n\nThe two folders differ in countries, image counts, and evaluation populations. Absolute metrics are therefore not directly comparable. Runs are single-seed peak-checkpoint results, so small differences may be training noise."},
+      {"id":"recommendation","type":"markdown","body":"## Recommended next step\n\nRun the same compact sweep on Austria–Croatia–Denmark: sigma 0.09, 0.12, 0.18, and 0.24 at boundary weight 20 and distance weight 0.1, plus sigma 0.12 with distance weight 0. Then select using the three-country validation boundary IoU only."},
+      {"id":"further_questions","type":"markdown","body":"## Further questions\n\nDoes sigma 0.12 remain best across multiple seeds and per-country validation slices? A country-level breakdown would reveal whether the aggregate is dominated by Austria's larger sample count."}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-07-12T12:00:00+02:00",
+    "status": "ready",
+    "datasets": {
+      "france_boundary": [
+        {"config":"w20_s012","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":56,"boundary_iou":0.3863,"miou":0.7543},
+        {"config":"w20_s024","boundary_weight":20.0,"boundary_sigma":0.24,"distance_weight":0.1,"best_epoch":56,"boundary_iou":0.3841,"miou":0.7597},
+        {"config":"w20_s009","boundary_weight":20.0,"boundary_sigma":0.09,"distance_weight":0.1,"best_epoch":54,"boundary_iou":0.3839,"miou":0.7615},
+        {"config":"w20_s012_d0","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.0,"best_epoch":54,"boundary_iou":0.3816,"miou":0.7580},
+        {"config":"w25_d1","boundary_weight":25.0,"boundary_sigma":0.12,"distance_weight":1.0,"best_epoch":48,"boundary_iou":0.3812,"miou":0.7639},
+        {"config":"w30","boundary_weight":30.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":46,"boundary_iou":0.3811,"miou":0.7580},
+        {"config":"w20","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":46,"boundary_iou":0.3805,"miou":0.7597},
+        {"config":"w20_s018","boundary_weight":20.0,"boundary_sigma":0.18,"distance_weight":0.1,"best_epoch":56,"boundary_iou":0.3802,"miou":0.7543},
+        {"config":"w25","boundary_weight":25.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":36,"boundary_iou":0.3801,"miou":0.7633},
+        {"config":"w18","boundary_weight":18.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":48,"boundary_iou":0.3797,"miou":0.7597},
+        {"config":"mask_baseline","boundary_weight":null,"boundary_sigma":null,"distance_weight":null,"best_epoch":40,"boundary_iou":0.3469,"miou":0.7541}
+      ],
+      "multi_boundary": [
+        {"config":"w20_s012","boundary_weight":20.0,"boundary_sigma":0.12,"distance_weight":0.1,"best_epoch":54,"boundary_iou":0.3591,"miou":0.6811},
+        {"config":"mask_baseline","boundary_weight":null,"boundary_sigma":null,"distance_weight":null,"best_epoch":40,"boundary_iou":0.3155,"miou":0.6672}
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {"id":"france_logs","query":{"engine":"duckdb","language":"sql","sql":"SELECT * FROM (VALUES ('w20_s012',20.0,0.12,0.1,56,0.3863,0.7543),('w20_s024',20.0,0.24,0.1,56,0.3841,0.7597),('w20_s009',20.0,0.09,0.1,54,0.3839,0.7615),('w20_s012_d0',20.0,0.12,0.0,54,0.3816,0.7580),('w25_d1',25.0,0.12,1.0,48,0.3812,0.7639),('w30',30.0,0.12,0.1,46,0.3811,0.7580),('w20',20.0,0.12,0.1,46,0.3805,0.7597),('w20_s018',20.0,0.18,0.1,56,0.3802,0.7543),('w25',25.0,0.12,0.1,36,0.3801,0.7633),('w18',18.0,0.12,0.1,48,0.3797,0.7597),('mask_baseline',NULL,NULL,NULL,40,0.3469,0.7541)) AS t(config,boundary_weight,boundary_sigma,distance_weight,best_epoch,boundary_iou,miou) ORDER BY boundary_iou DESC","description":"Reproduces reviewed rows parsed from latest sessions in Logs_france/ (France only), including the mask-only baseline.","tables_used":["reviewed_france_log_rows"],"executed_at":"2026-07-12T12:00:00+02:00"}},
+    {"id":"multi_logs","query":{"engine":"duckdb","language":"sql","sql":"SELECT * FROM (VALUES ('w20_s012',20.0,0.12,0.1,54,0.3591,0.6811),('mask_baseline',NULL,NULL,NULL,40,0.3155,0.6672)) AS t(config,boundary_weight,boundary_sigma,distance_weight,best_epoch,boundary_iou,miou) ORDER BY boundary_iou DESC","description":"Reproduces reviewed rows parsed from latest sessions in Logs/ (Austria, Croatia, and Denmark).","tables_used":["reviewed_multi_country_log_rows"],"executed_at":"2026-07-12T12:00:00+02:00"}}
+  ]
+}
