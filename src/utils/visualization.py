@@ -94,7 +94,7 @@ def show_predictions(
         baseline_mask = mask_probability_from_outputs(baseline_outputs).detach().cpu()
     batch = {key: value[:max_items].detach().cpu() if torch.is_tensor(value) else value for key, value in batch.items()}
     n = images.shape[0]
-    n_cols = 4
+    n_cols = 5
     if baseline_mask is not None:
         n_cols += 3
     fig, axes = plt.subplots(n, n_cols, figsize=(3 * n_cols, 3 * n))

@@ -7,6 +7,7 @@ import torch
 from src.data_loaders.field_dataset import FieldSegmentationDataModule, NUM_INPUT_CHANNELS
 from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
 from src.losses.segmentation_losses import (
+    BoundaryWeightedDiceBCEDistanceTVLoss,
     BoundaryWeightedSDFDiceBCEDistanceTVLoss,
     DiceBCETVLoss,
     DiceBCEDistanceTVLoss,
@@ -161,6 +162,24 @@ ftw_dual_head_boundary_sdf["criterion_args"] = dict(
 )
 ftw_dual_head_boundary_sdf["trainer_config"] = _base_trainer(
     "ftw_dual_head_boundary_sdf",
+    epochs=30,
+    eval_period=5,
+)
+
+
+ftw_dual_head_boundary_bce = deepcopy(ftw_dual_head)
+ftw_dual_head_boundary_bce["name"] = "ftw_dual_head_boundary_bce"
+ftw_dual_head_boundary_bce["criterion"] = BoundaryWeightedDiceBCEDistanceTVLoss
+ftw_dual_head_boundary_bce["criterion_args"] = dict(
+    bce_weight=1.0,
+    dice_weight=1.0,
+    distance_weight=FTW_DISTANCE_WEIGHT,
+    tv_weight=FTW_TV_WEIGHT,
+    boundary_weight=3.0,
+    boundary_sigma=0.12,
+)
+ftw_dual_head_boundary_bce["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce",
     epochs=30,
     eval_period=5,
 )

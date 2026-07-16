@@ -29,8 +29,14 @@ def _resolve_checkpoint(project_root, config, checkpoint):
     if checkpoint is not None:
         return Path(checkpoint)
 
-    candidate = project_root / "Saved" / config["name"] / "last_model.pth"
-    return candidate if candidate.exists() else None
+    candidates = [
+        project_root / "Saved" / config["name"] / "last_model.pth",
+        project_root / "Saved" / "Saved" / config["name"] / "last_model.pth",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
 
 
 def _take_value(value, index):
@@ -86,6 +92,7 @@ def main():
     parser.add_argument("--mask-kind", choices=["semantic_2class", "semantic_3class"], default=None)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--include-empty", action="store_true")
+    parser.add_argument("--allow-random", action="store_true")
     args = parser.parse_args()
 
     seed_everything(args.seed)
