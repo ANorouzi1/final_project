@@ -7,7 +7,7 @@ from src.utils.prediction import mask_probability_from_outputs
 class MeanIoU:
     def __init__(
         self,
-        threshold=0.5,
+        threshold=0.6,
         eps=1e-6,
     ):
         self.threshold = threshold
@@ -26,7 +26,7 @@ class PixelIoU:
 
     def __init__(
         self,
-        threshold=0.5,
+        threshold=0.6,
         eps=1e-6,
     ):
         self.threshold = threshold
@@ -43,7 +43,7 @@ class PixelIoU:
 class BoundaryIoU:
     def __init__(
         self,
-        threshold=0.5,
+        threshold=0.6,
         radius=2,
         eps=1e-6,
     ):

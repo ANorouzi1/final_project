@@ -107,7 +107,7 @@ def _find_blob_examples(dataset, n_items):
     if candidates:
         candidates.sort(reverse=True, key=lambda item: (item[0], item[1]))
         selected = [
-            (merge_gap, n_instances, n_components, index, binary_components, f"SDF target separates {merge_gap}")
+            (merge_gap, n_instances, n_components, index, binary_components, "separate fields")
             for merge_gap, n_instances, n_components, index, binary_components in candidates[:n_items]
         ]
     else:
@@ -115,7 +115,7 @@ def _find_blob_examples(dataset, n_items):
             raise ValueError("No non-empty field examples found to visualize.")
         fallback_candidates.sort(reverse=True, key=lambda item: item[0])
         selected = [
-            (0, n_instances, n_components, index, binary_components, "SDF zeroes field boundaries")
+            (0, n_instances, n_components, index, binary_components, "separate fields")
             for n_instances, n_components, index, binary_components in fallback_candidates[:n_items]
         ]
 
@@ -129,7 +129,7 @@ def _find_blob_examples(dataset, n_items):
             "instance": sample["instance"].numpy(),
             "distance": sample["distance"][0].numpy(),
             "blob_labels": binary_components,
-            "blob_title": f"{n_components} binary blobs",
+            "blob_title": "connected field regions",
             "score_title": score_title,
             "n_instances": n_instances,
             "pred_mask": None,
@@ -176,8 +176,8 @@ def _find_prediction_blob_examples(model, loader, device, threshold, n_items):
                         "instance": target_instances,
                         "distance": batch["distance"][index, 0].numpy(),
                         "blob_labels": pred_components,
-                        "blob_title": f"{n_pred_components} predicted blobs",
-                        "score_title": f"worst blob covers {worst_overlap} fields",
+                        "blob_title": "predicted field regions",
+                        "score_title": "separate fields",
                         "n_instances": _count_instances(target_instances),
                         "pred_mask": pred_batch[index],
                         "pred_labels": pred_components,
@@ -246,7 +246,7 @@ def main():
         print("No checkpoint loaded; visualizing ground-truth label layout only.")
     print(f"Mask source: {config['data_args'].get('mask_kind', 'semantic_2class')}")
 
-    n_cols = 6 if examples[0]["pred_mask"] is not None else 5
+    n_cols = 4 if examples[0]["pred_mask"] is not None else 3
     fig, axes = plt.subplots(len(examples), n_cols, figsize=(3.2 * n_cols, 3.4 * len(examples)))
     if len(examples) == 1:
         axes = axes[None, :]
@@ -255,24 +255,18 @@ def main():
         image = _display_image(example["image"])
         target_mask = example["mask"]
         target_instances = example["instance"]
-        distance = example["distance"]
 
         instance_labels, instance_cmap = _colorize_labels(target_instances)
-        component_labels, component_cmap = _colorize_labels(example["blob_labels"])
 
         axes[row, 0].imshow(image)
         axes[row, 0].set_title(f"image\n{example['id']}")
         axes[row, 1].imshow(target_mask, cmap="gray")
-        axes[row, 1].set_title("semantic mask")
+        axes[row, 1].set_title("field / background mask")
         axes[row, 2].imshow(instance_labels, cmap=instance_cmap, interpolation="nearest")
-        axes[row, 2].set_title(f"{example['n_instances']} field instances")
-        axes[row, 3].imshow(component_labels, cmap=component_cmap, interpolation="nearest")
-        axes[row, 3].set_title(example["blob_title"])
-        axes[row, 4].imshow(distance, cmap="coolwarm", vmin=-1, vmax=1)
-        axes[row, 4].set_title(example["score_title"])
+        axes[row, 2].set_title("same fields as separate parcels")
         if example["pred_mask"] is not None:
-            axes[row, 5].imshow(example["pred_mask"], cmap="gray")
-            axes[row, 5].set_title("predicted mask blob")
+            axes[row, 3].imshow(example["pred_mask"], cmap="gray")
+            axes[row, 3].set_title("model field prediction")
 
         for ax in axes[row]:
             ax.axis("off")

@@ -1,11 +1,13 @@
 import argparse
 import os
+import random
 import sys
 import tempfile
 from copy import deepcopy
 from pathlib import Path
 
 import torch
+from torch.utils.data import default_collate
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -68,6 +70,117 @@ def _take_samples(loader, n_items, include_empty=False):
     return merged
 
 
+def _base_dataset_and_index(dataset, index):
+    while hasattr(dataset, "dataset") and hasattr(dataset, "indices"):
+        index = dataset.indices[index]
+        dataset = dataset.dataset
+    return dataset, index
+
+
+def _country_for_index(dataset, index):
+    base, base_index = _base_dataset_and_index(dataset, index)
+    if hasattr(base, "samples"):
+        country, _ = base.samples[base_index]
+        return country
+    return "unknown"
+
+
+def _random_index_order(dataset, seed, balanced_countries=False):
+    rng = random.Random(seed)
+    indices = list(range(len(dataset)))
+
+    if not balanced_countries:
+        rng.shuffle(indices)
+        return indices
+
+    by_country = {}
+    for index in indices:
+        by_country.setdefault(_country_for_index(dataset, index), []).append(index)
+    for country_indices in by_country.values():
+        rng.shuffle(country_indices)
+
+    countries = sorted(by_country)
+    rng.shuffle(countries)
+    ordered = []
+    while countries:
+        next_countries = []
+        for country in countries:
+            ordered.append(by_country[country].pop())
+            if by_country[country]:
+                next_countries.append(country)
+        countries = next_countries
+    return ordered
+
+
+def _take_random_samples(dataset, n_items, seed=0, include_empty=False, balanced_countries=False):
+    samples = []
+    for index in _random_index_order(dataset, seed, balanced_countries=balanced_countries):
+        sample = dataset[index]
+        if not include_empty and float(sample["mask"].sum()) == 0.0:
+            continue
+        samples.append(sample)
+        if len(samples) >= n_items:
+            break
+
+    if not samples:
+        raise ValueError("No non-empty samples were available to visualize.")
+    return default_collate(samples)
+
+
+def _split_values(values):
+    if not values:
+        return []
+    out = []
+    for value in values:
+        out.extend(item.strip() for item in value.split(",") if item.strip())
+    return out
+
+
+def _take_samples_by_index(dataset, indices, include_empty=False):
+    samples = []
+    for index in indices:
+        sample = dataset[index]
+        if not include_empty and float(sample["mask"].sum()) == 0.0:
+            raise ValueError(f"Sample index {index} is empty. Pass --include-empty to visualize it.")
+        samples.append(sample)
+    return default_collate(samples)
+
+
+def _take_samples_by_id(dataset, sample_ids, include_empty=False):
+    wanted = _split_values(sample_ids)
+    index_by_id = {}
+    index_by_aoi = {}
+    duplicate_aois = set()
+
+    for index in range(len(dataset)):
+        base, base_index = _base_dataset_and_index(dataset, index)
+        if not hasattr(base, "samples"):
+            sample = dataset[index]
+            index_by_id[sample["id"]] = index
+            continue
+        country, aoi_id = base.samples[base_index]
+        index_by_id[f"{country}/{aoi_id}"] = index
+        if aoi_id in index_by_aoi:
+            duplicate_aois.add(aoi_id)
+        else:
+            index_by_aoi[aoi_id] = index
+
+    indices = []
+    for sample_id in wanted:
+        if sample_id in index_by_id:
+            indices.append(index_by_id[sample_id])
+        elif sample_id in index_by_aoi and sample_id not in duplicate_aois:
+            indices.append(index_by_aoi[sample_id])
+        elif sample_id in duplicate_aois:
+            raise ValueError(
+                f"AOI id {sample_id!r} exists in multiple countries. Use the full country/aoi_id form."
+            )
+        else:
+            raise ValueError(f"Sample id {sample_id!r} was not found in this split.")
+
+    return _take_samples_by_index(dataset, indices, include_empty=include_empty)
+
+
 def _select_loader(data_module, split):
     if split == "train":
         return data_module.get_loader()
@@ -91,13 +204,12 @@ def main():
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--min-area", type=int, default=0)
     parser.add_argument("--mask-kind", choices=["semantic_2class", "semantic_3class"], default=None)
-    parser.add_argument("--use-sdf-instances", action="store_true")
-    parser.add_argument("--sdf-mask-threshold", type=float, default=0.5)
-    parser.add_argument("--sdf-core-threshold", type=float, default=0.15)
-    parser.add_argument("--sdf-min-core-area", type=int, default=4)
-    parser.add_argument("--sdf-min-instance-area", type=int, default=20)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--include-empty", action="store_true")
+    parser.add_argument("--random-samples", action="store_true")
+    parser.add_argument("--balanced-countries", action="store_true")
+    parser.add_argument("--sample-id", action="append", default=None)
+    parser.add_argument("--sample-index", type=int, action="append", default=None)
     args = parser.parse_args()
 
     seed_everything(args.seed)
@@ -135,7 +247,20 @@ def main():
             baseline_model = None
             print("Warning: no baseline checkpoint found; skipping baseline columns.")
 
-    batch = _take_samples(loader, args.num_samples, include_empty=args.include_empty)
+    if args.sample_id:
+        batch = _take_samples_by_id(loader.dataset, args.sample_id, include_empty=args.include_empty)
+    elif args.sample_index:
+        batch = _take_samples_by_index(loader.dataset, args.sample_index, include_empty=args.include_empty)
+    elif args.random_samples or args.balanced_countries:
+        batch = _take_random_samples(
+            loader.dataset,
+            args.num_samples,
+            seed=args.seed,
+            include_empty=args.include_empty,
+            balanced_countries=args.balanced_countries,
+        )
+    else:
+        batch = _take_samples(loader, args.num_samples, include_empty=args.include_empty)
     print("Visualized samples:", ", ".join(batch.get("id", [])))
     print(f"Mask source: {config['data_args'].get('mask_kind', 'semantic_2class')}")
     fig = show_predictions(
@@ -145,12 +270,7 @@ def main():
         threshold=args.threshold,
         max_items=args.num_samples,
         min_area=args.min_area,
-        use_sdf_instances=args.use_sdf_instances,
-        sdf_mask_threshold=args.sdf_mask_threshold,
-        sdf_core_threshold=args.sdf_core_threshold,
-        sdf_min_core_area=args.sdf_min_core_area,
-        sdf_min_instance_area=args.sdf_min_instance_area,
-        prediction_args=config.get("prediction_args", {}),
+        prediction_args={},
         baseline_model=baseline_model,
         baseline_label=baseline_config["name"] if baseline_model is not None else "baseline",
     )
