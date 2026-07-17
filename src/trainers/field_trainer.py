@@ -27,8 +27,12 @@ class FieldSegmentationTrainer(BaseTrainer):
             "raw_bce",
             "dice_loss",
             "distance_loss",
+            "raw_distance_loss",
+            "weighted_distance_loss",
+            "distance_loss_fraction",
             "tv_loss",
             "boundary_weight_mean",
+            "distance_boundary_weight_mean",
             "seam_weight_mean",
         ]
         self.loss_keys = loss_keys
