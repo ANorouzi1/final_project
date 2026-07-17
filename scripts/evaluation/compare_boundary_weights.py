@@ -10,11 +10,16 @@ NUMBER_RE = (
 )
 PAIR_RE = re.compile(rf"([A-Za-z_][A-Za-z_0-9]*): ({NUMBER_RE})")
 WEIGHT_RE = re.compile(r"_w(?P<weight>\d+(?:\.\d+)?)(?:_|$)")
-DISTANCE_WEIGHT_RE = re.compile(r"_d(?P<weight>\d+(?:\.\d+)?)(?:_|$)")
+SIGMA_RE = re.compile(r"_s(?P<sigma>\d+)(?:_|$)")
+DISTANCE_WEIGHT_RE = re.compile(r"_d(?P<weight>\d+)(?:_|$)")
 
 DEFAULT_CONFIGS = [
     "ftw_mask_baseline",
+    "ftw_dual_head",
+    "ftw_dual_head_small",
+    "ftw_dual_head_no_aug",
     "ftw_seam",
+    "ftw_dual_head_boundary_sdf",
     "ftw_dual_head_boundary_bce",
 ]
 DEFAULT_METRICS = [
@@ -88,8 +93,22 @@ def _distance_weight(config):
         return None
     match = DISTANCE_WEIGHT_RE.search(config)
     if not match:
+        return 0.1
+    encoded = match.group("weight")
+    if encoded == "0":
+        return 0.0
+    if encoded.startswith("0"):
+        return float(f"0.{encoded[1:]}")
+    return float(encoded) / 10.0
+
+
+def _boundary_sigma(config):
+    if not config.startswith("ftw_dual_head_boundary_bce"):
         return None
-    return float(match.group("weight"))
+    match = SIGMA_RE.search(config)
+    if match:
+        return int(match.group("sigma")) / 100.0
+    return 0.12
 
 
 def _rows_for_path(path, all_sessions):
@@ -205,6 +224,7 @@ def main():
     metric_columns = [
         "config",
         "boundary_weight",
+        "boundary_sigma",
         "distance_weight",
         epoch_column,
         *DEFAULT_METRICS,
@@ -226,6 +246,7 @@ def main():
         summary_row = {
             "config": config,
             "boundary_weight": _boundary_weight(config),
+            "boundary_sigma": _boundary_sigma(config),
             "distance_weight": _distance_weight(config),
             epoch_column: selected_row["epoch"],
         }

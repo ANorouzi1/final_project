@@ -146,6 +146,22 @@ ftw_dual_head = dict(
     trainer_config=_base_trainer("ftw_dual_head", epochs=30, eval_period=5),
 )
 
+ftw_dual_head_small = deepcopy(ftw_dual_head)
+ftw_dual_head_small["name"] = "ftw_dual_head_small"
+ftw_dual_head_small["model_args"] = dict(ftw_dual_head_small["model_args"])
+ftw_dual_head_small["model_args"]["base_channels"] = 24
+ftw_dual_head_small["trainer_config"] = _base_trainer(
+    "ftw_dual_head_small", epochs=50, eval_period=2
+)
+
+ftw_dual_head_no_aug = deepcopy(ftw_dual_head)
+ftw_dual_head_no_aug["name"] = "ftw_dual_head_no_aug"
+ftw_dual_head_no_aug["data_args"] = dict(ftw_dual_head_no_aug["data_args"])
+ftw_dual_head_no_aug["data_args"]["transform_preset"] = None
+ftw_dual_head_no_aug["trainer_config"] = _base_trainer(
+    "ftw_dual_head_no_aug", epochs=50, eval_period=2
+)
+
 # currently maybe the best 
 ftw_dual_head_boundary_bce = deepcopy(ftw_dual_head)
 ftw_dual_head_boundary_bce["name"] = "ftw_dual_head_boundary_bce"
@@ -267,6 +283,53 @@ ftw_dual_head_boundary_bce_w20_s012_d0["model_args"]["predict_distance"] = False
 ftw_dual_head_boundary_bce_w20_s012_d0["criterion_args"]["distance_weight"] = 0.0
 ftw_dual_head_boundary_bce_w20_s012_d0["trainer_config"] = _base_trainer(
     "ftw_dual_head_boundary_bce_w20_s012_d0", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s012_d003 = deepcopy(
+    ftw_dual_head_boundary_bce_w20_s012
+)
+ftw_dual_head_boundary_bce_w20_s012_d003["name"] = (
+    "ftw_dual_head_boundary_bce_w20_s012_d003"
+)
+ftw_dual_head_boundary_bce_w20_s012_d003["criterion_args"]["distance_weight"] = 0.03
+ftw_dual_head_boundary_bce_w20_s012_d003["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s012_d003", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s012_d030 = deepcopy(
+    ftw_dual_head_boundary_bce_w20_s012
+)
+ftw_dual_head_boundary_bce_w20_s012_d030["name"] = (
+    "ftw_dual_head_boundary_bce_w20_s012_d030"
+)
+ftw_dual_head_boundary_bce_w20_s012_d030["criterion_args"]["distance_weight"] = 0.3
+ftw_dual_head_boundary_bce_w20_s012_d030["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s012_d030", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s012_tv1e6 = deepcopy(
+    ftw_dual_head_boundary_bce_w20_s012
+)
+ftw_dual_head_boundary_bce_w20_s012_tv1e6["name"] = (
+    "ftw_dual_head_boundary_bce_w20_s012_tv1e6"
+)
+ftw_dual_head_boundary_bce_w20_s012_tv1e6["criterion_args"]["tv_weight"] = 1e-6
+ftw_dual_head_boundary_bce_w20_s012_tv1e6["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s012_tv1e6", epochs=50, eval_period=2
+)
+
+ftw_dual_head_boundary_bce_w20_s012_no_aug = deepcopy(
+    ftw_dual_head_boundary_bce_w20_s012
+)
+ftw_dual_head_boundary_bce_w20_s012_no_aug["name"] = (
+    "ftw_dual_head_boundary_bce_w20_s012_no_aug"
+)
+ftw_dual_head_boundary_bce_w20_s012_no_aug["data_args"] = dict(
+    ftw_dual_head_boundary_bce_w20_s012_no_aug["data_args"]
+)
+ftw_dual_head_boundary_bce_w20_s012_no_aug["data_args"]["transform_preset"] = None
+ftw_dual_head_boundary_bce_w20_s012_no_aug["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_bce_w20_s012_no_aug", epochs=50, eval_period=2
 )
 
 ftw_dual_head_boundary_bce_w20_s018 = deepcopy(ftw_dual_head_boundary_bce_w20)
@@ -426,3 +489,19 @@ ftw_seam["criterion_args"] = dict(
     tv_weight=FTW_TV_WEIGHT,
 )
 ftw_seam["trainer_config"] = _base_trainer("ftw_seam", epochs=30, eval_period=5)
+
+
+REPORT_CONFIG_NAMES = [
+    "ftw_mask_baseline",
+    "ftw_dual_head",
+    "ftw_dual_head_small",
+    "ftw_dual_head_no_aug",
+    "ftw_seam",
+    "ftw_dual_head_boundary_sdf",
+    "ftw_dual_head_boundary_bce_w20_s012",
+    "ftw_dual_head_boundary_bce_w20_s012_d0",
+    "ftw_dual_head_boundary_bce_w20_s012_d003",
+    "ftw_dual_head_boundary_bce_w20_s012_d030",
+    "ftw_dual_head_boundary_bce_w20_s012_tv1e6",
+    "ftw_dual_head_boundary_bce_w20_s012_no_aug",
+]
