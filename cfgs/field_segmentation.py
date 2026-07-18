@@ -7,6 +7,7 @@ import torch
 from src.data_loaders.field_dataset import FieldSegmentationDataModule, NUM_INPUT_CHANNELS
 from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
 from src.losses.segmentation_losses import (
+    BoundaryWeightedDiceDistanceLoss,
     BoundaryWeightedDiceBCEDistanceTVLoss,
     BoundaryWeightedSDFDiceBCEDistanceTVLoss,
     DiceBCESeamLoss,
@@ -437,6 +438,25 @@ ftw_dual_head_boundary_sdf["trainer_config"] = _base_trainer(
     eval_period=5,
 )
 
+# Move the boundary-focused supervision from the segmentation head to the
+# distance-regression head. This deliberately has no BCE or TV term: the mask
+# head uses ordinary Dice, while Smooth L1 distance errors are weighted with
+# the same w20/sigma=0.12 boundary map as the boundary-BCE comparison run.
+ftw_dual_head_boundary_distance = deepcopy(ftw_dual_head)
+ftw_dual_head_boundary_distance["name"] = "ftw_dual_head_boundary_distance"
+ftw_dual_head_boundary_distance["criterion"] = BoundaryWeightedDiceDistanceLoss
+ftw_dual_head_boundary_distance["criterion_args"] = dict(
+    dice_weight=1.0,
+    distance_weight=1.0,
+    boundary_weight=20.0,
+    boundary_sigma=0.12,
+)
+ftw_dual_head_boundary_distance["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_distance",
+    epochs=60,
+    eval_period=2,
+)
+
 
 ftw_mask_baseline = dict(
     name="ftw_mask_baseline",
@@ -498,6 +518,7 @@ REPORT_CONFIG_NAMES = [
     "ftw_dual_head_no_aug",
     "ftw_seam",
     "ftw_dual_head_boundary_sdf",
+    "ftw_dual_head_boundary_distance",
     "ftw_dual_head_boundary_bce_w20_s012",
     "ftw_dual_head_boundary_bce_w20_s012_d0",
     "ftw_dual_head_boundary_bce_w20_s012_d003",

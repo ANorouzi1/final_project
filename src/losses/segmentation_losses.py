@@ -150,6 +150,66 @@ class BoundaryWeightedSDFDiceBCEDistanceTVLoss(nn.Module):
         }
 
 
+class BoundaryWeightedDiceDistanceLoss(nn.Module):
+    """Dice segmentation plus boundary-weighted distance regression.
+
+    The segmentation head is supervised only with the standard Dice loss. For
+    the distance head, Smooth L1 errors receive the same SDF-derived weighting
+    used by the boundary-weighted BCE experiment: every pixel keeps a base
+    weight of one, while pixels close to the zero level set receive an
+    additional exponentially decaying weight.
+    """
+
+    def __init__(
+        self,
+        dice_weight=1.0,
+        distance_weight=1.0,
+        boundary_weight=20.0,
+        boundary_sigma=0.12,
+        eps=1e-6,
+    ):
+        super().__init__()
+        self.dice_weight = dice_weight
+        self.distance_weight = distance_weight
+        self.boundary_weight = boundary_weight
+        self.boundary_sigma = boundary_sigma
+        self.eps = eps
+
+    def forward(self, outputs, targets):
+        mask_logits = outputs["mask_logits"]
+        target_mask = targets["mask"].float()
+        target_distance = targets["distance"].float()
+
+        mask_prob = torch.sigmoid(mask_logits)
+        dice = _dice_loss(mask_prob, target_mask, eps=self.eps)
+
+        distance_logits = outputs["distance_logits"]
+        pred_distance = torch.tanh(distance_logits)
+        raw_distance_map = F.smooth_l1_loss(
+            pred_distance,
+            target_distance,
+            reduction="none",
+        )
+        distance_weights = sdf_boundary_weight(
+            target_distance,
+            boundary_weight=self.boundary_weight,
+            boundary_sigma=self.boundary_sigma,
+        )
+        distance = (
+            (raw_distance_map * distance_weights).sum()
+            / distance_weights.sum().clamp_min(self.eps)
+        )
+
+        total = self.dice_weight * dice + self.distance_weight * distance
+        return {
+            "loss": total,
+            "dice_loss": dice.detach(),
+            "distance_loss": distance.detach(),
+            "raw_distance_loss": raw_distance_map.mean().detach(),
+            "boundary_weight_mean": distance_weights.mean().detach(),
+        }
+
+
 class BoundaryWeightedDiceBCEDistanceTVLoss(nn.Module):
     """Dual-head loss with BCE focused near field boundaries."""
 

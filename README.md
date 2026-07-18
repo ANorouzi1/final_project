@@ -98,7 +98,12 @@ Train the fair mask-only ablation baseline and the proposed dual-head model:
 .venv/bin/python run_experiment.py --config ftw_mask_baseline
 .venv/bin/python run_experiment.py --config ftw_dual_head
 .venv/bin/python run_experiment.py --config ftw_dual_head_boundary_bce
+.venv/bin/python run_experiment.py --config ftw_dual_head_boundary_distance
 ```
+
+`ftw_dual_head_boundary_distance` removes BCE entirely. It trains the mask head
+with Dice loss and trains the signed-distance head with boundary-weighted
+Smooth L1 loss, emphasizing distance errors near the SDF zero level set.
 
 Compare validation metrics after the runs:
 
