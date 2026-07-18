@@ -35,6 +35,11 @@ def sdf_boundary_focus_weight(target_distance, boundary_sigma=0.12):
     return torch.exp(-target_distance.abs() / boundary_sigma)
 
 
+def sdf_boundary_target(target_distance, boundary_threshold=0.08):
+    """Binary boundary target from the signed-distance zero band."""
+    return (target_distance.abs() <= float(boundary_threshold)).float()
+
+
 class DiceBCEDistanceTVLoss(nn.Module):
     """Compact dual-head loss: mask terms, SDF regression, and TV smoothing."""
 
@@ -231,6 +236,106 @@ class BoundaryWeightedDiceBCEDistanceTVLoss(nn.Module):
             "distance_loss_fraction": (
                 weighted_distance / total.clamp_min(self.eps)
             ).detach(),
+            "tv_loss": tv.detach(),
+            "boundary_weight_mean": bce_weights.mean().detach(),
+        }
+
+
+class ThreeHeadBoundaryDiceBCEDistanceTVLoss(nn.Module):
+    """Three-head loss with mask, SDF, and explicit boundary supervision."""
+
+    def __init__(
+        self,
+        bce_weight=1.0,
+        dice_weight=1.0,
+        distance_weight=0.5,
+        tv_weight=0.02,
+        boundary_weight=3.0,
+        boundary_sigma=0.12,
+        boundary_head_weight=0.3,
+        boundary_target_threshold=0.12,
+        eps=1e-6,
+    ):
+        super().__init__()
+        self.bce_weight = bce_weight
+        self.dice_weight = dice_weight
+        self.distance_weight = distance_weight
+        self.tv_weight = tv_weight
+        self.boundary_weight = boundary_weight
+        self.boundary_sigma = boundary_sigma
+        self.boundary_head_weight = boundary_head_weight
+        self.boundary_target_threshold = boundary_target_threshold
+        self.eps = eps
+
+    def forward(self, outputs, targets):
+        mask_logits = outputs["mask_logits"]
+        boundary_logits = outputs["boundary_logits"]
+        target_mask = targets["mask"].float()
+        target_distance = targets["distance"].float()
+
+        raw_bce = F.binary_cross_entropy_with_logits(
+            mask_logits,
+            target_mask,
+            reduction="none",
+        )
+        bce_weights = sdf_boundary_weight(
+            target_distance,
+            boundary_weight=self.boundary_weight,
+            boundary_sigma=self.boundary_sigma,
+        )
+        bce = (raw_bce * bce_weights).sum() / bce_weights.sum().clamp_min(self.eps)
+
+        mask_prob = torch.sigmoid(mask_logits)
+        dice = _dice_loss(mask_prob, target_mask, eps=self.eps)
+        if self.distance_weight:
+            distance_logits = outputs["distance_logits"]
+            pred_distance = torch.tanh(distance_logits)
+            distance = F.smooth_l1_loss(pred_distance, target_distance)
+        else:
+            distance = mask_logits.new_zeros(())
+        tv = total_variation_loss(mask_prob, eps=self.eps)
+
+        target_boundary = sdf_boundary_target(
+            target_distance,
+            boundary_threshold=self.boundary_target_threshold,
+        )
+        positive = target_boundary.sum()
+        negative = target_boundary.numel() - positive
+        pos_weight = (negative / positive.clamp_min(1.0)).clamp(max=50.0)
+        raw_boundary = F.binary_cross_entropy_with_logits(
+            boundary_logits,
+            target_boundary,
+            pos_weight=pos_weight,
+            reduction="none",
+        )
+        boundary = raw_boundary.mean()
+
+        total = (
+            self.bce_weight * bce
+            + self.dice_weight * dice
+            + self.distance_weight * distance
+            + self.boundary_head_weight * boundary
+            + self.tv_weight * tv
+        )
+        weighted_distance = self.distance_weight * distance
+        weighted_boundary = self.boundary_head_weight * boundary
+        return {
+            "loss": total,
+            "bce": bce.detach(),
+            "raw_bce": raw_bce.mean().detach(),
+            "dice_loss": dice.detach(),
+            "distance_loss": distance.detach(),
+            "weighted_distance_loss": weighted_distance.detach(),
+            "distance_loss_fraction": (
+                weighted_distance / total.clamp_min(self.eps)
+            ).detach(),
+            "boundary_head_loss": boundary.detach(),
+            "weighted_boundary_head_loss": weighted_boundary.detach(),
+            "boundary_head_loss_fraction": (
+                weighted_boundary / total.clamp_min(self.eps)
+            ).detach(),
+            "boundary_target_fraction": target_boundary.mean().detach(),
+            "boundary_pos_weight": pos_weight.detach(),
             "tv_loss": tv.detach(),
             "boundary_weight_mean": bce_weights.mean().detach(),
         }

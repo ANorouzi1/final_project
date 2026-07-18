@@ -15,7 +15,7 @@ The structure follows Assignment 3:
 - `scripts/visualization/`: project diagnostic visualizations
 - `notebooks/`: notebook-first workflow
 - `docs/`: proposal and course feedback
-- `Logs/`: training logs
+- `Logs_france/`: France training logs
 - `Visualizations/`: generated figures
 - `Saved/`: optional/legacy checkpoints
 - `sdf_cache/`: generated signed-distance-field targets

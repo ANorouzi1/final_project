@@ -13,9 +13,10 @@ from src.losses.segmentation_losses import (
     DiceBCESeamLoss,
     DiceBCETVLoss,
     DiceBCEDistanceTVLoss,
+    ThreeHeadBoundaryDiceBCEDistanceTVLoss,
 )
 from src.metrics.segmentation_metrics import BoundaryIoU, MeanIoU, PixelIoU
-from src.models.unet import DualHeadUNet, FrameFieldUNet, MaskOnlyUNet
+from src.models.unet import DualHeadUNet, FrameFieldUNet, MaskOnlyUNet, ThreeHeadUNet
 from src.trainers.field_trainer import FieldSegmentationTrainer
 
 
@@ -253,6 +254,87 @@ ftw_dual_head_boundary_bce_w20_s012["criterion_args"]["distance_weight"] = 0.1
 ftw_dual_head_boundary_bce_w20_s012["criterion_args"]["boundary_sigma"] = 0.12
 ftw_dual_head_boundary_bce_w20_s012["trainer_config"] = _base_trainer(
     "ftw_dual_head_boundary_bce_w20_s012", epochs=50, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012 = deepcopy(
+    ftw_dual_head_boundary_bce_w20_s012
+)
+ftw_three_head_boundary_bce_w20_s012["name"] = "ftw_three_head_boundary_bce_w20_s012"
+ftw_three_head_boundary_bce_w20_s012["model_arch"] = ThreeHeadUNet
+ftw_three_head_boundary_bce_w20_s012[
+    "criterion"
+] = ThreeHeadBoundaryDiceBCEDistanceTVLoss
+ftw_three_head_boundary_bce_w20_s012["criterion_args"] = dict(
+    ftw_dual_head_boundary_bce_w20_s012["criterion_args"],
+    boundary_head_weight=0.3,
+    boundary_target_threshold=0.12,
+)
+ftw_three_head_boundary_bce_w20_s012["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012", epochs=50, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw1 = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012
+)
+ftw_three_head_boundary_bce_w20_s012_headw1[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw1"
+ftw_three_head_boundary_bce_w20_s012_headw1["criterion_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012["criterion_args"],
+    boundary_head_weight=1.0,
+)
+ftw_three_head_boundary_bce_w20_s012_headw1["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw1", epochs=50, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw2 = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012
+)
+ftw_three_head_boundary_bce_w20_s012_headw2[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw2"
+ftw_three_head_boundary_bce_w20_s012_headw2["criterion_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012["criterion_args"],
+    boundary_head_weight=2.0,
+)
+ftw_three_head_boundary_bce_w20_s012_headw2["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw2", epochs=50, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw2_other3 = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012_headw2
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw2_other3"
+ftw_three_head_boundary_bce_w20_s012_headw2_other3["data_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3["data_args"],
+    countries=["austria", "croatia", "denmark"],
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3", epochs=60, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf"
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["model_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["model_args"],
+    predict_distance=False,
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["criterion_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["criterion_args"],
+    distance_weight=0.0,
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf[
+    "trainer_config"
+] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf",
+    epochs=60,
+    eval_period=2,
 )
 
 ftw_dual_head_boundary_bce_w20_s012_d0 = deepcopy(

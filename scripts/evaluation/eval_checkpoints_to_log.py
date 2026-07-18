@@ -2,7 +2,7 @@
 
 For each config it builds the model from the config, loads the checkpoint, runs
 the config's metrics on the validation (heldout) loader, and appends one
-``epoch: 1 | eval_*: ...`` line to ``Logs/<config>.log`` — exactly the format
+``epoch: 1 | eval_*: ...`` line to ``Logs_france/<config>.log`` — exactly the format
 ``compare_experiments.py`` parses. So after running this, compare_experiments
 shows every model, even ones trained elsewhere (only the .pth was copied in).
 
@@ -100,15 +100,17 @@ def main():
                         "ftw_mask_baseline",
                         "ftw_dual_head",
                         "ftw_dual_head_boundary_bce",
+                        "ftw_dual_head_boundary_bce_w20_s012",
+                        "ftw_three_head_boundary_bce_w20_s012",
                         "ftw_dual_head_sdf_prediction",
                     ])
     ap.add_argument("--data-dir", default=None, help="override data dir (else config's)")
-    ap.add_argument("--countries", nargs="+", default=["austria"])
+    ap.add_argument("--countries", nargs="+", default=["france"])
     ap.add_argument("--split", choices=["val", "test"], default="test")
     ap.add_argument("--checkpoint", default=None,
                     help="explicit .pth (only valid with a single --configs)")
     ap.add_argument("--max-batches", type=int, default=20, help="0 = whole val set")
-    ap.add_argument("--log-dir", default="Logs")
+    ap.add_argument("--log-dir", default="Logs_france")
     args = ap.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

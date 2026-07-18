@@ -13,18 +13,6 @@ PAIR_RE = re.compile(rf"([A-Za-z_][A-Za-z_0-9]*): ({NUMBER_RE})")
 WEIGHT_RE = re.compile(r"_w(?P<weight>\d+(?:\.\d+)?)(?:_|$)")
 DISTANCE_WEIGHT_RE = re.compile(r"_d(?P<weight>\d+(?:\.\d+)?)(?:_|$)")
 
-DEFAULT_CONFIGS = [
-    "ftw_mask_baseline",
-    "ftw_seam",
-    "ftw_dual_head_boundary_bce",
-]
-DISCOVERY_PATTERNS = [
-    "ftw_dual_head_boundary_bce*.log",
-    "ftw_dual_head_boundary_both_w20_s012*.log",
-]
-DISCOVERY_PREFIXES = [
-    "ftw_dual_head_boundary_both_w20_s012",
-]
 DEFAULT_METRICS = [
     "pixel_iou",
     "miou",
@@ -37,6 +25,15 @@ DEFAULT_METRICS = [
     "raw_distance_loss",
     "weighted_distance_loss",
     "distance_loss_fraction",
+    "boundary_head_loss",
+    "weighted_boundary_head_loss",
+    "boundary_head_loss_fraction",
+    "boundary_target_fraction",
+]
+
+EXPECTED_CONFIGS = [
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3",
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf",
 ]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -73,18 +70,8 @@ def _parse_log_sessions(path):
     return sessions
 
 
-def _discover_boundary_configs(log_dir):
-    configs = set(DEFAULT_CONFIGS)
-    if field_segmentation is not None:
-        for name in dir(field_segmentation):
-            if any(name.startswith(prefix) for prefix in DISCOVERY_PREFIXES):
-                value = getattr(field_segmentation, name)
-                if isinstance(value, dict) and "criterion_args" in value:
-                    configs.add(name)
-    for pattern in DISCOVERY_PATTERNS:
-        for path in log_dir.glob(pattern):
-            configs.add(path.stem)
-    return sorted(configs, key=_config_sort_key)
+def _discover_log_configs(log_dir):
+    return sorted({path.stem for path in log_dir.glob("*.log")} | set(EXPECTED_CONFIGS))
 
 
 def _config_sort_key(config):
@@ -129,6 +116,10 @@ def _distance_weight(config):
 
 def _distance_boundary_weight(config):
     return _criterion_arg(config, "distance_boundary_weight")
+
+
+def _boundary_head_weight(config):
+    return _criterion_arg(config, "boundary_head_weight")
 
 
 def _criterion_arg(config, key):
@@ -213,9 +204,8 @@ def main():
         "--configs",
         nargs="+",
         help=(
-            "Explicit config names to compare. Defaults to ftw_mask_baseline, "
-            "ftw_seam, every ftw_dual_head_boundary_bce*.log, and every "
-            "ftw_dual_head_boundary_both_w20_s012*.log in --log-dir."
+            "Explicit config names to compare. Defaults to every *.log file "
+            "in --log-dir, ordered by filename."
         ),
     )
     parser.add_argument(
@@ -242,7 +232,7 @@ def main():
     args = parser.parse_args()
 
     log_dir = Path(args.log_dir)
-    configs = args.configs or _discover_boundary_configs(log_dir)
+    configs = args.configs or _discover_log_configs(log_dir)
     sort_metric = args.select.removeprefix("eval_")
     epoch_column = (
         f"best_epoch_by_{sort_metric}"
@@ -254,6 +244,7 @@ def main():
         "boundary_weight",
         "distance_weight",
         "distance_boundary_weight",
+        "boundary_head_weight",
         epoch_column,
         *DEFAULT_METRICS,
     ]
@@ -268,6 +259,7 @@ def main():
                     "boundary_weight": _boundary_weight(config),
                     "distance_weight": _distance_weight(config),
                     "distance_boundary_weight": _distance_boundary_weight(config),
+                    "boundary_head_weight": _boundary_head_weight(config),
                     "status": "missing log",
                 }
             )
@@ -284,6 +276,7 @@ def main():
             "boundary_weight": _boundary_weight(config),
             "distance_weight": _distance_weight(config),
             "distance_boundary_weight": _distance_boundary_weight(config),
+            "boundary_head_weight": _boundary_head_weight(config),
             epoch_column: selected_row["epoch"],
         }
         for metric in DEFAULT_METRICS:
