@@ -221,7 +221,7 @@ def main():
     parser.add_argument(
         "--select",
         default="boundary_iou",
-        help="Metric used for best-row selection and sorting, with or without eval_.",
+        help="Metric used for best-row selection, with or without eval_.",
     )
     parser.add_argument(
         "--selection",
@@ -290,14 +290,7 @@ def main():
             summary_row[metric] = selected_row.get(_eval_key(metric))
         summary_rows.append(summary_row)
 
-    summary_rows.sort(
-        key=lambda row: (
-            row.get(sort_metric, float("-inf"))
-            if row.get(sort_metric) is not None
-            else float("-inf")
-        ),
-        reverse=True,
-    )
+    summary_rows.sort(key=lambda row: row.get("config", ""))
 
     columns = [
         column
