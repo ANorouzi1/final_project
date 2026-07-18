@@ -1,0 +1,263 @@
+2026-07-17 22:36:22,489:INFO:DualHeadUNet(
+  (inc): DoubleConv(
+    (block): Sequential(
+      (0): Conv2d(8, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (down1): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down2): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down3): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down4): Down(
+    (block): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (block): Sequential(
+          (0): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (up1): Up(
+    (up): ConvTranspose2d(512, 256, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up2): Up(
+    (up): ConvTranspose2d(256, 128, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up3): Up(
+    (up): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up4): Up(
+    (up): ConvTranspose2d(64, 32, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (block): Sequential(
+        (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (mask_head): Conv2d(32, 1, kernel_size=(1, 1), stride=(1, 1))
+  (distance_head): Sequential(
+    (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(32, 1, kernel_size=(1, 1), stride=(1, 1))
+  )
+)
+Trainable parameters by tensor:
+  inc.block.0.weight: 2,304
+  inc.block.1.weight: 32
+  inc.block.1.bias: 32
+  inc.block.3.weight: 9,216
+  inc.block.4.weight: 32
+  inc.block.4.bias: 32
+  down1.block.1.block.0.weight: 18,432
+  down1.block.1.block.1.weight: 64
+  down1.block.1.block.1.bias: 64
+  down1.block.1.block.3.weight: 36,864
+  down1.block.1.block.4.weight: 64
+  down1.block.1.block.4.bias: 64
+  down2.block.1.block.0.weight: 73,728
+  down2.block.1.block.1.weight: 128
+  down2.block.1.block.1.bias: 128
+  down2.block.1.block.3.weight: 147,456
+  down2.block.1.block.4.weight: 128
+  down2.block.1.block.4.bias: 128
+  down3.block.1.block.0.weight: 294,912
+  down3.block.1.block.1.weight: 256
+  down3.block.1.block.1.bias: 256
+  down3.block.1.block.3.weight: 589,824
+  down3.block.1.block.4.weight: 256
+  down3.block.1.block.4.bias: 256
+  down4.block.1.block.0.weight: 1,179,648
+  down4.block.1.block.1.weight: 512
+  down4.block.1.block.1.bias: 512
+  down4.block.1.block.3.weight: 2,359,296
+  down4.block.1.block.4.weight: 512
+  down4.block.1.block.4.bias: 512
+  up1.up.weight: 524,288
+  up1.up.bias: 256
+  up1.conv.block.0.weight: 1,179,648
+  up1.conv.block.1.weight: 256
+  up1.conv.block.1.bias: 256
+  up1.conv.block.3.weight: 589,824
+  up1.conv.block.4.weight: 256
+  up1.conv.block.4.bias: 256
+  up2.up.weight: 131,072
+  up2.up.bias: 128
+  up2.conv.block.0.weight: 294,912
+  up2.conv.block.1.weight: 128
+  up2.conv.block.1.bias: 128
+  up2.conv.block.3.weight: 147,456
+  up2.conv.block.4.weight: 128
+  up2.conv.block.4.bias: 128
+  up3.up.weight: 32,768
+  up3.up.bias: 64
+  up3.conv.block.0.weight: 73,728
+  up3.conv.block.1.weight: 64
+  up3.conv.block.1.bias: 64
+  up3.conv.block.3.weight: 36,864
+  up3.conv.block.4.weight: 64
+  up3.conv.block.4.bias: 64
+  up4.up.weight: 8,192
+  up4.up.bias: 32
+  up4.conv.block.0.weight: 18,432
+  up4.conv.block.1.weight: 32
+  up4.conv.block.1.bias: 32
+  up4.conv.block.3.weight: 9,216
+  up4.conv.block.4.weight: 32
+  up4.conv.block.4.bias: 32
+  mask_head.weight: 32
+  mask_head.bias: 1
+  distance_head.0.weight: 9,216
+  distance_head.1.weight: 32
+  distance_head.1.bias: 32
+  distance_head.3.weight: 32
+  distance_head.3.bias: 1
+Total trainable parameters: 7,773,794
+2026-07-17 22:36:22,492:INFO:------------ New Training Session ------------
+2026-07-17 22:44:43,874:INFO:epoch: 1 | loss: 0.8975 | bce: 0.3877 | raw_bce: 0.4313 | dice_loss: 0.5071 | distance_loss: 0.0277 | raw_distance_loss: 0.1246 | weighted_distance_loss: 0.0028 | distance_loss_fraction: 0.0030 | tv_loss: 2172.5255 | boundary_weight_mean: 6.4153 | distance_boundary_weight_mean: 6.4153
+2026-07-17 22:48:00,286:INFO:epoch: 2 | loss: 0.7796 | bce: 0.3433 | raw_bce: 0.3298 | dice_loss: 0.4342 | distance_loss: 0.0208 | raw_distance_loss: 0.0948 | weighted_distance_loss: 0.0021 | distance_loss_fraction: 0.0026 | tv_loss: 2172.4982 | boundary_weight_mean: 6.4069 | distance_boundary_weight_mean: 6.4069 | eval_loss: 0.8756 | eval_bce: 0.4893 | eval_raw_bce: 0.3271 | eval_dice_loss: 0.3830 | eval_distance_loss: 0.0327 | eval_raw_distance_loss: 0.0889 | eval_weighted_distance_loss: 0.0033 | eval_distance_loss_fraction: 0.0035 | eval_tv_loss: 2220.1025 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.6453 | eval_miou: 0.5909 | eval_boundary_iou: 0.2540
+2026-07-17 22:50:22,398:INFO:epoch: 3 | loss: 0.7395 | bce: 0.3317 | raw_bce: 0.3115 | dice_loss: 0.4059 | distance_loss: 0.0183 | raw_distance_loss: 0.0843 | weighted_distance_loss: 0.0018 | distance_loss_fraction: 0.0025 | tv_loss: 2214.4039 | boundary_weight_mean: 6.4006 | distance_boundary_weight_mean: 6.4006
+2026-07-17 22:52:51,851:INFO:epoch: 4 | loss: 0.7178 | bce: 0.3238 | raw_bce: 0.2999 | dice_loss: 0.3923 | distance_loss: 0.0168 | raw_distance_loss: 0.0777 | weighted_distance_loss: 0.0017 | distance_loss_fraction: 0.0023 | tv_loss: 2236.0351 | boundary_weight_mean: 6.4121 | distance_boundary_weight_mean: 6.4121 | eval_loss: 0.8127 | eval_bce: 0.4562 | eval_raw_bce: 0.3143 | eval_dice_loss: 0.3534 | eval_distance_loss: 0.0305 | eval_raw_distance_loss: 0.0853 | eval_weighted_distance_loss: 0.0031 | eval_distance_loss_fraction: 0.0034 | eval_tv_loss: 2220.7833 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.6726 | eval_miou: 0.6245 | eval_boundary_iou: 0.2757
+2026-07-17 22:55:14,053:INFO:epoch: 5 | loss: 0.7033 | bce: 0.3185 | raw_bce: 0.2917 | dice_loss: 0.3832 | distance_loss: 0.0163 | raw_distance_loss: 0.0747 | weighted_distance_loss: 0.0016 | distance_loss_fraction: 0.0023 | tv_loss: 2257.0024 | boundary_weight_mean: 6.3911 | distance_boundary_weight_mean: 6.3911
+2026-07-17 22:57:43,541:INFO:epoch: 6 | loss: 0.6959 | bce: 0.3158 | raw_bce: 0.2865 | dice_loss: 0.3785 | distance_loss: 0.0158 | raw_distance_loss: 0.0725 | weighted_distance_loss: 0.0016 | distance_loss_fraction: 0.0023 | tv_loss: 2255.8660 | boundary_weight_mean: 6.4002 | distance_boundary_weight_mean: 6.4002 | eval_loss: 0.8055 | eval_bce: 0.4384 | eval_raw_bce: 0.2955 | eval_dice_loss: 0.3643 | eval_distance_loss: 0.0290 | eval_raw_distance_loss: 0.0861 | eval_weighted_distance_loss: 0.0029 | eval_distance_loss_fraction: 0.0033 | eval_tv_loss: 2308.3956 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.6702 | eval_miou: 0.6205 | eval_boundary_iou: 0.2828
+2026-07-17 23:00:05,794:INFO:epoch: 7 | loss: 0.6848 | bce: 0.3095 | raw_bce: 0.2794 | dice_loss: 0.3738 | distance_loss: 0.0151 | raw_distance_loss: 0.0697 | weighted_distance_loss: 0.0015 | distance_loss_fraction: 0.0022 | tv_loss: 2272.2210 | boundary_weight_mean: 6.4117 | distance_boundary_weight_mean: 6.4117
+2026-07-17 23:02:34,624:INFO:epoch: 8 | loss: 0.6792 | bce: 0.3091 | raw_bce: 0.2792 | dice_loss: 0.3686 | distance_loss: 0.0150 | raw_distance_loss: 0.0690 | weighted_distance_loss: 0.0015 | distance_loss_fraction: 0.0022 | tv_loss: 2280.2388 | boundary_weight_mean: 6.4001 | distance_boundary_weight_mean: 6.4001 | eval_loss: 0.7845 | eval_bce: 0.4502 | eval_raw_bce: 0.3012 | eval_dice_loss: 0.3316 | eval_distance_loss: 0.0275 | eval_raw_distance_loss: 0.0796 | eval_weighted_distance_loss: 0.0027 | eval_distance_loss_fraction: 0.0032 | eval_tv_loss: 2296.0894 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.6902 | eval_miou: 0.6428 | eval_boundary_iou: 0.3087
+2026-07-17 23:04:56,726:INFO:epoch: 9 | loss: 0.6753 | bce: 0.3063 | raw_bce: 0.2741 | dice_loss: 0.3675 | distance_loss: 0.0147 | raw_distance_loss: 0.0672 | weighted_distance_loss: 0.0015 | distance_loss_fraction: 0.0022 | tv_loss: 2294.3849 | boundary_weight_mean: 6.3853 | distance_boundary_weight_mean: 6.3853
+2026-07-17 23:07:25,805:INFO:epoch: 10 | loss: 0.6704 | bce: 0.3042 | raw_bce: 0.2705 | dice_loss: 0.3647 | distance_loss: 0.0144 | raw_distance_loss: 0.0661 | weighted_distance_loss: 0.0014 | distance_loss_fraction: 0.0021 | tv_loss: 2296.9741 | boundary_weight_mean: 6.3904 | distance_boundary_weight_mean: 6.3904 | eval_loss: 0.7964 | eval_bce: 0.4614 | eval_raw_bce: 0.2962 | eval_dice_loss: 0.3324 | eval_distance_loss: 0.0262 | eval_raw_distance_loss: 0.0641 | eval_weighted_distance_loss: 0.0026 | eval_distance_loss_fraction: 0.0031 | eval_tv_loss: 2345.1997 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.6874 | eval_miou: 0.6396 | eval_boundary_iou: 0.3142
+2026-07-17 23:09:47,579:INFO:epoch: 11 | loss: 0.6677 | bce: 0.3037 | raw_bce: 0.2685 | dice_loss: 0.3625 | distance_loss: 0.0143 | raw_distance_loss: 0.0653 | weighted_distance_loss: 0.0014 | distance_loss_fraction: 0.0021 | tv_loss: 2303.4249 | boundary_weight_mean: 6.3760 | distance_boundary_weight_mean: 6.3760
+2026-07-17 23:12:16,174:INFO:epoch: 12 | loss: 0.6654 | bce: 0.3024 | raw_bce: 0.2685 | dice_loss: 0.3615 | distance_loss: 0.0142 | raw_distance_loss: 0.0649 | weighted_distance_loss: 0.0014 | distance_loss_fraction: 0.0021 | tv_loss: 2315.5702 | boundary_weight_mean: 6.3704 | distance_boundary_weight_mean: 6.3704 | eval_loss: 0.7547 | eval_bce: 0.4235 | eval_raw_bce: 0.2924 | eval_dice_loss: 0.3289 | eval_distance_loss: 0.0240 | eval_raw_distance_loss: 0.0691 | eval_weighted_distance_loss: 0.0024 | eval_distance_loss_fraction: 0.0030 | eval_tv_loss: 2436.5075 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.6944 | eval_miou: 0.6486 | eval_boundary_iou: 0.3184
+2026-07-17 23:14:38,311:INFO:epoch: 13 | loss: 0.6596 | bce: 0.2997 | raw_bce: 0.2652 | dice_loss: 0.3585 | distance_loss: 0.0139 | raw_distance_loss: 0.0637 | weighted_distance_loss: 0.0014 | distance_loss_fraction: 0.0021 | tv_loss: 2316.6985 | boundary_weight_mean: 6.3972 | distance_boundary_weight_mean: 6.3972
+2026-07-17 23:17:07,750:INFO:epoch: 14 | loss: 0.6551 | bce: 0.2960 | raw_bce: 0.2621 | dice_loss: 0.3577 | distance_loss: 0.0137 | raw_distance_loss: 0.0632 | weighted_distance_loss: 0.0014 | distance_loss_fraction: 0.0021 | tv_loss: 2316.5012 | boundary_weight_mean: 6.4288 | distance_boundary_weight_mean: 6.4288 | eval_loss: 0.7547 | eval_bce: 0.4214 | eval_raw_bce: 0.2768 | eval_dice_loss: 0.3308 | eval_distance_loss: 0.0250 | eval_raw_distance_loss: 0.0734 | eval_weighted_distance_loss: 0.0025 | eval_distance_loss_fraction: 0.0031 | eval_tv_loss: 2429.3171 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.6949 | eval_miou: 0.6480 | eval_boundary_iou: 0.3200
+2026-07-17 23:19:30,256:INFO:epoch: 15 | loss: 0.6553 | bce: 0.2971 | raw_bce: 0.2626 | dice_loss: 0.3568 | distance_loss: 0.0138 | raw_distance_loss: 0.0636 | weighted_distance_loss: 0.0014 | distance_loss_fraction: 0.0021 | tv_loss: 2329.0022 | boundary_weight_mean: 6.4079 | distance_boundary_weight_mean: 6.4079
+2026-07-17 23:21:59,309:INFO:epoch: 16 | loss: 0.6482 | bce: 0.2943 | raw_bce: 0.2586 | dice_loss: 0.3526 | distance_loss: 0.0134 | raw_distance_loss: 0.0617 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0021 | tv_loss: 2329.6761 | boundary_weight_mean: 6.4075 | distance_boundary_weight_mean: 6.4075 | eval_loss: 0.7449 | eval_bce: 0.4194 | eval_raw_bce: 0.2750 | eval_dice_loss: 0.3232 | eval_distance_loss: 0.0233 | eval_raw_distance_loss: 0.0666 | eval_weighted_distance_loss: 0.0023 | eval_distance_loss_fraction: 0.0029 | eval_tv_loss: 2368.8201 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7028 | eval_miou: 0.6554 | eval_boundary_iou: 0.3280
+2026-07-17 23:24:21,564:INFO:epoch: 17 | loss: 0.6451 | bce: 0.2919 | raw_bce: 0.2561 | dice_loss: 0.3519 | distance_loss: 0.0132 | raw_distance_loss: 0.0610 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0020 | tv_loss: 2324.8597 | boundary_weight_mean: 6.4132 | distance_boundary_weight_mean: 6.4132
+2026-07-17 23:26:50,420:INFO:epoch: 18 | loss: 0.6447 | bce: 0.2926 | raw_bce: 0.2543 | dice_loss: 0.3508 | distance_loss: 0.0133 | raw_distance_loss: 0.0608 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0021 | tv_loss: 2336.3181 | boundary_weight_mean: 6.4117 | distance_boundary_weight_mean: 6.4117 | eval_loss: 0.7527 | eval_bce: 0.4331 | eval_raw_bce: 0.2724 | eval_dice_loss: 0.3173 | eval_distance_loss: 0.0230 | eval_raw_distance_loss: 0.0617 | eval_weighted_distance_loss: 0.0023 | eval_distance_loss_fraction: 0.0029 | eval_tv_loss: 2331.2253 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7052 | eval_miou: 0.6571 | eval_boundary_iou: 0.3298
+2026-07-17 23:29:12,271:INFO:epoch: 19 | loss: 0.6414 | bce: 0.2903 | raw_bce: 0.2532 | dice_loss: 0.3498 | distance_loss: 0.0130 | raw_distance_loss: 0.0602 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0020 | tv_loss: 2338.4403 | boundary_weight_mean: 6.4190 | distance_boundary_weight_mean: 6.4190
+2026-07-17 23:31:41,173:INFO:epoch: 20 | loss: 0.6385 | bce: 0.2908 | raw_bce: 0.2504 | dice_loss: 0.3464 | distance_loss: 0.0129 | raw_distance_loss: 0.0590 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0020 | tv_loss: 2339.0990 | boundary_weight_mean: 6.3964 | distance_boundary_weight_mean: 6.3964 | eval_loss: 0.7436 | eval_bce: 0.4217 | eval_raw_bce: 0.2639 | eval_dice_loss: 0.3196 | eval_distance_loss: 0.0228 | eval_raw_distance_loss: 0.0602 | eval_weighted_distance_loss: 0.0023 | eval_distance_loss_fraction: 0.0029 | eval_tv_loss: 2366.9069 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7080 | eval_miou: 0.6675 | eval_boundary_iou: 0.3474
+2026-07-17 23:34:03,487:INFO:epoch: 21 | loss: 0.6377 | bce: 0.2896 | raw_bce: 0.2503 | dice_loss: 0.3468 | distance_loss: 0.0129 | raw_distance_loss: 0.0591 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0020 | tv_loss: 2346.4382 | boundary_weight_mean: 6.3958 | distance_boundary_weight_mean: 6.3958
+2026-07-17 23:36:32,231:INFO:epoch: 22 | loss: 0.6352 | bce: 0.2888 | raw_bce: 0.2489 | dice_loss: 0.3452 | distance_loss: 0.0128 | raw_distance_loss: 0.0588 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0020 | tv_loss: 2345.5628 | boundary_weight_mean: 6.3899 | distance_boundary_weight_mean: 6.3899 | eval_loss: 0.7294 | eval_bce: 0.4110 | eval_raw_bce: 0.2719 | eval_dice_loss: 0.3161 | eval_distance_loss: 0.0228 | eval_raw_distance_loss: 0.0644 | eval_weighted_distance_loss: 0.0023 | eval_distance_loss_fraction: 0.0029 | eval_tv_loss: 2468.8627 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7098 | eval_miou: 0.6607 | eval_boundary_iou: 0.3338
+2026-07-17 23:38:54,275:INFO:epoch: 23 | loss: 0.6309 | bce: 0.2860 | raw_bce: 0.2463 | dice_loss: 0.3437 | distance_loss: 0.0126 | raw_distance_loss: 0.0582 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0020 | tv_loss: 2344.3357 | boundary_weight_mean: 6.4196 | distance_boundary_weight_mean: 6.4196
+2026-07-17 23:41:23,626:INFO:epoch: 24 | loss: 0.6296 | bce: 0.2867 | raw_bce: 0.2459 | dice_loss: 0.3417 | distance_loss: 0.0126 | raw_distance_loss: 0.0580 | weighted_distance_loss: 0.0013 | distance_loss_fraction: 0.0020 | tv_loss: 2349.1829 | boundary_weight_mean: 6.4019 | distance_boundary_weight_mean: 6.4019 | eval_loss: 0.7199 | eval_bce: 0.4096 | eval_raw_bce: 0.2597 | eval_dice_loss: 0.3081 | eval_distance_loss: 0.0220 | eval_raw_distance_loss: 0.0609 | eval_weighted_distance_loss: 0.0022 | eval_distance_loss_fraction: 0.0029 | eval_tv_loss: 2448.4245 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7156 | eval_miou: 0.6753 | eval_boundary_iou: 0.3531
+2026-07-17 23:43:45,500:INFO:epoch: 25 | loss: 0.6278 | bce: 0.2855 | raw_bce: 0.2434 | dice_loss: 0.3411 | distance_loss: 0.0125 | raw_distance_loss: 0.0572 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2352.5987 | boundary_weight_mean: 6.3944 | distance_boundary_weight_mean: 6.3944
+2026-07-17 23:46:14,484:INFO:epoch: 26 | loss: 0.6225 | bce: 0.2826 | raw_bce: 0.2412 | dice_loss: 0.3387 | distance_loss: 0.0123 | raw_distance_loss: 0.0565 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2346.1061 | boundary_weight_mean: 6.4304 | distance_boundary_weight_mean: 6.4304 | eval_loss: 0.7142 | eval_bce: 0.4027 | eval_raw_bce: 0.2508 | eval_dice_loss: 0.3093 | eval_distance_loss: 0.0214 | eval_raw_distance_loss: 0.0606 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2460.6562 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7194 | eval_miou: 0.6773 | eval_boundary_iou: 0.3558
+2026-07-17 23:48:36,742:INFO:epoch: 27 | loss: 0.6252 | bce: 0.2848 | raw_bce: 0.2410 | dice_loss: 0.3391 | distance_loss: 0.0124 | raw_distance_loss: 0.0568 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2355.0261 | boundary_weight_mean: 6.3895 | distance_boundary_weight_mean: 6.3895
+2026-07-17 23:51:05,654:INFO:epoch: 28 | loss: 0.6226 | bce: 0.2835 | raw_bce: 0.2399 | dice_loss: 0.3379 | distance_loss: 0.0123 | raw_distance_loss: 0.0560 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2357.2387 | boundary_weight_mean: 6.4019 | distance_boundary_weight_mean: 6.4019 | eval_loss: 0.7112 | eval_bce: 0.4034 | eval_raw_bce: 0.2538 | eval_dice_loss: 0.3057 | eval_distance_loss: 0.0212 | eval_raw_distance_loss: 0.0604 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2471.0639 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7207 | eval_miou: 0.6790 | eval_boundary_iou: 0.3558
+2026-07-17 23:53:27,788:INFO:epoch: 29 | loss: 0.6199 | bce: 0.2821 | raw_bce: 0.2380 | dice_loss: 0.3366 | distance_loss: 0.0122 | raw_distance_loss: 0.0561 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2362.0042 | boundary_weight_mean: 6.4004 | distance_boundary_weight_mean: 6.4004
+2026-07-17 23:55:57,397:INFO:epoch: 30 | loss: 0.6203 | bce: 0.2823 | raw_bce: 0.2376 | dice_loss: 0.3369 | distance_loss: 0.0122 | raw_distance_loss: 0.0558 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2356.3157 | boundary_weight_mean: 6.3954 | distance_boundary_weight_mean: 6.3954 | eval_loss: 0.7108 | eval_bce: 0.4017 | eval_raw_bce: 0.2493 | eval_dice_loss: 0.3069 | eval_distance_loss: 0.0213 | eval_raw_distance_loss: 0.0609 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2443.9712 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7215 | eval_miou: 0.6765 | eval_boundary_iou: 0.3540
+2026-07-17 23:58:20,034:INFO:epoch: 31 | loss: 0.6179 | bce: 0.2812 | raw_bce: 0.2360 | dice_loss: 0.3354 | distance_loss: 0.0121 | raw_distance_loss: 0.0553 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2359.0550 | boundary_weight_mean: 6.3919 | distance_boundary_weight_mean: 6.3919
+2026-07-18 00:00:49,662:INFO:epoch: 32 | loss: 0.6172 | bce: 0.2807 | raw_bce: 0.2349 | dice_loss: 0.3353 | distance_loss: 0.0121 | raw_distance_loss: 0.0554 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2357.8562 | boundary_weight_mean: 6.3927 | distance_boundary_weight_mean: 6.3927 | eval_loss: 0.7063 | eval_bce: 0.3991 | eval_raw_bce: 0.2476 | eval_dice_loss: 0.3051 | eval_distance_loss: 0.0210 | eval_raw_distance_loss: 0.0599 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2434.4687 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7234 | eval_miou: 0.6786 | eval_boundary_iou: 0.3511
+2026-07-18 00:03:12,099:INFO:epoch: 33 | loss: 0.6161 | bce: 0.2803 | raw_bce: 0.2345 | dice_loss: 0.3345 | distance_loss: 0.0121 | raw_distance_loss: 0.0554 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2363.5310 | boundary_weight_mean: 6.4026 | distance_boundary_weight_mean: 6.4026
+2026-07-18 00:05:41,847:INFO:epoch: 34 | loss: 0.6136 | bce: 0.2789 | raw_bce: 0.2320 | dice_loss: 0.3334 | distance_loss: 0.0119 | raw_distance_loss: 0.0547 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2354.0566 | boundary_weight_mean: 6.4079 | distance_boundary_weight_mean: 6.4079 | eval_loss: 0.7095 | eval_bce: 0.4029 | eval_raw_bce: 0.2541 | eval_dice_loss: 0.3044 | eval_distance_loss: 0.0211 | eval_raw_distance_loss: 0.0594 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2435.5588 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7213 | eval_miou: 0.6767 | eval_boundary_iou: 0.3516
+2026-07-18 00:08:04,262:INFO:epoch: 35 | loss: 0.6136 | bce: 0.2790 | raw_bce: 0.2325 | dice_loss: 0.3334 | distance_loss: 0.0119 | raw_distance_loss: 0.0547 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2360.3803 | boundary_weight_mean: 6.4050 | distance_boundary_weight_mean: 6.4050
+2026-07-18 00:10:32,969:INFO:epoch: 36 | loss: 0.6116 | bce: 0.2788 | raw_bce: 0.2321 | dice_loss: 0.3316 | distance_loss: 0.0119 | raw_distance_loss: 0.0545 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2362.5826 | boundary_weight_mean: 6.4066 | distance_boundary_weight_mean: 6.4066 | eval_loss: 0.7029 | eval_bce: 0.3960 | eval_raw_bce: 0.2436 | eval_dice_loss: 0.3049 | eval_distance_loss: 0.0207 | eval_raw_distance_loss: 0.0593 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2489.2269 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7257 | eval_miou: 0.6773 | eval_boundary_iou: 0.3536
+2026-07-18 00:12:54,972:INFO:epoch: 37 | loss: 0.6124 | bce: 0.2791 | raw_bce: 0.2306 | dice_loss: 0.3322 | distance_loss: 0.0118 | raw_distance_loss: 0.0543 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2366.2800 | boundary_weight_mean: 6.4012 | distance_boundary_weight_mean: 6.4012
+2026-07-18 00:15:23,367:INFO:epoch: 38 | loss: 0.6114 | bce: 0.2785 | raw_bce: 0.2311 | dice_loss: 0.3318 | distance_loss: 0.0119 | raw_distance_loss: 0.0544 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2356.2395 | boundary_weight_mean: 6.4075 | distance_boundary_weight_mean: 6.4075 | eval_loss: 0.7049 | eval_bce: 0.3992 | eval_raw_bce: 0.2453 | eval_dice_loss: 0.3036 | eval_distance_loss: 0.0208 | eval_raw_distance_loss: 0.0589 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2459.1391 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7251 | eval_miou: 0.6777 | eval_boundary_iou: 0.3552
+2026-07-18 00:17:45,613:INFO:epoch: 39 | loss: 0.6125 | bce: 0.2799 | raw_bce: 0.2311 | dice_loss: 0.3314 | distance_loss: 0.0119 | raw_distance_loss: 0.0545 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2364.6144 | boundary_weight_mean: 6.3876 | distance_boundary_weight_mean: 6.3876
+2026-07-18 00:20:14,672:INFO:epoch: 40 | loss: 0.6113 | bce: 0.2786 | raw_bce: 0.2298 | dice_loss: 0.3315 | distance_loss: 0.0119 | raw_distance_loss: 0.0543 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2357.1765 | boundary_weight_mean: 6.3979 | distance_boundary_weight_mean: 6.3979 | eval_loss: 0.7034 | eval_bce: 0.3963 | eval_raw_bce: 0.2422 | eval_dice_loss: 0.3050 | eval_distance_loss: 0.0210 | eval_raw_distance_loss: 0.0608 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2468.6872 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7261 | eval_miou: 0.6781 | eval_boundary_iou: 0.3555
+2026-07-18 00:22:37,007:INFO:epoch: 41 | loss: 0.6105 | bce: 0.2783 | raw_bce: 0.2305 | dice_loss: 0.3310 | distance_loss: 0.0118 | raw_distance_loss: 0.0542 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2360.5067 | boundary_weight_mean: 6.4100 | distance_boundary_weight_mean: 6.4100
+2026-07-18 00:25:06,106:INFO:epoch: 42 | loss: 0.6099 | bce: 0.2773 | raw_bce: 0.2300 | dice_loss: 0.3314 | distance_loss: 0.0118 | raw_distance_loss: 0.0542 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2355.8199 | boundary_weight_mean: 6.4168 | distance_boundary_weight_mean: 6.4168 | eval_loss: 0.7038 | eval_bce: 0.3980 | eval_raw_bce: 0.2452 | eval_dice_loss: 0.3037 | eval_distance_loss: 0.0209 | eval_raw_distance_loss: 0.0598 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2478.1677 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7255 | eval_miou: 0.6767 | eval_boundary_iou: 0.3542
+2026-07-18 00:27:28,438:INFO:epoch: 43 | loss: 0.6113 | bce: 0.2784 | raw_bce: 0.2306 | dice_loss: 0.3317 | distance_loss: 0.0118 | raw_distance_loss: 0.0542 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2359.3949 | boundary_weight_mean: 6.4103 | distance_boundary_weight_mean: 6.4103
+2026-07-18 00:29:57,214:INFO:epoch: 44 | loss: 0.6108 | bce: 0.2782 | raw_bce: 0.2308 | dice_loss: 0.3314 | distance_loss: 0.0118 | raw_distance_loss: 0.0541 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2359.7419 | boundary_weight_mean: 6.4173 | distance_boundary_weight_mean: 6.4173 | eval_loss: 0.7041 | eval_bce: 0.3983 | eval_raw_bce: 0.2456 | eval_dice_loss: 0.3037 | eval_distance_loss: 0.0208 | eval_raw_distance_loss: 0.0598 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2490.2069 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7254 | eval_miou: 0.6759 | eval_boundary_iou: 0.3534
+2026-07-18 00:32:19,683:INFO:epoch: 45 | loss: 0.6107 | bce: 0.2790 | raw_bce: 0.2304 | dice_loss: 0.3305 | distance_loss: 0.0118 | raw_distance_loss: 0.0538 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2363.1325 | boundary_weight_mean: 6.4031 | distance_boundary_weight_mean: 6.4031
+2026-07-18 00:34:48,590:INFO:epoch: 46 | loss: 0.6122 | bce: 0.2790 | raw_bce: 0.2315 | dice_loss: 0.3320 | distance_loss: 0.0119 | raw_distance_loss: 0.0543 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2365.7754 | boundary_weight_mean: 6.3947 | distance_boundary_weight_mean: 6.3947 | eval_loss: 0.7036 | eval_bce: 0.3991 | eval_raw_bce: 0.2454 | eval_dice_loss: 0.3024 | eval_distance_loss: 0.0209 | eval_raw_distance_loss: 0.0599 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2466.2745 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7262 | eval_miou: 0.6795 | eval_boundary_iou: 0.3557
+2026-07-18 00:37:10,975:INFO:epoch: 47 | loss: 0.6120 | bce: 0.2785 | raw_bce: 0.2313 | dice_loss: 0.3323 | distance_loss: 0.0119 | raw_distance_loss: 0.0546 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2365.4553 | boundary_weight_mean: 6.4024 | distance_boundary_weight_mean: 6.4024
+2026-07-18 00:39:39,886:INFO:epoch: 48 | loss: 0.6112 | bce: 0.2784 | raw_bce: 0.2307 | dice_loss: 0.3317 | distance_loss: 0.0118 | raw_distance_loss: 0.0540 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2361.1667 | boundary_weight_mean: 6.4114 | distance_boundary_weight_mean: 6.4114 | eval_loss: 0.7013 | eval_bce: 0.3970 | eval_raw_bce: 0.2464 | eval_dice_loss: 0.3022 | eval_distance_loss: 0.0207 | eval_raw_distance_loss: 0.0588 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2506.0952 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7266 | eval_miou: 0.6784 | eval_boundary_iou: 0.3544
+2026-07-18 00:42:02,326:INFO:epoch: 49 | loss: 0.6136 | bce: 0.2795 | raw_bce: 0.2315 | dice_loss: 0.3329 | distance_loss: 0.0119 | raw_distance_loss: 0.0543 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2364.3278 | boundary_weight_mean: 6.3967 | distance_boundary_weight_mean: 6.3967
+2026-07-18 00:44:31,113:INFO:epoch: 50 | loss: 0.6145 | bce: 0.2802 | raw_bce: 0.2326 | dice_loss: 0.3331 | distance_loss: 0.0119 | raw_distance_loss: 0.0544 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2364.5996 | boundary_weight_mean: 6.3930 | distance_boundary_weight_mean: 6.3930 | eval_loss: 0.7049 | eval_bce: 0.3989 | eval_raw_bce: 0.2483 | eval_dice_loss: 0.3039 | eval_distance_loss: 0.0213 | eval_raw_distance_loss: 0.0603 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2481.3312 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7252 | eval_miou: 0.6731 | eval_boundary_iou: 0.3483
+2026-07-18 00:46:53,480:INFO:epoch: 51 | loss: 0.6147 | bce: 0.2795 | raw_bce: 0.2318 | dice_loss: 0.3340 | distance_loss: 0.0119 | raw_distance_loss: 0.0543 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2361.0809 | boundary_weight_mean: 6.4017 | distance_boundary_weight_mean: 6.4017
+2026-07-18 00:49:22,933:INFO:epoch: 52 | loss: 0.6148 | bce: 0.2800 | raw_bce: 0.2333 | dice_loss: 0.3336 | distance_loss: 0.0120 | raw_distance_loss: 0.0547 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2356.5278 | boundary_weight_mean: 6.4089 | distance_boundary_weight_mean: 6.4089 | eval_loss: 0.7029 | eval_bce: 0.3959 | eval_raw_bce: 0.2429 | eval_dice_loss: 0.3049 | eval_distance_loss: 0.0209 | eval_raw_distance_loss: 0.0605 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2466.4555 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7265 | eval_miou: 0.6811 | eval_boundary_iou: 0.3580
+2026-07-18 00:51:45,396:INFO:epoch: 53 | loss: 0.6158 | bce: 0.2801 | raw_bce: 0.2345 | dice_loss: 0.3346 | distance_loss: 0.0120 | raw_distance_loss: 0.0548 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2363.7773 | boundary_weight_mean: 6.4186 | distance_boundary_weight_mean: 6.4186
+2026-07-18 00:54:14,165:INFO:epoch: 54 | loss: 0.6148 | bce: 0.2801 | raw_bce: 0.2326 | dice_loss: 0.3335 | distance_loss: 0.0119 | raw_distance_loss: 0.0545 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2360.4452 | boundary_weight_mean: 6.4034 | distance_boundary_weight_mean: 6.4034 | eval_loss: 0.7089 | eval_bce: 0.3984 | eval_raw_bce: 0.2449 | eval_dice_loss: 0.3084 | eval_distance_loss: 0.0211 | eval_raw_distance_loss: 0.0621 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2459.0871 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7220 | eval_miou: 0.6759 | eval_boundary_iou: 0.3557
+2026-07-18 00:56:36,622:INFO:epoch: 55 | loss: 0.6169 | bce: 0.2812 | raw_bce: 0.2343 | dice_loss: 0.3345 | distance_loss: 0.0120 | raw_distance_loss: 0.0547 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2366.0356 | boundary_weight_mean: 6.3931 | distance_boundary_weight_mean: 6.3931
+2026-07-18 00:59:05,554:INFO:epoch: 56 | loss: 0.6177 | bce: 0.2816 | raw_bce: 0.2337 | dice_loss: 0.3349 | distance_loss: 0.0120 | raw_distance_loss: 0.0548 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2370.6251 | boundary_weight_mean: 6.3968 | distance_boundary_weight_mean: 6.3968 | eval_loss: 0.7054 | eval_bce: 0.3953 | eval_raw_bce: 0.2462 | eval_dice_loss: 0.3080 | eval_distance_loss: 0.0211 | eval_raw_distance_loss: 0.0611 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2487.1983 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7226 | eval_miou: 0.6721 | eval_boundary_iou: 0.3514
+2026-07-18 01:01:28,079:INFO:epoch: 57 | loss: 0.6173 | bce: 0.2813 | raw_bce: 0.2346 | dice_loss: 0.3347 | distance_loss: 0.0121 | raw_distance_loss: 0.0550 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2359.3223 | boundary_weight_mean: 6.3994 | distance_boundary_weight_mean: 6.3994
+2026-07-18 01:03:56,997:INFO:epoch: 58 | loss: 0.6180 | bce: 0.2810 | raw_bce: 0.2347 | dice_loss: 0.3357 | distance_loss: 0.0121 | raw_distance_loss: 0.0552 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2368.8600 | boundary_weight_mean: 6.4010 | distance_boundary_weight_mean: 6.4010 | eval_loss: 0.7121 | eval_bce: 0.3999 | eval_raw_bce: 0.2477 | eval_dice_loss: 0.3100 | eval_distance_loss: 0.0214 | eval_raw_distance_loss: 0.0614 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2481.2879 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7209 | eval_miou: 0.6707 | eval_boundary_iou: 0.3528
+2026-07-18 01:06:19,192:INFO:epoch: 59 | loss: 0.6188 | bce: 0.2816 | raw_bce: 0.2360 | dice_loss: 0.3359 | distance_loss: 0.0121 | raw_distance_loss: 0.0553 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0020 | tv_loss: 2365.6669 | boundary_weight_mean: 6.4017 | distance_boundary_weight_mean: 6.4017
+2026-07-18 01:08:47,890:INFO:epoch: 60 | loss: 0.6204 | bce: 0.2817 | raw_bce: 0.2367 | dice_loss: 0.3375 | distance_loss: 0.0121 | raw_distance_loss: 0.0556 | weighted_distance_loss: 0.0012 | distance_loss_fraction: 0.0019 | tv_loss: 2373.5415 | boundary_weight_mean: 6.4126 | distance_boundary_weight_mean: 6.4126 | eval_loss: 0.7114 | eval_bce: 0.4016 | eval_raw_bce: 0.2483 | eval_dice_loss: 0.3077 | eval_distance_loss: 0.0210 | eval_raw_distance_loss: 0.0588 | eval_weighted_distance_loss: 0.0021 | eval_distance_loss_fraction: 0.0028 | eval_tv_loss: 2456.6822 | eval_boundary_weight_mean: 4.6877 | eval_distance_boundary_weight_mean: 4.6877 | eval_pixel_iou: 0.7240 | eval_miou: 0.6771 | eval_boundary_iou: 0.3553

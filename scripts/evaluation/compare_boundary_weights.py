@@ -2,6 +2,7 @@ import argparse
 import csv
 import math
 import re
+import sys
 from pathlib import Path
 
 
@@ -17,6 +18,13 @@ DEFAULT_CONFIGS = [
     "ftw_seam",
     "ftw_dual_head_boundary_bce",
 ]
+DISCOVERY_PATTERNS = [
+    "ftw_dual_head_boundary_bce*.log",
+    "ftw_dual_head_boundary_both_w20_s012*.log",
+]
+DISCOVERY_PREFIXES = [
+    "ftw_dual_head_boundary_both_w20_s012",
+]
 DEFAULT_METRICS = [
     "pixel_iou",
     "miou",
@@ -26,7 +34,19 @@ DEFAULT_METRICS = [
     "raw_bce",
     "dice_loss",
     "distance_loss",
+    "raw_distance_loss",
+    "weighted_distance_loss",
+    "distance_loss_fraction",
 ]
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+try:
+    from cfgs import field_segmentation
+except Exception:
+    field_segmentation = None
 
 
 def _parse_log_sessions(path):
@@ -55,8 +75,15 @@ def _parse_log_sessions(path):
 
 def _discover_boundary_configs(log_dir):
     configs = set(DEFAULT_CONFIGS)
-    for path in log_dir.glob("ftw_dual_head_boundary_bce*.log"):
-        configs.add(path.stem)
+    if field_segmentation is not None:
+        for name in dir(field_segmentation):
+            if any(name.startswith(prefix) for prefix in DISCOVERY_PREFIXES):
+                value = getattr(field_segmentation, name)
+                if isinstance(value, dict) and "criterion_args" in value:
+                    configs.add(name)
+    for pattern in DISCOVERY_PATTERNS:
+        for path in log_dir.glob(pattern):
+            configs.add(path.stem)
     return sorted(configs, key=_config_sort_key)
 
 
@@ -73,9 +100,12 @@ def _config_sort_key(config):
 
 
 def _boundary_weight(config):
-    if config == "ftw_dual_head_boundary_bce":
-        return 3.0
-    if not config.startswith("ftw_dual_head_boundary_bce"):
+    configured = _criterion_arg(config, "boundary_weight")
+    if configured is not None:
+        return configured
+    if not config.startswith("ftw_dual_head_boundary_bce") and not config.startswith(
+        "ftw_dual_head_boundary_both"
+    ):
         return None
     match = WEIGHT_RE.search(config)
     if not match:
@@ -84,12 +114,28 @@ def _boundary_weight(config):
 
 
 def _distance_weight(config):
-    if not config.startswith("ftw_dual_head_boundary_bce"):
+    configured = _criterion_arg(config, "distance_weight")
+    if configured is not None:
+        return configured
+    if not config.startswith("ftw_dual_head_boundary_bce") and not config.startswith(
+        "ftw_dual_head_boundary_both"
+    ):
         return None
     match = DISTANCE_WEIGHT_RE.search(config)
     if not match:
         return None
     return float(match.group("weight"))
+
+
+def _distance_boundary_weight(config):
+    return _criterion_arg(config, "distance_boundary_weight")
+
+
+def _criterion_arg(config, key):
+    if field_segmentation is None or not hasattr(field_segmentation, config):
+        return None
+    value = getattr(field_segmentation, config).get("criterion_args", {}).get(key)
+    return float(value) if value is not None else None
 
 
 def _rows_for_path(path, all_sessions):
@@ -168,7 +214,8 @@ def main():
         nargs="+",
         help=(
             "Explicit config names to compare. Defaults to ftw_mask_baseline, "
-            "ftw_seam, plus every ftw_dual_head_boundary_bce*.log in --log-dir."
+            "ftw_seam, every ftw_dual_head_boundary_bce*.log, and every "
+            "ftw_dual_head_boundary_both_w20_s012*.log in --log-dir."
         ),
     )
     parser.add_argument(
@@ -206,6 +253,7 @@ def main():
         "config",
         "boundary_weight",
         "distance_weight",
+        "distance_boundary_weight",
         epoch_column,
         *DEFAULT_METRICS,
     ]
@@ -214,7 +262,15 @@ def main():
     for config in configs:
         path = log_dir / f"{config}.log"
         if not path.exists():
-            summary_rows.append({"config": config, "status": "missing log"})
+            summary_rows.append(
+                {
+                    "config": config,
+                    "boundary_weight": _boundary_weight(config),
+                    "distance_weight": _distance_weight(config),
+                    "distance_boundary_weight": _distance_boundary_weight(config),
+                    "status": "missing log",
+                }
+            )
             continue
 
         rows = _rows_for_path(path, all_sessions=args.all_sessions)
@@ -227,6 +283,7 @@ def main():
             "config": config,
             "boundary_weight": _boundary_weight(config),
             "distance_weight": _distance_weight(config),
+            "distance_boundary_weight": _distance_boundary_weight(config),
             epoch_column: selected_row["epoch"],
         }
         for metric in DEFAULT_METRICS:

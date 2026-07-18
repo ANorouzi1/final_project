@@ -455,6 +455,21 @@ ftw_dual_head_boundary_both_w20_s012_d10["trainer_config"] = _base_trainer(
     eval_period=2,
 )
 
+ftw_dual_head_boundary_both_w20_s012_d30 = deepcopy(
+    ftw_dual_head_boundary_both_w20_s012
+)
+ftw_dual_head_boundary_both_w20_s012_d30["name"] = (
+    "ftw_dual_head_boundary_both_w20_s012_d30"
+)
+ftw_dual_head_boundary_both_w20_s012_d30["criterion_args"][
+    "distance_weight"
+] = 3.0
+ftw_dual_head_boundary_both_w20_s012_d30["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_both_w20_s012_d30",
+    epochs=60,
+    eval_period=2,
+)
+
 
 ftw_mask_baseline = dict(
     name="ftw_mask_baseline",
