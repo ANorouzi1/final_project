@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.4.11)  18 JUL 2026 17:36
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.4.11)  18 JUL 2026 21:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -866,7 +866,7 @@ s/tikzlibrarypositioning.code.tex
 File: tikzlibrarypositioning.code.tex 2023-01-15 v3.1.10 (3.1.10)
 )
 LaTeX Font Info:    Trying to load font information for T1+lmss on input line 6
-8.
+7.
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/lm/t1lmss.fd
 File: t1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -879,24 +879,24 @@ File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
 (./hlcv_project_slides.aux)
 \openout1 = `hlcv_project_slides.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 67.
+LaTeX Font Info:    ... okay on input line 67.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -954,58 +954,58 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring OFF on input line 68.
+Package hyperref Info: Link coloring OFF on input line 67.
 
 (./hlcv_project_slides.out) (./hlcv_project_slides.out)
 \@outlinefile=\write5
 \openout5 = `hlcv_project_slides.out'.
 
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/lmr/m/n --> OT1/cmss/m/n on input line 68.
+(Font)                  OT1/lmr/m/n --> OT1/cmss/m/n on input line 67.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/lmr/bx/n --> OT1/cmss/b/n on input line 68.
+(Font)                  OT1/lmr/bx/n --> OT1/cmss/b/n on input line 67.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmss/m/n --> OT1/lmss/m/n on input line 68.
+(Font)                  OT1/cmss/m/n --> OT1/lmss/m/n on input line 67.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmss/b/n --> OT1/lmss/b/n on input line 68.
+(Font)                  OT1/cmss/b/n --> OT1/lmss/b/n on input line 67.
 \symnumbers=\mathgroup6
 \sympureletters=\mathgroup7
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
-(Font)                  OT1/lmss/m/n --> T1/lmr/m/n on input line 68.
-LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 68.
+(Font)                  OT1/lmss/m/n --> T1/lmr/m/n on input line 67.
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 68.
+(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 68.
-LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 68.
+(Font)                  OT1/lmr/bx/n --> T1/lmss/b/n on input line 67.
+LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/lmss/m/n --> T1/lmss/m/n on input line 68.
+(Font)                  OT1/lmss/m/n --> T1/lmss/m/n on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/lmss/bx/n --> T1/lmss/m/n on input line 68.
-LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 68.
+(Font)                  OT1/lmss/bx/n --> T1/lmss/m/n on input line 67.
+LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/lmr/m/it --> T1/lmss/m/it on input line 68.
+(Font)                  OT1/lmr/m/it --> T1/lmss/m/it on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/lmr/bx/it --> T1/lmss/m/it on input line 68.
-LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 68.
+(Font)                  OT1/lmr/bx/it --> T1/lmss/m/it on input line 67.
+LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 68.
+(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 68.
+(Font)                  OT1/lmtt/m/n --> T1/lmtt/m/n on input line 67.
 LaTeX Font Info:    Overwriting symbol font `numbers' in version `bold'
-(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 68.
+(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 67.
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
-(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 68.
+(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `bold'
-(Font)                  OT1/lmss/b/n --> T1/lmr/b/n on input line 68.
+(Font)                  OT1/lmss/b/n --> T1/lmr/b/n on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  T1/lmss/b/n --> T1/lmss/b/n on input line 68.
+(Font)                  T1/lmss/b/n --> T1/lmss/b/n on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 68.
+(Font)                  T1/lmss/m/n --> T1/lmss/b/n on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 68.
+(Font)                  T1/lmss/m/it --> T1/lmss/b/it on input line 67.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  T1/lmtt/m/n --> T1/lmtt/b/n on input line 68.
+(Font)                  T1/lmtt/m/n --> T1/lmtt/b/n on input line 67.
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/translator/translator-basic-dicti
 onary-English.dict
@@ -1032,7 +1032,7 @@ tionary-English.dict
 Dictionary: translator-theorem-dictionary, Language: English 
 ) (./hlcv_project_slides.nav)
 LaTeX Font Info:    Trying to load font information for TS1+lmss on input line 
-68.
+67.
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/lm/ts1lmss.fd
 File: ts1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -1049,7 +1049,7 @@ File: ../Visualizations/problem_setup/val_blob_issue.png Graphic file (type png
 )
 <use ../Visualizations/problem_setup/val_blob_issue.png>
 Package pdftex.def Info: ../Visualizations/problem_setup/val_blob_issue.png  us
-ed on input line 101.
+ed on input line 100.
 (pdftex.def)             Requested size: 274.8577pt x 102.95023pt.
 
 
@@ -1063,13 +1063,13 @@ ed on input line 101.
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd)
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd)
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 148.
+(Font)              <9> on input line 147.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 148.
+(Font)              <6> on input line 147.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 148.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 147.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <6> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 148.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 147.
 
 
 [3
@@ -1085,11 +1085,11 @@ LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <6> not available
 {/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/usr/local/te
 xlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 272.
+(Font)              <8> on input line 271.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <8> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 272.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 271.
 LaTeX Font Info:    Trying to load font information for T1+lmr on input line 27
-2.
+1.
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/lm/t1lmr.fd
 File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -1099,11 +1099,11 @@ File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 
 ]
 LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <10> not available
-(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 316.
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 315.
 LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <7> not available
-(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 316.
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 315.
 LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <5> not available
-(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 316.
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 315.
 
 
 [7
@@ -1121,58 +1121,62 @@ LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <5> not available
 [10
 
 ]
-<../Visualizations/presentation_test/test_denmark_input.png, id=96, 178.266pt x
- 178.266pt>
-File: ../Visualizations/presentation_test/test_denmark_input.png Graphic file (
-type png)
-<use ../Visualizations/presentation_test/test_denmark_input.png>
-Package pdftex.def Info: ../Visualizations/presentation_test/test_denmark_input
-.png  used on input line 458.
-(pdftex.def)             Requested size: 91.61617pt x 91.61896pt.
-<../Visualizations/presentation_test/test_denmark_target.png, id=97, 178.266pt 
-x 178.266pt>
-File: ../Visualizations/presentation_test/test_denmark_target.png Graphic file 
-(type png)
-<use ../Visualizations/presentation_test/test_denmark_target.png>
-Package pdftex.def Info: ../Visualizations/presentation_test/test_denmark_targe
-t.png  used on input line 458.
-(pdftex.def)             Requested size: 91.61617pt x 91.61896pt.
-<../Visualizations/presentation_test/test_denmark_baseline_error.png, id=98, 17
-8.266pt x 178.266pt>
-File: ../Visualizations/presentation_test/test_denmark_baseline_error.png Graph
+<../Visualizations/sample_austria_g83_00040_14/rgb.png, id=96, 177.8645pt x 177
+.8645pt>
+File: ../Visualizations/sample_austria_g83_00040_14/rgb.png Graphic file (type 
+png)
+<use ../Visualizations/sample_austria_g83_00040_14/rgb.png>
+Package pdftex.def Info: ../Visualizations/sample_austria_g83_00040_14/rgb.png 
+ used on input line 462.
+(pdftex.def)             Requested size: 91.61617pt x 91.61617pt.
+<../Visualizations/sample_austria_g83_00040_14/ground_truth_mask.png, id=97, 17
+7.8645pt x 177.8645pt>
+File: ../Visualizations/sample_austria_g83_00040_14/ground_truth_mask.png Graph
 ic file (type png)
-<use ../Visualizations/presentation_test/test_denmark_baseline_error.png>
-Package pdftex.def Info: ../Visualizations/presentation_test/test_denmark_basel
-ine_error.png  used on input line 458.
-(pdftex.def)             Requested size: 91.61617pt x 91.61896pt.
-<../Visualizations/presentation_test/test_denmark_boundary_bce_error.png, id=99
-, 178.266pt x 178.266pt>
-File: ../Visualizations/presentation_test/test_denmark_boundary_bce_error.png G
-raphic file (type png)
-<use ../Visualizations/presentation_test/test_denmark_boundary_bce_error.png>
-Package pdftex.def Info: ../Visualizations/presentation_test/test_denmark_bound
-ary_bce_error.png  used on input line 458.
-(pdftex.def)             Requested size: 91.61617pt x 91.61896pt.
-
+<use ../Visualizations/sample_austria_g83_00040_14/ground_truth_mask.png>
+Package pdftex.def Info: ../Visualizations/sample_austria_g83_00040_14/ground_t
+ruth_mask.png  used on input line 462.
+(pdftex.def)             Requested size: 91.61617pt x 91.61617pt.
+<../Visualizations/sample_austria_g83_00040_14/baseline_mask.png, id=98, 177.86
+45pt x 177.8645pt>
+File: ../Visualizations/sample_austria_g83_00040_14/baseline_mask.png Graphic f
+ile (type png)
+<use ../Visualizations/sample_austria_g83_00040_14/baseline_mask.png>
+Package pdftex.def Info: ../Visualizations/sample_austria_g83_00040_14/baseline
+_mask.png  used on input line 462.
+(pdftex.def)             Requested size: 91.61617pt x 91.61617pt.
+<../Visualizations/sample_austria_g83_00040_14/best_model_mask.png, id=99, 177.
+8645pt x 177.8645pt>
+File: ../Visualizations/sample_austria_g83_00040_14/best_model_mask.png Graphic
+ file (type png)
+<use ../Visualizations/sample_austria_g83_00040_14/best_model_mask.png>
+Package pdftex.def Info: ../Visualizations/sample_austria_g83_00040_14/best_mod
+el_mask.png  used on input line 462.
+(pdftex.def)             Requested size: 91.61617pt x 91.61617pt.
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 4
+62.
+ (/usr/local/texlive/2025/texmf-dist/tex/latex/lm/t1lmtt.fd
+File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
 
 [11
 
- <../Visualizations/presentation_test/test_denmark_input.png> <../Visualization
-s/presentation_test/test_denmark_target.png> <../Visualizations/presentation_te
-st/test_denmark_baseline_error.png> <../Visualizations/presentation_test/test_d
-enmark_boundary_bce_error.png>]
+ <../Visualizations/sample_austria_g83_00040_14/rgb.png> <../Visualizations/sam
+ple_austria_g83_00040_14/ground_truth_mask.png> <../Visualizations/sample_austr
+ia_g83_00040_14/baseline_mask.png> <../Visualizations/sample_austria_g83_00040_
+14/best_model_mask.png>]
 
 [12
 
 ]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\translate ' on input line 490.
+(hyperref)                removing `\translate ' on input line 494.
 
 LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <9> not available
-(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 512.
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 516.
 LaTeX Font Info:    Font shape `T1/lmss/b/n' in size <6> not available
-(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 512.
+(Font)              Font shape `T1/lmss/bx/n' tried instead on input line 516.
 
 
 [13
@@ -1204,11 +1208,11 @@ Package rerunfilecheck Info: File `hlcv_project_slides.out' has not changed.
 (rerunfilecheck)             Checksum: 5BCEA9CF7D2D9AECE7CAC4018E9F6C5B;81.
  ) 
 Here is how much of TeX's memory you used:
- 25788 strings out of 473190
- 511466 string characters out of 5715800
+ 25830 strings out of 473190
+ 512101 string characters out of 5715800
  878326 words of memory out of 5000000
- 48459 multiletter control sequences out of 15000+600000
- 667940 words of font info for 100 fonts, out of 8000000 for 9000
+ 48497 multiletter control sequences out of 15000+600000
+ 668261 words of font info for 101 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  128i,15n,123p,394b,1067s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmex10.pfb></usr/lo
@@ -1228,11 +1232,12 @@ pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></usr/
 local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy7.pfb></usr/local/texli
 ve/2025/texmf-dist/fonts/type1/public/lm/lmsy8.pfb></usr/local/texlive/2025/tex
 mf-dist/fonts/type1/public/lm/lmsy9.pfb></usr/local/texlive/2025/texmf-dist/fon
-ts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on hlcv_project_slides.pdf (15 pages, 1832943 bytes).
+ts/type1/public/lm/lmtt8.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/pu
+blic/amsfonts/symbols/msam10.pfb>
+Output written on hlcv_project_slides.pdf (15 pages, 1974630 bytes).
 PDF statistics:
- 247 PDF objects out of 1000 (max. 8388607)
- 165 compressed objects within 2 object streams
+ 252 PDF objects out of 1000 (max. 8388607)
+ 168 compressed objects within 2 object streams
  35 named destinations out of 1000 (max. 500000)
  76 words of extra memory for PDF output out of 10000 (max. 10000000)
 

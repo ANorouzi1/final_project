@@ -42,9 +42,9 @@ This is the main result. The mask baseline reaches 0.3313 Boundary IoU and 0.657
 
 This slide resolves an important result mismatch. Earlier validation runs suggested a small improvement from SDF supervision, roughly the two-point gain we initially discussed, but that claim does not hold on the held-out test checkpoint. We also compare boundary-weighted BCE with and without the SDF head. The full dual-head version reaches 0.3739 Boundary IoU; removing the SDF head slightly improves it to 0.3755. Once the segmentation loss already emphasizes borders, the second head adds no measurable benefit. The evidence supports direct segmentation supervision, not auxiliary regression, as the source of the final gain.
 
-## 11. Qualitative test examples — 0:55
+## 11. Qualitative validation example — 0:55
 
-This example comes from the held-out test split, not validation. Green pixels are correct, red pixels are false negatives, and blue pixels are false positives. Compare the two error columns around thin separations between fields and irregular field edges. The image is an example rather than the basis of the claim; the aggregate 1,430-chip metrics on the previous slide are the main evidence.
+This Austrian validation chip shows the original Sentinel-2 RGB image, the ground-truth field mask, the baseline segmentation, and the segmentation from our best boundary-weighted BCE model. The baseline merges or removes several thin separations between neighboring fields. The best model preserves more of those narrow gaps, although difficult borders remain. This image is only a qualitative illustration; the aggregate comparison on the previous slide is based on all 1,430 held-out test chips.
 
 ## 12. Conclusion and outlook — 0:50
 

@@ -58,7 +58,6 @@
     fill=#1,rounded corners=2pt,inner xsep=6pt,inner ysep=3pt
   ] (n) {\strut #2};%
 }
-
 \title{Boundary-Aware Agricultural Field Segmentation}
 \subtitle{Does auxiliary distance prediction help more than direct boundary weighting?}
 \author{HLCV Team 004}
@@ -425,36 +424,41 @@
   \pill{palegold}{Interpretation: useful boundary information must reach the segmentation gradients directly.}
 \end{frame}
 
-\begin{frame}{Qualitative test example at threshold 0.60}
+\begin{frame}{Qualitative validation example: Austria}
   \centering
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.23\textwidth}
-      \centering\small\bfseries Sentinel-2\\[-0.2em]
+      \centering
+      \parbox[c][2.6em][c]{\linewidth}{\centering\small\bfseries Sentinel-2 RGB}\par
+      \vspace{0.25em}
       \includegraphics[width=\linewidth]
-        {../Visualizations/presentation_test/test_denmark_input.png}
+        {../Visualizations/sample_austria_g83_00040_14/rgb.png}
     \end{column}
     \begin{column}{0.23\textwidth}
-      \centering\small\bfseries Target mask\\[-0.2em]
+      \centering
+      \parbox[c][2.6em][c]{\linewidth}{\centering\small\bfseries Ground-truth mask}\par
+      \vspace{0.25em}
       \includegraphics[width=\linewidth]
-        {../Visualizations/presentation_test/test_denmark_target.png}
+        {../Visualizations/sample_austria_g83_00040_14/ground_truth_mask.png}
     \end{column}
     \begin{column}{0.23\textwidth}
-      \centering\small\bfseries Baseline error\\[-0.2em]
+      \centering
+      \parbox[c][2.6em][c]{\linewidth}{\centering\small\bfseries Baseline segmentation}\par
+      \vspace{0.25em}
       \includegraphics[width=\linewidth]
-        {../Visualizations/presentation_test/test_denmark_baseline_error.png}
+        {../Visualizations/sample_austria_g83_00040_14/baseline_mask.png}
     \end{column}
     \begin{column}{0.23\textwidth}
-      \centering\small\bfseries Boundary-BCE error\\[-0.2em]
+      \centering
+      \parbox[c][2.6em][c]{\linewidth}{\centering\small\bfseries Best-model segmentation}\par
+      \vspace{0.25em}
       \includegraphics[width=\linewidth]
-        {../Visualizations/presentation_test/test_denmark_boundary_bce_error.png}
+        {../Visualizations/sample_austria_g83_00040_14/best_model_mask.png}
     \end{column}
   \end{columns}
-  \vspace{0.35em}
-  \small
-  \textcolor{leaf}{Green: correct}\quad
-  \textcolor{coral}{Red: false negative}\quad
-  \textcolor{blue}{Blue: false positive}
-  \source{Held-out FTW test chip from Denmark; predictions generated in this project.}
+  \vspace{0.65em}
+  \pill{palegold}{The best model preserves more of the thin separations between neighboring fields.}
+  \source{FTW validation chip \texttt{austria/g83\_00040\_14}; predictions generated in this project.}
 \end{frame}
 
 \begin{frame}{Conclusion and outlook}
