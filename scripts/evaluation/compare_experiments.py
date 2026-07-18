@@ -46,7 +46,6 @@ def main():
             "ftw_mask_baseline",
             "ftw_dual_head",
             "ftw_dual_head_boundary_bce",
-            "ftw_dual_head_boundary_distance",
         ],
     )
     parser.add_argument("--log-dir", default="Logs")

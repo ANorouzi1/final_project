@@ -19,7 +19,6 @@ DEFAULT_CONFIGS = [
     "ftw_dual_head_small",
     "ftw_dual_head_no_aug",
     "ftw_seam",
-    "ftw_dual_head_boundary_sdf",
     "ftw_dual_head_boundary_bce",
 ]
 DEFAULT_METRICS = [

@@ -1,71 +1,55 @@
-# HLCV Project Speaker Notes
+# HLCV final presentation — speaker notes
 
-Approximate pacing: 45-60 seconds per main slide. The backup slide is only for questions.
+Target length: about 11:45–12:00. Backup slides are only for Q/A.
 
-## 1. Title
+## 1. Title — 0:20
 
-Introduce the project as agricultural field segmentation from Sentinel-2 imagery. The main theme is boundary quality: the output should preserve separate fields, not only predict field pixels.
+We study agricultural field segmentation from Sentinel-2 imagery. The central question is whether the boundaries between individual fields are learned better through an auxiliary signed-distance head or by directly increasing the segmentation loss near boundaries.
 
-## 2. What This Project Tries To Solve
+## 2. The challenge — 0:55
 
-Explain that the task is binary segmentation, but the useful map depends on boundaries. If neighboring fields merge, the prediction can have good-looking foreground overlap while still failing the parcel-level goal.
+The ordinary task is field versus background segmentation, but the useful map must also preserve each individual field. In the figure, the middle mask tells us where agricultural land is. The right image shows the separate fields within that area. A prediction can therefore obtain reasonable region overlap and still be wrong by merging neighboring fields. Our goal is to improve border agreement without harming the field mask.
 
-## 3. Why Boundaries Matter
+## 3. Data and supervision — 0:55
 
-Use the figure simply: the white mask tells us where fields are, while the colored map shows that those fields are separate parcels. The key point is that a prediction can cover the right field area but still be wrong if neighboring parcels merge.
+We use the Fields of The World benchmark and the three countries available in our local training setup: Austria, Croatia, and Denmark. Every chip contains red, green, blue, and near-infrared bands from two contrasting dates, giving eight input channels. The complete-pair loader gives 10,938 training, 1,347 validation, and 1,430 test chips. The semantic mask is the main target. FTW also provides an instance mask in which each individual field has a different pixel value. Our loader remaps those existing values to compact IDs and uses the result to create a normalized signed distance field: positive inside each field, zero near its boundary, and negative outside.
 
-## 4. Dataset And Supervision
+## 4. Related work and contribution — 0:55
 
-Say that the input is the Sentinel-2 `window_a` image. The main target is the 2-class field/background mask, and the instance mask is used to build the signed distance field.
+We build on three ingredients: the FTW dataset, the U-Net encoder–decoder, and the general idea that distance-to-boundary information can complement region losses. Our contribution is the controlled implementation and comparison. We added the SDF target and regression head, implemented SDF-derived BCE weighting, and built the matched baselines, Boundary IoU metric, checkpoint evaluation, and visualizations. The project question is specifically where the boundary signal should enter training.
 
-Fill later: final countries and chip counts: [.....]
+## 5. Three methods — 1:05
 
-## 5. Baseline
+The first method is the mask-only baseline. I checked the actual trained configuration: its loss is ordinary BCE plus Dice. The second method adds an SDF regression head and a Smooth L1 term with weight 0.1. The third method returns to a single mask head but uses the SDF only to weight BCE near field boundaries. Data, augmentation, backbone width, optimizer, and evaluation code remain the same. This makes the comparison about the supervision strategy rather than model capacity or data.
 
-Emphasize that the mask-only U-Net is a fair reference. It uses BCE, Dice, and optional TV only; there is no SDF head and no SDF loss term.
+## 6. Second SDF head — 1:15
 
-## 6. Main Model
+The dual-head model shares the full U-Net feature extractor. One small head predicts mask logits; the other predicts signed distance. The mask receives BCE and Dice. The distance prediction is passed through tanh and compared with the target using Smooth L1. The hypothesis is multi-task learning: to predict the SDF, shared features should encode where each individual field ends. The head adds only 9,313 parameters, about 0.12 percent, and inference still uses the mask head. Therefore any mask improvement must come through the shared representation.
 
-Describe the shared U-Net encoder/decoder and the two heads. The mask head predicts field pixels; the distance head predicts SDF geometry.
+## 7. Boundary-weighted BCE — 1:20
 
-## 7. Loss
+The final method uses the same SDF target differently. Each pixel’s BCE is multiplied by a weight that decays exponentially with absolute signed distance. At the border the weight is 21. At one sigma, a distance of 0.12, it is still 8.36, and it approaches one far from the border. We divide by the sum of weights so the term stays normalized. Dice remains unweighted and preserves global overlap. The key difference is that boundary information now acts directly on the mask logits instead of reaching them indirectly through a regression task.
 
-Explain that the main model uses SDF in the loss in two ways: the target SDF weights BCE near boundaries, and the SDF head is supervised with a SmoothL1 distance loss. Current main setting is boundary weight 20, sigma 0.12, and SDF SmoothL1 weight 0.1.
+## 8. Evaluation protocol — 0:50
 
-## 8. What I Changed
+Validation is used only to choose the saved checkpoint. The held-out test split is then used for the reported comparison. All three models are evaluated on exactly 1,430 chips using the same threshold of 0.60 and a two-pixel boundary band. mIoU measures region overlap. Boundary IoU measures overlap between the predicted and target boundary bands. Using one threshold for all models avoids choosing a separate test operating point for each model.
 
-Summarize practical project work: FTW loader, SDF target/cache, mask-only and dual-head models, boundary loss, metrics, notebook workflow, and test/visualization scripts.
+## 9. Test results — 1:25
 
-## 9. Experiment Grid
+This is the main result. The mask baseline reaches 0.3313 Boundary IoU and 0.6572 mIoU. The ordinary two-head SDF model reaches 0.3254 Boundary IoU, so it is 0.59 percentage points below the baseline on this test checkpoint. Boundary-weighted BCE reaches 0.3755, an absolute improvement of 4.42 percentage points, while mIoU also increases by 1.03 points to 0.6675. Therefore the gain is not a trade where we improve only a thin boundary metric and damage the region mask.
 
-Present this as the ablation plan already encoded in the config file. It covers boundary weight, boundary width, SDF distance weight, augmentation, TV, and seam baseline controls.
+## 10. What the second head contributed — 1:10
 
-Fill later: d003/d030/tv/no-aug run summaries: [.....]
+This slide resolves an important result mismatch. Earlier validation runs suggested a small improvement from SDF supervision, roughly the two-point gain we initially discussed, but that claim does not hold on the held-out test checkpoint. We also compare boundary-weighted BCE with and without the SDF head. The full dual-head version reaches 0.3739 Boundary IoU; removing the SDF head slightly improves it to 0.3755. Once the segmentation loss already emphasizes borders, the second head adds no measurable benefit. The evidence supports direct segmentation supervision, not auxiliary regression, as the source of the final gain.
 
-## 10. Current Validation Results
+## 11. Qualitative test examples — 0:55
 
-State clearly that these are current validation results, not final test results. The boundary-aware run improves Boundary IoU from 0.3155 to 0.3591 and mIoU from 0.6672 to 0.6811.
+This example comes from the held-out test split, not validation. Green pixels are correct, red pixels are false negatives, and blue pixels are false positives. Compare the two error columns around thin separations between fields and irregular field edges. The image is an example rather than the basis of the claim; the aggregate 1,430-chip metrics on the previous slide are the main evidence.
 
-Fill later: final test row: [.....]
+## 12. Conclusion and outlook — 0:50
 
-## 11. Qualitative Results
+The conclusion is simple: in this setup, direct boundary-weighted BCE together with Dice is more effective than an auxiliary signed-distance regression head. It improves Boundary IoU by 4.42 percentage points and mIoU by 1.03 points over the matched mask baseline. The selected final model is therefore the simpler mask-only boundary-BCE version. The strongest next checks are multiple random seeds, per-country results, and instance-separation post-processing.
 
-Use one chip at a time. Green is correct, blue is false positive, and red is false negative. Compare the baseline columns with the boundary-aware prediction columns, focusing on boundary mistakes.
+## Backup slides
 
-## 12. Interpretation
-
-Be honest: the boundary-aware loss is clearly helpful in the current validation results, but the d0 ablation is close, so the final report should not overclaim that the SDF head alone caused the whole gain.
-
-## 13. Final Results To Fill
-
-Use this as a checklist before presenting. Replace all placeholders after final training and evaluation.
-
-## 14. Conclusion
-
-End with the story: field maps need boundaries, the method adds boundary supervision, validation supports the direction, and the final test result completes the evidence.
-
-Final takeaway sentence: [.....]
-
-## 15. Backup
-
-Use only if asked about the broader France-only sweep. Make clear that France-only numbers should not be directly mixed with the multi-country validation numbers.
+The threshold table shows that boundary-weighted BCE remains best at every tested threshold. The loss backup gives the general objective and the exact final weights. The reference slide documents the external work used in the project.

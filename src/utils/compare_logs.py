@@ -65,7 +65,6 @@ def main():
             "Logs/ftw_mask_baseline.log",
             "Logs/ftw_dual_head.log",
             "Logs/ftw_dual_head_boundary_bce.log",
-            "Logs/ftw_dual_head_boundary_sdf.log",
         ],
     )
     parser.add_argument(

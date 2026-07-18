@@ -27,7 +27,6 @@ class FieldSegmentationTrainer(BaseTrainer):
             "raw_bce",
             "dice_loss",
             "distance_loss",
-            "raw_distance_loss",
             "tv_loss",
             "boundary_weight_mean",
             "seam_weight_mean",

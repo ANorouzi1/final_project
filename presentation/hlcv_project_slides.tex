@@ -1,11 +1,11 @@
-\documentclass[aspectratio=169,11pt]{beamer}
+\documentclass[aspectratio=169,10pt]{beamer}
 
-% Compile from this folder with:
-%   pdflatex hlcv_project_slides.tex
-% The resulting PDF can be imported into PowerPoint slide-by-slide if needed.
+% Compile from this directory with:
+%   latexmk -pdf hlcv_project_slides.tex
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{lmodern}
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{graphicx}
@@ -13,412 +13,555 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
 
-\definecolor{fieldgreen}{HTML}{1F5D3A}
-\definecolor{soil}{HTML}{A05A2C}
-\definecolor{sky}{HTML}{2F74B5}
-\definecolor{ink}{HTML}{20242A}
-\definecolor{muted}{HTML}{5C6670}
-\definecolor{lightbg}{HTML}{F4F7F3}
-\definecolor{placeholder}{HTML}{B00020}
+\definecolor{forest}{HTML}{173F35}
+\definecolor{leaf}{HTML}{2F7D6B}
+\definecolor{gold}{HTML}{E5A84B}
+\definecolor{coral}{HTML}{C95746}
+\definecolor{ink}{HTML}{1D2528}
+\definecolor{muted}{HTML}{64706F}
+\definecolor{paper}{HTML}{F6F3EB}
+\definecolor{palegreen}{HTML}{E7F0EC}
+\definecolor{palegold}{HTML}{F8EDD7}
 
 \setbeamertemplate{navigation symbols}{}
-\setbeamertemplate{itemize item}{\color{fieldgreen}$\blacktriangleright$}
-\setbeamertemplate{itemize subitem}{\color{soil}$\bullet$}
 \setbeamercolor{normal text}{fg=ink,bg=white}
-\setbeamercolor{frametitle}{fg=fieldgreen,bg=white}
-\setbeamercolor{title}{fg=fieldgreen}
+\setbeamercolor{frametitle}{fg=forest,bg=white}
+\setbeamercolor{title}{fg=forest}
 \setbeamercolor{subtitle}{fg=muted}
-\setbeamercolor{structure}{fg=fieldgreen}
-\setbeamercolor{block title}{fg=white,bg=fieldgreen}
-\setbeamercolor{block body}{fg=ink,bg=lightbg}
+\setbeamercolor{structure}{fg=leaf}
+\setbeamercolor{block title}{fg=white,bg=forest}
+\setbeamercolor{block body}{fg=ink,bg=paper}
 \setbeamerfont{frametitle}{series=\bfseries,size=\Large}
 \setbeamerfont{title}{series=\bfseries,size=\LARGE}
+\setbeamertemplate{itemize item}{\color{leaf}$\blacktriangleright$}
+\setbeamertemplate{itemize subitem}{\color{gold}$\bullet$}
+
 \setbeamertemplate{footline}{
   \leavevmode%
   \hbox{%
-    \begin{beamercolorbox}[wd=.80\paperwidth,ht=2.4ex,dp=1ex,leftskip=1.2em]{author in head/foot}%
-      \color{muted}\scriptsize HLCV Final Project - Field Segmentation
+    \begin{beamercolorbox}[wd=.84\paperwidth,ht=2.5ex,dp=1ex,leftskip=1.2em]{author in head/foot}%
+      \color{muted}\scriptsize HLCV Final Project \textbullet\ Boundary-Aware Field Segmentation
     \end{beamercolorbox}%
-    \begin{beamercolorbox}[wd=.20\paperwidth,ht=2.4ex,dp=1ex,center]{date in head/foot}%
+    \begin{beamercolorbox}[wd=.16\paperwidth,ht=2.5ex,dp=1ex,center]{date in head/foot}%
       \color{muted}\scriptsize \insertframenumber/\inserttotalframenumber
     \end{beamercolorbox}%
   }%
 }
 
-\newcommand{\todo}{\textcolor{placeholder}{[.....]}}
+\newcommand{\source}[1]{%
+  \vfill
+  {\color{muted}\fontsize{5.7}{6.5}\selectfont Source: #1\par}
+}
 \newcommand{\config}[1]{\texttt{\footnotesize #1}}
-\newcommand{\metricbox}[3]{%
-  \begin{block}{#1}
-    \centering{\Large\bfseries #2}\\[-0.2em]
-    {\scriptsize #3}
-  \end{block}
+\newcommand{\pill}[2]{%
+  \tikz[baseline=(n.base)]\node[
+    fill=#1,rounded corners=2pt,inner xsep=6pt,inner ysep=3pt
+  ] (n) {\strut #2};%
 }
 
 \title{Boundary-Aware Agricultural Field Segmentation}
-\subtitle{Dual-head U-Net, signed distance supervision, and boundary-focused evaluation}
-\author{\todo}
-\institute{HLCV Final Project \\ \todo}
-\date{\todo}
+\subtitle{Does auxiliary distance prediction help more than direct boundary weighting?}
+\author{HLCV Team 004}
+\institute{Saarland University}
+\date{July 2026}
 
 \begin{document}
 
-\begin{frame}[plain]
+\begin{frame}
   \titlepage
-  \vspace{-1.0em}
+  \vspace{-0.9em}
   \begin{center}
+    \pill{palegreen}{Three controlled methods}
+    \hspace{0.45em}
+    \pill{palegold}{1,430 held-out test chips}
   \end{center}
-  % Speaker cue: Introduce this as a field-boundary segmentation project. Say that the main idea is not only to segment "field/not field", but to preserve the thin boundaries that separate neighboring fields.
 \end{frame}
 
-\begin{frame}{What This Project Tries To Solve}
+\begin{frame}{The challenge is preserving individual fields, not only field area}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.69\textwidth}
+      \includegraphics[
+        width=\textwidth,
+        height=0.70\textheight,
+        keepaspectratio
+      ]{../Visualizations/problem_setup/val_blob_issue.png}
+    \end{column}
+    \begin{column}{0.28\textwidth}
+      \vspace{0.5em}
+      \begin{block}{Failure mode}
+        A binary mask can cover the correct area while merging neighboring fields.
+      \end{block}
+      \vspace{0.6em}
+      \begin{block}{Project goal}
+        Improve border agreement without sacrificing region overlap.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \source{FTW imagery and labels; visualization generated in this project.}
+\end{frame}
+
+\begin{frame}{Data and supervision}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}
+      \begin{block}{Fields of The World subset}
+        \begin{tabularx}{\textwidth}{@{}>{\bfseries}lX@{}}
+          Countries & Austria, Croatia, Denmark \\
+          Input & two seasonal images, each with RGB+NIR (8 channels total) \\
+          Resolution & $256\times256$ pixels; 10 m per pixel \\
+          Labels & field mask + FTW instance mask \\
+        \end{tabularx}
+      \end{block}
+      \vspace{0.45em}
+      \begin{center}
+        \pill{palegreen}{10,938 train}
+        \quad
+        \pill{paper}{1,347 validation}
+        \quad
+        \pill{palegold}{1,430 test}
+      \end{center}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{block}{How the labels are used}
+        \textbf{Binary field mask}\hfill
+        {\color{leaf}\bfseries Mask head}\\[-0.05em]
+        \small Direct target: field or background at every pixel.
+
+        \vspace{0.45em}
+        {\color{muted}\rule{\linewidth}{0.35pt}}
+        \vspace{0.35em}
+
+        \textbf{FTW instance mask}\\[-0.05em]
+        \small Provided by the dataset; separates neighboring fields.
+
+        \vspace{0.25em}
+        \centering
+        {\color{muted}\small converted into $\Downarrow$}
+        \par
+        \raggedright
+        \textbf{Signed distance field (SDF)}\hfill
+        {\color{leaf}\bfseries Distance head}\\[-0.05em]
+        \small Derived target: distance to the nearest field boundary.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \source{Kerner et al., ``Fields of The World,'' AAAI 2025.}
+\end{frame}
+
+\begin{frame}{Related work and what we contributed}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}
+      \begin{block}{Built upon}
+        \begin{itemize}
+          \item \textbf{FTW}: global, multi-date Sentinel-2 field benchmark.
+          \item \textbf{U-Net}: encoder--decoder with skip connections for dense prediction.
+          \item \textbf{Distance-aware supervision}: geometry can complement region losses.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{block}{Our project work}
+        \begin{itemize}
+          \item Added an instance-derived SDF target and a second regression head.
+          \item Added an SDF-based weighting map to focus BCE near field borders.
+          \item Implemented matched baselines, Boundary IoU, checkpoint comparison, and test visualization.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.55em}
+  \centering
+  \pill{palegold}{Research question: where should boundary information enter the learning objective?}
+  \source{Ronneberger et al., MICCAI 2015; Kervadec et al., MIDL 2019 / MedIA 2021.}
+\end{frame}
+
+\begin{frame}{Three methods, one controlled comparison}
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabularx}{\textwidth}{@{}
+    >{\raggedright\arraybackslash}p{0.19\textwidth}
+    >{\raggedright\arraybackslash}p{0.21\textwidth}
+    >{\raggedright\arraybackslash}p{0.34\textwidth}
+    >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Method} & \textbf{Architecture} & \textbf{Training loss} & \textbf{Boundary signal} \\
+    \midrule
+    Mask baseline &
+    one mask head &
+    $\mathcal{L}_{BCE}+\mathcal{L}_{Dice}$ &
+    none \\
+    \addlinespace
+    Two-head SDF &
+    mask + distance heads &
+    $\mathcal{L}_{BCE}+\mathcal{L}_{Dice}+0.1\mathcal{L}_{SDF}$ &
+    auxiliary geometry \\
+    \addlinespace
+    Boundary BCE &
+    one mask head &
+    $\mathcal{L}_{WBCE}+\mathcal{L}_{Dice}$ &
+    direct mask gradients \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.75em}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.49\textwidth}
+      \begin{block}{Held constant}
+        Data, augmentation, U-Net width, optimizer, and evaluation code.
+      \end{block}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{block}{Checkpoint audit}
+        The trained mask baseline uses ordinary \textbf{BCE + Dice}; it is not a Dice-only checkpoint.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Method 1: a second head predicts signed distance}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.55\textwidth}
+      \centering
+      \begin{tikzpicture}[
+        font=\scriptsize,
+        box/.style={draw=forest,very thick,rounded corners=3pt,fill=palegreen,
+          minimum width=1.75cm,minimum height=0.68cm,align=center},
+        head/.style={draw=leaf,very thick,rounded corners=3pt,fill=white,
+          minimum width=1.95cm,minimum height=0.68cm,align=center},
+        arr/.style={-{Latex[length=2.5mm]},very thick,draw=muted}
+      ]
+        \node[box] (input) at (0,0) {8-channel\\chip};
+        \node[box] (unet) at (2.25,0) {shared U-Net\\features};
+        \node[head] (mask) at (4.75,0.82) {mask head\\$z_M$};
+        \node[head] (sdf) at (4.75,-0.82) {distance head\\$z_D$};
+        \draw[arr] (input) -- (unet);
+        \draw[arr] (unet) -- (mask);
+        \draw[arr] (unet) -- (sdf);
+      \end{tikzpicture}
+
+      \vspace{0.55em}
+      \begin{block}{Joint objective}
+        \footnotesize
+        \[
+          \begin{aligned}
+            \mathcal{L}_{2H}
+            &= \mathcal{L}_{BCE}(z_M,Y)
+             + \mathcal{L}_{Dice}(\sigma(z_M),Y)\\
+            &\quad + 0.1\,\mathrm{SmoothL1}(\tanh(z_D),D)
+          \end{aligned}
+        \]
+      \end{block}
+    \end{column}
+    \begin{column}{0.41\textwidth}
+      \begin{block}{Hypothesis}
+        The SDF task forces shared features to encode individual field geometry.
+      \end{block}
+      \vspace{0.45em}
+      \begin{itemize}
+        \item $D>0$: inside an individual field
+        \item $D\approx0$: field boundary
+        \item $D<0$: background
+        \item Inference still uses the mask head
+      \end{itemize}
+      \vspace{0.45em}
+      \pill{palegreen}{+9,313 parameters}
+      \quad
+      \pill{paper}{+0.12\%}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Method 2: put boundary emphasis directly into BCE}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.57\textwidth}
+      \begin{block}{Boundary-weighted BCE}
+        \small
+        \[
+          \mathcal{L}_{WBCE}
+          = \frac{\sum_i w_i\,\mathrm{BCE}(z_i,y_i)}{\sum_i w_i}
+        \]
+        \vspace{-0.8em}
+        \[
+          w_i = 1 + 20\exp\!\left(-\frac{|D_i|}{0.12}\right)
+        \]
+      \end{block}
+      \vspace{0.45em}
+      \[
+        \mathcal{L}_{final}
+        = \mathcal{L}_{WBCE}+\mathcal{L}_{Dice}
+      \]
+      \small
+      Dice preserves global region overlap; weighted BCE changes which pixel errors dominate the gradient.
+    \end{column}
+    \begin{column}{0.39\textwidth}
+      \begin{block}{Pixel weight by distance}
+        \centering
+        \begin{tabular}{@{}lc@{}}
+          \toprule
+          $|D|$ & BCE weight \\
+          \midrule
+          $0$ & $\mathbf{21.0}$ \\
+          $0.12$ & $8.36$ \\
+          $0.24$ & $3.71$ \\
+          far from border & $\approx1.0$ \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+      \vspace{0.55em}
+      \begin{block}{Key difference}
+        The boundary signal acts on the \textbf{final mask output}, not through an auxiliary task.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Evaluation protocol: model selection and test stay separate}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.55\textwidth}
+      \begin{tikzpicture}[
+        node distance=0.42cm,
+        stage/.style={draw=forest,very thick,rounded corners=3pt,
+          minimum width=3.6cm,minimum height=0.78cm,align=center},
+        arr/.style={-{Latex[length=2.5mm]},very thick,draw=muted}
+      ]
+        \node[stage,fill=palegreen] (train) {train\\fit model parameters};
+        \node[stage,fill=paper,below=of train] (val) {validation\\select checkpoint};
+        \node[stage,fill=palegold,below=of val] (test) {test: 1,430 chips\\report once};
+        \draw[arr] (train) -- (val);
+        \draw[arr] (val) -- (test);
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.41\textwidth}
+      \begin{block}{Fair comparison}
+        \begin{itemize}
+          \item Common probability threshold: \textbf{0.60}
+          \item Boundary band radius: \textbf{2 pixels}
+          \item Same 1,430 test chips for all models
+        \end{itemize}
+      \end{block}
+      \vspace{0.45em}
+      \begin{block}{Metrics}
+        \textbf{mIoU}: region overlap\\[0.35em]
+        \textbf{Boundary IoU}: overlap of predicted and target boundary bands
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Test result: direct boundary weighting is the clear winner}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.52\textwidth}
+      \centering
+      \resizebox{\linewidth}{!}{%
+      \begin{tikzpicture}[x=0.48cm,y=0.88cm]
+        \node[anchor=east,font=\small] at (0,1.35) {Mask baseline};
+        \node[anchor=east,font=\small] at (0,0.35) {Two-head SDF};
+        \node[anchor=east,font=\small\bfseries] at (0,-0.65) {Boundary BCE};
+        \fill[palegreen] (0.2,1.10) rectangle (7.65,1.60);
+        \fill[paper] (0.2,0.10) rectangle (7.52,0.60);
+        \fill[gold] (0.2,-0.90) rectangle (8.65,-0.40);
+        \node[anchor=west,font=\small\bfseries] at (7.78,1.35) {0.3313};
+        \node[anchor=west,font=\small\bfseries] at (7.65,0.35) {0.3254};
+        \node[anchor=west,font=\small\bfseries] at (8.78,-0.65) {0.3755};
+        \node[anchor=west,font=\scriptsize,text=muted] at (0.2,-1.35)
+          {Boundary IoU @ threshold 0.60};
+      \end{tikzpicture}
+      }
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \scriptsize
+      \setlength{\tabcolsep}{3pt}
+      \begin{tabular}{@{}lrrr@{}}
+        \toprule
+        Method & mIoU & BIoU & $\Delta$ BIoU \\
+        \midrule
+        Baseline & .6572 & .3313 & -- \\
+        2-head SDF & .6500 & .3254 & $-0.59$ pp \\
+        \textbf{Boundary BCE} & \textbf{.6675} & \textbf{.3755} & $\mathbf{+4.42}$ pp \\
+        \bottomrule
+      \end{tabular}
+      \vspace{0.8em}
+      \begin{block}{Main test finding}
+        Boundary-weighted BCE improves both the target boundary metric and overall region overlap.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{What did the second head actually contribute?}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{SDF alone}
+        Earlier validation runs suggested a small gain, but the selected SDF checkpoint did \textbf{not} improve the held-out test baseline.
+      \end{block}
+      \vspace{0.5em}
+      \begin{tabular}{@{}lcc@{}}
+        \toprule
+        Test @ 0.60 & mIoU & BIoU \\
+        \midrule
+        Baseline & .6572 & .3313 \\
+        Two-head SDF & .6500 & .3254 \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Boundary BCE with vs.\ without SDF head}
+        \begin{tabular}{@{}lcc@{}}
+          \toprule
+          Test @ 0.60 & mIoU & BIoU \\
+          \midrule
+          With SDF head & .6676 & .3739 \\
+          \textbf{Without SDF head} & .6675 & \textbf{.3755} \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+      \vspace{0.5em}
+      \small
+      Once the mask loss directly emphasizes borders, the auxiliary regression head adds parameters but no measurable test benefit.
+    \end{column}
+  \end{columns}
+  \vspace{0.7em}
+  \centering
+  \pill{palegold}{Interpretation: useful boundary information must reach the segmentation gradients directly.}
+\end{frame}
+
+\begin{frame}{Qualitative test example at threshold 0.60}
+  \centering
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.23\textwidth}
+      \centering\small\bfseries Sentinel-2\\[-0.2em]
+      \includegraphics[width=\linewidth]
+        {../Visualizations/presentation_test/test_denmark_input.png}
+    \end{column}
+    \begin{column}{0.23\textwidth}
+      \centering\small\bfseries Target mask\\[-0.2em]
+      \includegraphics[width=\linewidth]
+        {../Visualizations/presentation_test/test_denmark_target.png}
+    \end{column}
+    \begin{column}{0.23\textwidth}
+      \centering\small\bfseries Baseline error\\[-0.2em]
+      \includegraphics[width=\linewidth]
+        {../Visualizations/presentation_test/test_denmark_baseline_error.png}
+    \end{column}
+    \begin{column}{0.23\textwidth}
+      \centering\small\bfseries Boundary-BCE error\\[-0.2em]
+      \includegraphics[width=\linewidth]
+        {../Visualizations/presentation_test/test_denmark_boundary_bce_error.png}
+    \end{column}
+  \end{columns}
+  \vspace{0.35em}
+  \small
+  \textcolor{leaf}{Green: correct}\quad
+  \textcolor{coral}{Red: false negative}\quad
+  \textcolor{blue}{Blue: false positive}
+  \source{Held-out FTW test chip from Denmark; predictions generated in this project.}
+\end{frame}
+
+\begin{frame}{Conclusion and outlook}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.58\textwidth}
+      \begin{block}{Takeaway}
+        For this dataset and training setup, \textbf{boundary-weighted BCE + Dice} is more effective than adding an SDF regression head.
+      \end{block}
+      \vspace{0.55em}
       \begin{itemize}
-        \item Segment agricultural fields.
-        \item The hard part is not only foreground/background segmentation.
-        \item Neighboring fields often touch, so a normal binary mask can merge multiple parcels into one blob.
-        \item Our contribution focuses the model and evaluation on boundaries, not only region overlap.
+        \item Boundary IoU: $0.3313 \rightarrow 0.3755$ (\textbf{+4.42 pp})
+        \item mIoU: $0.6572 \rightarrow 0.6675$ (\textbf{+1.03 pp})
+        \item The simpler, mask-only boundary-BCE model is the final choice.
       \end{itemize}
     \end{column}
     \begin{column}{0.38\textwidth}
-      \metricbox{Input}{Sentinel-2}{\texttt{window\_a} image}
-      \metricbox{Main target}{field mask}{2-class segmentation}
-      \metricbox{Extra signal}{SDF}{geometry around field borders}
+      \begin{block}{Next steps}
+        \begin{itemize}
+          \item repeat with multiple random seeds
+          \item report per-country performance
+          \item test instance-separation post-processing
+          \item study learned boundary calibration
+        \end{itemize}
+      \end{block}
     \end{column}
   \end{columns}
-  % Speaker cue: This slide is the high-level framing. The audience should understand that the project is about preserving parcel structure, not just making the white mask larger or smaller.
-\end{frame}
-
-\begin{frame}{Why Parcel Boundaries Matter}
-  \begin{itemize}
-    \item The white mask only says field or background.
-    \item The colored map shows the real goal: each parcel should stay separate.
-    \item If neighboring parcels get joined, the field area can look right but the map is still wrong.
-  \end{itemize}
-  \vspace{0.2cm}
+  \vspace{0.65em}
   \centering
-  \includegraphics[width=\textwidth,height=0.56\textheight,keepaspectratio]{../Visualizations/problem_setup/val_blob_issue.png}
-  % Speaker cue: Explain the figure as image -> field/background mask -> separate parcels. Avoid discussing component counts.
-\end{frame}
-
-\begin{frame}{Dataset And Supervision}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.50\textwidth}
-      \begin{block}{Fields of The World setup}
-        \begin{itemize}
-          \item Image: \texttt{window\_a}
-          \item Target labels: background and field
-          \item Spatial size in configs: $256 \times 256$
-          \item Current batch size: 16
-        \end{itemize}
-      \end{block}
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \begin{block}{Targets used}
-        \begin{tabularx}{\textwidth}{@{}lX@{}}
-          \toprule
-          Target & Role \\
-          \midrule
-          Binary mask & field / background supervision \\
-          Instance mask & builds SDF and diagnostics \\
-          Signed distance field & boundary-aware auxiliary target \\
-          \bottomrule
-        \end{tabularx}
-      \end{block}
-      \vspace{0.4em}
-      \small Final training countries / sample count: Austria, Denmark, Croatia / $\sim$15,500
-    \end{column} 
-  \end{columns}
-  % Speaker cue: Mention that the loader checks complete image/mask pairs and uses official split metadata when available.
-\end{frame}
-
-\begin{frame}{Baseline: Fair Mask-Only U-Net}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.53\textwidth}
-      \begin{itemize}
-        \item Same U-Net backbone style as the proposed model.
-        \item One output head: binary field-mask logits.
-        \item Loss: BCE + Dice + optional total variation.
-        \item Purpose: compare against the model that adds SDF-based boundary supervision.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.43\textwidth}
-      \begin{block}{Evaluation metrics}
-        \begin{itemize}
-          \item Pixel IoU: global foreground overlap.
-          \item Mean IoU: image-wise overlap.
-          \item Boundary IoU: border agreement, threshold 0.6 and radius 2.
-        \end{itemize}
-      \end{block}
-    \end{column}
-  \end{columns}
-  % Speaker cue: Emphasize that the baseline is important because without it the second head could look good just because the task is easy.
-\end{frame}
-
-\begin{frame}{Main Model: Dual-Head U-Net}
-  \centering
-  \begin{tikzpicture}[
-      node distance=1.0cm,
-      box/.style={draw=fieldgreen, very thick, rounded corners=2pt, fill=lightbg, minimum width=2.7cm, minimum height=0.85cm, align=center},
-      head/.style={draw=soil, very thick, rounded corners=2pt, fill=white, minimum width=2.7cm, minimum height=0.85cm, align=center},
-      arr/.style={-{Latex[length=3mm]}, very thick, draw=muted}
-    ]
-    \node[box] (input) {8-channel\\Sentinel-2 chip};
-    \node[box, right=1.15cm of input] (enc) {U-Net\\encoder};
-    \node[box, right=1.15cm of enc] (dec) {U-Net\\decoder};
-    \node[head, above right=0.42cm and 1.0cm of dec] (mask) {mask head\\field logits};
-    \node[head, below right=0.42cm and 1.0cm of dec] (sdf) {distance head\\SDF logits};
-    \draw[arr] (input) -- (enc);
-    \draw[arr] (enc) -- (dec);
-    \draw[arr] (dec) -- (mask);
-    \draw[arr] (dec) -- (sdf);
-  \end{tikzpicture}
-
-  \vspace{1.0em}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.47\textwidth}
-      \begin{itemize}
-        \item The mask head solves the original segmentation task.
-        \item The SDF head asks the model to learn where field borders are.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \begin{itemize}
-        \item The two heads share spatial features.
-        \item At inference, the mask is still the main output; SDF helps analysis/post-processing.
-      \end{itemize}
-    \end{column}
-  \end{columns}
-  % Speaker cue: Keep this short. The key is shared features with two tasks: semantic mask and boundary geometry.
-\end{frame}
-
-\begin{frame}{Loss: Make Boundary Pixels Count More}
-  \begin{block}{Training objective}
-    \[
-      \mathcal{L} =
-      \lambda_{\mathrm{bce}}\mathcal{L}_{\mathrm{BCE}}^{\mathrm{boundary}}
-      + \lambda_{\mathrm{dice}}\mathcal{L}_{\mathrm{Dice}}
-      + \lambda_{\mathrm{sdf}}\mathcal{L}_{\mathrm{SmoothL1}}
-      + \lambda_{\mathrm{tv}}\mathcal{L}_{\mathrm{TV}}
-    \]
-  \end{block}
-
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.49\textwidth}
-      \[
-        w(D) = 1 + \alpha \exp \left(-\frac{|D|}{\sigma}\right)
-      \]
-      \small
-      Here $D$ is the target SDF. Pixels near field borders have $D \approx 0$, so they receive larger BCE weight.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \begin{tabularx}{\textwidth}{@{}lX@{}}
-        \toprule
-        Config value & Current main setting \\
-        \midrule
-        BCE / Dice weights & 1.0 / 1.0 \\
-        Boundary weight $\alpha$ & 20.0 \\
-        Boundary width $\sigma$ & 0.12 \\
-        SDF SmoothL1 weight & 0.1 \\
-        TV weight & 0.0 \\
-        \bottomrule
-      \end{tabularx}
-    \end{column}
-  \end{columns}
-  % Speaker cue: The method is intuitive: if errors at borders matter more for the final map, the loss should also pay more attention there.
-\end{frame}
-
-\begin{frame}{What we Changed In The Project}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.49\textwidth}
-      \begin{block}{Data and targets}
-        \begin{itemize}
-          \item FTW loader for two temporal windows.
-          \item Binary mask plus instance-derived SDF target.
-          \item SDF cache to avoid recomputing distance maps each epoch.
-          \item Train/validation/test paths for evaluation and visualization.
-        \end{itemize}
-      \end{block}
-    \end{column}
-    \begin{column}{0.49\textwidth}
-      \begin{block}{Models and experiments}
-        \begin{itemize}
-          \item Mask-only baseline.
-          \item Dual-head U-Net with mask + SDF heads.
-          \item Boundary-weighted BCE loss.
-          \item Compact metrics: Pixel IoU, mIoU, Boundary IoU.
-          \item Notebook-friendly training and comparison workflow.
-        \end{itemize}
-      \end{block}
-    \end{column}
-  \end{columns}
-  % Speaker cue: This is the "what did I actually do" slide. Present it as code, experiments, and project workflow rather than only model theory.
-\end{frame}
-
-\begin{frame}{Experiment Grid From The Configs}
-  \small
-  \begin{tabularx}{\textwidth}{@{}p{0.33\textwidth}p{0.30\textwidth}X@{}}
-    \toprule
-    Sweep & Values already in config & What it tests \\
-    \midrule
-    Boundary weight $\alpha$ &
-    1, 5, 10, 15, 18, 20, 25, 30 &
-    How strongly to emphasize border pixels. \\
-    \addlinespace
-    Boundary width $\sigma$ &
-    0.04, 0.06, 0.09, 0.12, 0.18, 0.24 &
-    How wide the boundary-focused region should be. \\
-    \addlinespace
-    SDF distance weight &
-    0, 0.03, 0.1, 0.3, 1, 5, 7, 15 &
-    Whether the SDF head helps, and how much it should influence learning. \\
-    \addlinespace
-    Controls &
-    no augmentation, TV $=10^{-6}$, seam baseline &
-    Checks whether gains come from boundary loss, augmentation, or smoothing. \\
-    \bottomrule
-  \end{tabularx}
-
-  \vspace{0.7em}
-  \begin{block}{Runs still to fill after final training}
-    \config{w20\_s012\_d003}: \todo \quad
-    \config{w20\_s012\_d030}: \todo \quad
-    \config{w20\_s012\_tv1e6}: \todo \quad
-    \config{w20\_s012\_no\_aug}: \todo
-  \end{block}
-  % Speaker cue: Say that the config file already encodes the ablation plan. This makes the work look systematic rather than like one lucky run.
-\end{frame}
-
-\begin{frame}{Current Validation Results}
-  \small
-  \begin{tabularx}{\textwidth}{@{}p{0.25\textwidth}ccccX@{}}
-    \toprule
-    Run & Epoch & Pixel IoU & mIoU & Boundary IoU & Comment \\
-    \midrule
-    Mask baseline &
-    40 & 0.7274 & 0.6672 & 0.3155 & fair mask-only reference \\
-    Boundary BCE, $w=20$, $\sigma=0.12$ &
-    54 & 0.7276 & 0.6811 & 0.3591 & current strongest multi-country run \\
-    Boundary BCE, no SDF loss &
-    42 & 0.7265 & 0.6793 & 0.3577 & distance-head/loss ablation \\
-    \midrule
-    Final selected model on test &
-    \todo & \todo & \todo & \todo & fill after final training \\
-    \bottomrule
-  \end{tabularx}
-
-  \vspace{0.8em}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.49\textwidth}
-      \metricbox{Boundary IoU gain}{+0.0436}{absolute over mask baseline}
-    \end{column}
-    \begin{column}{0.49\textwidth}
-      \metricbox{mIoU gain}{+0.0139}{region quality also improves}
-    \end{column}
-  \end{columns}
-  % Exact configs: ftw_mask_baseline, ftw_dual_head_boundary_bce_w20_s012, ftw_dual_head_boundary_bce_w20_s012_d0.
-  % Speaker cue: Be explicit that these are validation numbers from the current logs, not final test-set claims.
-\end{frame}
-
-\begin{frame}{Qualitative Results}
-  \centering
-  \makebox[\textwidth][c]{%
-    \includegraphics[width=1.14\textwidth]{../Visualizations/sample_austria_g83_00040_14/val_predictions.png}%
-  }
-
-  \vspace{0.35em}
-
-  \makebox[\textwidth][c]{%
-    \includegraphics[width=1.14\textwidth]{../Visualizations/sample_denmark_g6_00074_10/val_predictions.png}%
-  }
-
-  \vspace{0.35em}
-
-  \makebox[\textwidth][c]{%
-    \includegraphics[width=1.14\textwidth]{../Visualizations/sample_austria_g95_00035_12/val_predictions.png}%
-  }
-
-  \vspace{0.2em}
-  \tiny
-  Two selected validation chips. Green is correct, blue is false positive, and red is false negative.
-  % Speaker cue: Compare baseline and boundary-aware predictions using one chip at a time. Focus on whether field borders are preserved.
-\end{frame}
-
-\begin{frame}{Interpretation So Far}
-  \begin{itemize}
-    \item Boundary-focused training improves the metric most connected to the project goal: separating field borders.
-    \item The current validation result improves Boundary IoU without lowering mIoU.
-    \item The \config{d0} ablation is close to the SDF-loss run, so the final report should be careful: the boundary-weighted BCE seems to drive much of the current gain.
-    \item The remaining sweeps should decide whether the SDF auxiliary head adds a consistent benefit beyond boundary BCE.
-    \item Final claims should use the test split and a small qualitative panel.
-  \end{itemize}
-  % Speaker cue: This slide is where you sound honest. Do not overclaim that the SDF head alone caused everything until the final ablations are complete.
-\end{frame}
-
-\begin{frame}{Final Results To Fill Before Presenting}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.49\textwidth}
-      \begin{block}{Final selected run}
-        \begin{tabularx}{\textwidth}{@{}lX@{}}
-          Config & \todo \\
-          Countries & \todo \\
-          Train / val / test chips & \todo \\
-          Epoch selected & \todo \\
-          Checkpoint & \todo \\
-        \end{tabularx}
-      \end{block}
-    \end{column}
-    \begin{column}{0.49\textwidth}
-      \begin{block}{Final test metrics}
-        \begin{tabularx}{\textwidth}{@{}lX@{}}
-          Pixel IoU & \todo \\
-          mIoU & \todo \\
-          Boundary IoU & \todo \\
-          Improvement vs baseline & \todo \\
-          Main limitation & \todo \\
-        \end{tabularx}
-      \end{block}
-    \end{column}
-  \end{columns}
-
-  \vspace{0.8em}
-  \begin{block}{One-sentence final takeaway}
-    \todo
-  \end{block}
-  % Speaker cue: This slide is intentionally a checklist. Replace placeholders after the remaining training runs.
-\end{frame}
-
-\begin{frame}{Conclusion}
-  \begin{itemize}
-    \item The project reframes agricultural field segmentation as both mask prediction and boundary-geometry learning.
-    \item I implemented a fair mask-only baseline, dual-head U-Net, SDF targets, boundary-weighted loss, and boundary-aware evaluation.
-    \item Current validation evidence: Boundary IoU rises from 0.3155 to 0.3591 while mIoU rises from 0.6672 to 0.6811.
-    \item After final training, the main claim should be: \todo
-  \end{itemize}
-  % Speaker cue: End with the story: field maps need boundaries; the method adds boundary supervision; validation supports the direction; final test results complete the evidence.
+  \pill{palegold}{Directly optimize the error that matters at test time.}
 \end{frame}
 
 \appendix
 
-\begin{frame}{Backup: France-Only Sweep Is Separate}
-  \scriptsize
-  \begin{block}{Do not mix this table with the multi-country results}
-    \begin{tabularx}{\textwidth}{@{}p{0.27\textwidth}cccX@{}}
-      \toprule
-      Run & Epoch & mIoU & Boundary IoU & Note \\
-      \midrule
-      Dual-head & 35 & 0.7587 & 0.4021 & older France-only log \\
-      Boundary BCE, $\sigma=0.12$ & 56 & 0.7543 & 0.3863 & best boundary-BCE sweep row \\
-      Boundary BCE, $\sigma=0.24$ & 56 & 0.7597 & 0.3841 & wider boundary focus \\
-      Boundary BCE, $\sigma=0.09$ & 54 & 0.7615 & 0.3839 & narrower boundary focus \\
-      Mask baseline & 40 & 0.7541 & 0.3469 & France-only baseline \\
-      \bottomrule
-    \end{tabularx}
+\begin{frame}{Backup: threshold sensitivity on the test set}
+  \centering
+  \small
+  \setlength{\tabcolsep}{8pt}
+  \begin{tabular}{@{}lcccccccc@{}}
+    \toprule
+    & \multicolumn{2}{c}{0.40} & \multicolumn{2}{c}{0.50}
+    & \multicolumn{2}{c}{0.60} & \multicolumn{2}{c}{0.70} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+    Method & mIoU & BIoU & mIoU & BIoU & mIoU & BIoU & mIoU & BIoU \\
+    \midrule
+    Baseline & .6593 & .3049 & .6587 & .3199 & .6572 & .3313 & .6506 & .3359 \\
+    2-head SDF & .6554 & .3017 & .6528 & .3153 & .6500 & .3254 & .6369 & .3246 \\
+    Boundary BCE & .6706 & .3364 & .6731 & .3618 & .6675 & \textbf{.3755} & .6520 & .3682 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.9em}
+  \begin{block}{Why the main talk uses 0.60}
+    It is a single common operating point for all three models. The conclusion is unchanged across the tested thresholds.
   \end{block}
-  \vspace{0.4em}
-  \small Use this only as hyperparameter background; final comparison should come from the same countries and same split.
-  % Exact configs: ftw_dual_head, ftw_dual_head_boundary_bce_w20_s012, ftw_dual_head_boundary_bce_w20_s024, ftw_dual_head_boundary_bce_w20_s009, ftw_mask_baseline.
-  % Speaker cue: Use this only if someone asks about the broader config sweep. The key warning is that the geography differs.
+\end{frame}
+
+\begin{frame}{Backup: full boundary-BCE objective and SDF ablation}
+  \begin{block}{General dual-head objective}
+    \[
+      \mathcal{L}
+      = \lambda_B\mathcal{L}_{WBCE}
+      + \lambda_D\mathcal{L}_{Dice}
+      + \lambda_S\mathcal{L}_{SDF}
+      + \lambda_{TV}\mathcal{L}_{TV}
+    \]
+  \end{block}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Best simple model}
+        $\lambda_B=1,\ \lambda_D=1,\ \lambda_S=0,\ \lambda_{TV}=0$\\[0.4em]
+        $\alpha=20,\ \sigma=0.12$
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Full two-head variant}
+        $\lambda_B=1,\ \lambda_D=1,\ \lambda_S=0.1,\ \lambda_{TV}=0$\\[0.4em]
+        Test BIoU: $0.3739$ vs.\ $0.3755$ without SDF
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.6em}
+  \small
+  Normalizing weighted BCE by $\sum_i w_i$ keeps its scale comparable while changing the relative importance of boundary pixels.
+\end{frame}
+
+\begin{frame}{Backup: references}
+  \footnotesize
+  \begin{thebibliography}{9}
+    \bibitem{ftw}
+      H. Kerner et al.
+      \newblock \emph{Fields of The World: A Machine Learning Benchmark Dataset for Global Agricultural Field Boundary Segmentation}.
+      \newblock AAAI, 2025.
+
+    \bibitem{unet}
+      O. Ronneberger, P. Fischer, and T. Brox.
+      \newblock \emph{U-Net: Convolutional Networks for Biomedical Image Segmentation}.
+      \newblock MICCAI, 2015.
+
+    \bibitem{boundary}
+      H. Kervadec et al.
+      \newblock \emph{Boundary Loss for Highly Unbalanced Segmentation}.
+      \newblock MIDL, 2019; extended in Medical Image Analysis, 2021.
+  \end{thebibliography}
+
+  \vspace{0.8em}
+  \small
+  All prediction panels and project diagrams were generated from this repository; no external figures are reproduced.
 \end{frame}
 
 \end{document}
