@@ -387,12 +387,13 @@
 \end{frame}
 
 \begin{frame}{Evaluation protocol: model selection and test stay separate}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.55\textwidth}
+  \begin{columns}[c,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \centering
       \begin{tikzpicture}[
-        node distance=0.42cm,
+        node distance=0.52cm,
         stage/.style={draw=forest,very thick,rounded corners=3pt,
-          minimum width=3.6cm,minimum height=0.78cm,align=center},
+          minimum width=4.1cm,minimum height=0.82cm,align=center},
         arr/.style={-{Latex[length=2.5mm]},very thick,draw=muted}
       ]
         \node[stage,fill=palegreen] (train) {train\\fit model parameters};
@@ -402,26 +403,26 @@
         \draw[arr] (val) -- (test);
       \end{tikzpicture}
     \end{column}
-    \begin{column}{0.41\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Fair comparison}
         \begin{itemize}
           \item Common probability threshold: \textbf{0.60}
-          \item Boundary evaluation tolerance:\\[-0.1em]
-            \textbf{1 px inward + 1 px outward}\\[-0.1em]
-            {\small ($\approx$10 m per side)}
+          \item Boundary band:\\[-0.1em]
+            \textbf{2 px inward from each mask edge}\\[-0.1em]
+            {\small (erosion radius 2; $\approx$20 m)}
           \item Same 1,430 test chips for all models
         \end{itemize}
       \end{block}
       \vspace{0.45em}
       \begin{block}{Metrics}
         \textbf{mIoU}: region overlap\\[0.35em]
-        \textbf{Boundary IoU}: overlap of symmetric bands around predicted and target borders
+        \textbf{Boundary IoU}: overlap of two-pixel inner bands extracted from predicted and target masks
       \end{block}
     \end{column}
   \end{columns}
 \end{frame}
 
-\begin{frame}{Symmetric boundary evaluation confirms the best model}
+\begin{frame}{The explicit boundary head gives the best two-pixel Boundary IoU}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.52\textwidth}
       \centering
@@ -440,7 +441,7 @@
         \node[anchor=west,font=\small\bfseries] at (5.93,-0.20) {0.3501};
         \node[anchor=west,font=\small\bfseries] at (6.73,-1.20) {0.4000};
         \node[anchor=west,font=\scriptsize,text=muted] at (0.2,-1.92)
-          {Symmetric Boundary IoU @ threshold 0.60};
+          {Inner-boundary IoU (2 px) @ threshold 0.60};
       \end{tikzpicture}
       }
     \end{column}

@@ -36,11 +36,11 @@ The new model has two active heads, mask and boundary. The boundary target is on
 
 ## 9. Evaluation protocol — 0:45
 
-Validation is used to choose each saved checkpoint. The reported comparison then uses the held-out test split of 1,430 chips. Every model uses the same probability threshold, 0.60. For Boundary IoU, we create a strict symmetric band extending one pixel inward and one pixel outward from each border, which is approximately 10 metres per side at Sentinel-2 resolution. mIoU measures region overlap, while Boundary IoU measures overlap between the predicted and target boundary bands. A common threshold avoids selecting a separate test operating point for each model.
+Validation is used to choose each saved checkpoint. The reported comparison then uses the held-out test split of 1,430 chips. Every model uses the same probability threshold, 0.60. For Boundary IoU, we erode each binary mask with radius two and subtract the eroded mask, producing an inner boundary band two pixels wide, or approximately 20 metres at Sentinel-2 resolution. mIoU measures region overlap, while Boundary IoU measures overlap between the inner bands extracted from the predicted and target masks. A common threshold avoids selecting a separate test operating point for each model.
 
 ## 10. Test results — 1:20
 
-With the strict symmetric boundary band, the baseline reaches 0.3469 Boundary IoU. Boundary-weighted BCE raises it to 0.3926, a gain of 4.57 points, and gives the highest mIoU at 0.6675. The boundary-focused SDF regression model with loss weight 0.5 reaches 0.3501, a smaller gain of 0.32 points, while its mIoU falls by 0.73 points to 0.6499. The new mask-plus-boundary model reaches the best Boundary IoU, 0.4000. That is 5.31 points over baseline and 0.74 points over Boundary BCE alone. Its mIoU is 0.6634: still 0.62 points above baseline, but 0.41 points below Boundary BCE.
+With the two-pixel inner boundary band, the baseline reaches 0.3469 Boundary IoU. Boundary-weighted BCE raises it to 0.3926, a gain of 4.57 points, and gives the highest mIoU at 0.6675. The boundary-focused SDF regression model with loss weight 0.5 reaches 0.3501, a smaller gain of 0.32 points, while its mIoU falls by 0.73 points to 0.6499. The new mask-plus-boundary model reaches the best Boundary IoU, 0.4000. That is 5.31 points over baseline and 0.74 points over Boundary BCE alone. Its mIoU is 0.6634: still 0.62 points above baseline, but 0.41 points below Boundary BCE.
 
 ## 11. What the auxiliary task contributed — 0:55
 
@@ -52,7 +52,7 @@ All four predictions here use the same Austria validation chip and threshold. Th
 
 ## 13. Conclusion and outlook — 0:50
 
-The conclusion is that direct boundary supervision works better than auxiliary distance regression in this setup. Boundary-focused SDF regression with weight 0.5 gives only a small 0.32-point Boundary-IoU gain and reduces mIoU by 0.73 points. With the strict one-pixel symmetric evaluation band, Boundary-weighted BCE improves the baseline by 4.57 points, and the explicit boundary output reaches the best score at 0.4000, or 5.31 points above baseline. Boundary BCE alone still has the highest mIoU, so the final choice depends on whether boundary fidelity or region overlap is prioritized. Next we would tune the loss weights and other hyperparameters more thoroughly, train and evaluate on more data, report results by country, and study instance-separation post-processing.
+The conclusion is that direct boundary supervision works better than auxiliary distance regression in this setup. Boundary-focused SDF regression with weight 0.5 gives only a small 0.32-point Boundary-IoU gain and reduces mIoU by 0.73 points. With the two-pixel inner boundary evaluation band, Boundary-weighted BCE improves the baseline by 4.57 points, and the explicit boundary output reaches the best score at 0.4000, or 5.31 points above baseline. Boundary BCE alone still has the highest mIoU, so the final choice depends on whether boundary fidelity or region overlap is prioritized. Next we would tune the loss weights and other hyperparameters more thoroughly, train and evaluate on more data, report results by country, and study instance-separation post-processing.
 
 ## Backup slides
 
