@@ -1,8 +1,10 @@
 # Fdb version 4
-["pdflatex"] 1784403489.12867 "hlcv_project_slides.tex" "hlcv_project_slides.pdf" "hlcv_project_slides" 1784403491.51734 0
+["pdflatex"] 1784451622.97635 "hlcv_project_slides.tex" "hlcv_project_slides.pdf" "hlcv_project_slides" 1784451625.85337 0
+  "../Visualizations/presentation_comparison/baseline_mask.png" 1784449300.5416 44042 7d719bb82396c15a6860eaf065c47046 ""
+  "../Visualizations/presentation_comparison/boundary_bce_mask.png" 1784449315.89318 46733 35b08c484844aa5c372ef7b482bad10e ""
+  "../Visualizations/presentation_comparison/mask_boundary_heads_mask.png" 1784449322.63965 50182 417496374d9d15661cdfb3615ff01acd ""
+  "../Visualizations/presentation_comparison/sdf_head_mask.png" 1784449305.7453 42108 1175a2a70fce98ffa7dac16850ca73ff ""
   "../Visualizations/problem_setup/val_blob_issue.png" 1784288545.43035 869758 11e2cc58b8aeac8a80bd7272b57ed1fd ""
-  "../Visualizations/sample_austria_g83_00040_14/baseline_mask.png" 1784403463.32731 42456 35509dd048baf0a99c6772ccd700ce76 ""
-  "../Visualizations/sample_austria_g83_00040_14/best_model_mask.png" 1784403463.44438 50944 b84684e295013cd0c93e304a864d48f5 ""
   "../Visualizations/sample_austria_g83_00040_14/ground_truth_mask.png" 1784403463.19439 52621 03e8dd0904c9ef990c6c4297f5909185 ""
   "../Visualizations/sample_austria_g83_00040_14/rgb.png" 1784403463.06014 355625 482ad5ba393bc8e15a3b174babbb2583 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc" 1254269338 2375 baa924870cfb487815765f9094cf3728 ""
@@ -262,10 +264,10 @@
   "/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1744387786 5467155 19efa205003f9ecad95fbbaa6ff24da1 ""
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1744387755 3345736 674c83ef32936358dbcfadc0f5be704c ""
   "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
-  "hlcv_project_slides.aux" 1784403491.28671 2899 f63113bf8af03c9e93c9d92fb91b3d2e "pdflatex"
-  "hlcv_project_slides.nav" 1784403491.28777 1853 76c917cd7eecc57a4317d36dea5a1179 "pdflatex"
-  "hlcv_project_slides.out" 1784403491.28752 81 5bcea9cf7d2d9aece7cac4018e9f6c5b "pdflatex"
-  "hlcv_project_slides.tex" 1784403483.6337 19987 ca2389158f96fb13a5745a289d67c2c5 ""
+  "hlcv_project_slides.aux" 1784451625.585 3028 d0150a0513dfcecfa5306f2b7c9f6c3a "pdflatex"
+  "hlcv_project_slides.nav" 1784451625.58669 1946 cb982f64312f1f16a536254219649dc6 "pdflatex"
+  "hlcv_project_slides.out" 1784451625.58631 81 5bcea9cf7d2d9aece7cac4018e9f6c5b "pdflatex"
+  "hlcv_project_slides.tex" 1784451610.38604 23415 93f4ad8b7e88218ee2e4d6bfc99bd484 ""
   (generated)
   "hlcv_project_slides.aux"
   "hlcv_project_slides.log"

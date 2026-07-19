@@ -4,52 +4,56 @@ Target length: about 11:45–12:00. Backup slides are only for Q/A.
 
 ## 1. Title — 0:20
 
-We study agricultural field segmentation from Sentinel-2 imagery. The central question is whether the boundaries between individual fields are learned better through an auxiliary signed-distance head or by directly increasing the segmentation loss near boundaries.
+We study agricultural field segmentation from Sentinel-2 imagery. Our question is where boundary information should enter training: through distance regression, by directly weighting the mask loss, or through an explicit boundary-prediction output.
 
-## 2. The challenge — 0:55
+## 2. The challenge — 0:50
 
-The ordinary task is field versus background segmentation, but the useful map must also preserve each individual field. In the figure, the middle mask tells us where agricultural land is. The right image shows the separate fields within that area. A prediction can therefore obtain reasonable region overlap and still be wrong by merging neighboring fields. Our goal is to improve border agreement without harming the field mask.
+The primary target is field versus background, but a useful map must preserve the thin gaps between neighboring fields. A model can obtain reasonable area overlap while merging separate fields into one region. Our goal is therefore to improve border agreement without damaging the overall field mask.
 
-## 3. Data and supervision — 0:55
+## 3. Data and supervision — 0:50
 
-We use the Fields of The World benchmark and the three countries available in our local training setup: Austria, Croatia, and Denmark. Every chip contains red, green, blue, and near-infrared bands from two contrasting dates, giving eight input channels. The complete-pair loader gives 10,938 training, 1,347 validation, and 1,430 test chips. The semantic mask is the main target. FTW also provides an instance mask in which each individual field has a different pixel value. Our loader remaps those existing values to compact IDs and uses the result to create a normalized signed distance field: positive inside each field, zero near its boundary, and negative outside.
+We use the Fields of The World data available for Austria, Croatia, and Denmark. Every 256-by-256 chip contains RGB and near-infrared bands from two seasonal images, giving eight input channels. We have 10,938 training, 1,347 validation, and 1,430 test chips. The binary field mask is the segmentation target. The dataset also provides an instance mask that distinguishes neighboring fields; we convert it into a normalized signed distance field, which lets us derive distances and a narrow boundary band.
 
-## 4. Related work and contribution — 0:55
+## 4. Related work and contribution — 0:45
 
-We build on three ingredients: the FTW dataset, the U-Net encoder–decoder, and the general idea that distance-to-boundary information can complement region losses. Our contribution is the controlled implementation and comparison. We added the SDF target and regression head, implemented SDF-derived BCE weighting, and built the matched baselines, Boundary IoU metric, checkpoint evaluation, and visualizations. The project question is specifically where the boundary signal should enter training.
+We build on FTW, the U-Net architecture, and prior distance-aware segmentation ideas. Our work is the controlled comparison in this repository. We implemented an SDF regression output, boundary-weighted BCE, an explicit boundary-prediction output, Boundary IoU evaluation, matched checkpoint testing, and qualitative comparisons. The focus is not a new backbone; it is how the loss exposes boundary information to the same backbone.
 
-## 5. Three methods — 1:05
+## 5. Four methods — 1:00
 
-The first method is the mask-only baseline. I checked the actual trained configuration: its loss is ordinary BCE plus Dice. The second method adds an SDF regression head and a Smooth L1 term with weight 0.1. The third method returns to a single mask head but uses the SDF only to weight BCE near field boundaries. Data, augmentation, backbone width, optimizer, and evaluation code remain the same. This makes the comparison about the supervision strategy rather than model capacity or data.
+The baseline has one mask output and uses ordinary BCE plus Dice. The SDF method adds a distance-regression output and a Smooth L1 loss. Boundary BCE returns to one mask output, but weights each BCE pixel by its distance from a field border. The new model has two active outputs: a mask output and an explicit boundary output. Its mask still uses boundary-weighted BCE plus Dice, and the boundary output adds a class-balanced BCE term with weight two. Data, augmentation, U-Net width, optimizer, and evaluation code are held constant.
 
-## 6. Second SDF head — 1:15
+## 6. SDF regression output — 1:05
 
-The dual-head model shares the full U-Net feature extractor. One small head predicts mask logits; the other predicts signed distance. The mask receives BCE and Dice. The distance prediction is passed through tanh and compared with the target using Smooth L1. The hypothesis is multi-task learning: to predict the SDF, shared features should encode where each individual field ends. The head adds only 9,313 parameters, about 0.12 percent, and inference still uses the mask head. Therefore any mask improvement must come through the shared representation.
+The first two-output model shares the full U-Net and then predicts both mask logits and signed distance. Tanh bounds the predicted distance to the same minus-one-to-one range as the normalized target. Smooth L1 is quadratic for small errors and linear for larger errors, so it is less sensitive to outliers than mean squared error. The hypothesis is multi-task learning: learning field geometry may improve the shared mask features. Segmentation at inference still comes from the mask output.
 
-## 7. Boundary-weighted BCE — 1:20
+## 7. Boundary-weighted BCE — 1:10
 
-The final method uses the same SDF target differently. Each pixel’s BCE is multiplied by a weight that decays exponentially with absolute signed distance. At the border the weight is 21. At one sigma, a distance of 0.12, it is still 8.36, and it approaches one far from the border. We divide by the sum of weights so the term stays normalized. Dice remains unweighted and preserves global overlap. The key difference is that boundary information now acts directly on the mask logits instead of reaching them indirectly through a regression task.
+Here the distance target is used to change the mask loss directly. A pixel exactly on a boundary receives BCE weight 21. At normalized distance 0.12 the weight is 8.36, and it approaches one far away. Dividing by the sum of weights keeps the loss normalized. Dice remains unweighted and preserves global region overlap. This is the central difference: boundary mistakes now directly dominate the gradients of the final mask output.
 
-## 8. Evaluation protocol — 0:50
+## 8. Explicit boundary output — 1:00
 
-Validation is used only to choose the saved checkpoint. The held-out test split is then used for the reported comparison. All three models are evaluated on exactly 1,430 chips using the same threshold of 0.60 and a two-pixel boundary band. mIoU measures region overlap. Boundary IoU measures overlap between the predicted and target boundary bands. Using one threshold for all models avoids choosing a separate test operating point for each model.
+The new model has two active heads, mask and boundary. The boundary target is one whenever the absolute normalized distance is at most 0.12, and zero otherwise. Because this positive band is thin, its BCE is class-balanced. The complete objective is boundary-weighted BCE plus Dice for the mask, plus two times boundary BCE for the second output. At inference we still use the mask output for the final segmentation; the boundary task acts through the shared features during training.
 
-## 9. Test results — 1:25
+## 9. Evaluation protocol — 0:45
 
-This is the main result. The mask baseline reaches 0.3313 Boundary IoU and 0.6572 mIoU. The ordinary two-head SDF model reaches 0.3254 Boundary IoU, so it is 0.59 percentage points below the baseline on this test checkpoint. Boundary-weighted BCE reaches 0.3755, an absolute improvement of 4.42 percentage points, while mIoU also increases by 1.03 points to 0.6675. Therefore the gain is not a trade where we improve only a thin boundary metric and damage the region mask.
+Validation is used to choose each saved checkpoint. The reported comparison then uses the held-out test split of 1,430 chips. Every model uses the same probability threshold, 0.60, and a boundary evaluation tolerance of two pixels, which is approximately 20 metres at Sentinel-2 resolution. mIoU measures region overlap, while Boundary IoU measures overlap between predicted and target boundary bands. A common threshold avoids selecting a separate test operating point for each model.
 
-## 10. What the second head contributed — 1:10
+## 10. Test results — 1:20
 
-This slide resolves an important result mismatch. Earlier validation runs suggested a small improvement from SDF supervision, roughly the two-point gain we initially discussed, but that claim does not hold on the held-out test checkpoint. We also compare boundary-weighted BCE with and without the SDF head. The full dual-head version reaches 0.3739 Boundary IoU; removing the SDF head slightly improves it to 0.3755. Once the segmentation loss already emphasizes borders, the second head adds no measurable benefit. The evidence supports direct segmentation supervision, not auxiliary regression, as the source of the final gain.
+The baseline reaches 0.3313 Boundary IoU. The SDF regression model reaches 0.3254, which is 0.59 percentage points below the baseline. Boundary-weighted BCE raises Boundary IoU to 0.3755, a gain of 4.42 points, and gives the highest mIoU at 0.6675. The new mask-plus-boundary model reaches the best Boundary IoU, 0.3832. That is 5.19 points over baseline and 0.77 points over Boundary BCE alone. Its mIoU is 0.6634: still 0.62 points above baseline, but 0.41 points below Boundary BCE. So the explicit boundary output gives a modest additional boundary gain, with a small region-overlap tradeoff relative to the mask-only boundary model.
 
-## 11. Qualitative validation example — 0:55
+## 11. What the auxiliary task contributed — 0:55
 
-This Austrian validation chip shows the original Sentinel-2 RGB image, the ground-truth field mask, the baseline segmentation, and the segmentation from our best boundary-weighted BCE model. The baseline merges or removes several thin separations between neighboring fields. The best model preserves more of those narrow gaps, although difficult borders remain. This image is only a qualitative illustration; the aggregate comparison on the previous slide is based on all 1,430 held-out test chips.
+The important distinction is the target of the second output. Regressing signed distance did not improve the selected test checkpoint. Directly weighting the mask gradients produced the large gain. Once that direct loss is present, explicitly predicting the boundary band adds another 0.77 points of Boundary IoU. Our evidence therefore supports a focused boundary-classification task, not a distance-regression task, when the evaluation goal is border agreement.
 
-## 12. Conclusion and outlook — 0:50
+## 12. Qualitative comparison — 0:55
 
-The conclusion is simple: in this setup, direct boundary-weighted BCE together with Dice is more effective than an auxiliary signed-distance regression head. It improves Boundary IoU by 4.42 percentage points and mIoU by 1.03 points over the matched mask baseline. The selected final model is therefore the simpler mask-only boundary-BCE version. The strongest next checks are multiple random seeds, per-country results, and instance-separation post-processing.
+All four predictions here use the same Austria validation chip and threshold. The top row gives the image, target, and baseline. The bottom row shows the SDF model, Boundary BCE, and the new mask-plus-boundary model. The panels let us compare the same thin separations rather than choosing a different favorable image for each method. This is only a qualitative example; the numerical claims come from all 1,430 held-out test chips.
+
+## 13. Conclusion and outlook — 0:50
+
+The conclusion is that direct boundary supervision works better than auxiliary distance regression in this setup. Boundary-weighted BCE improves the baseline by 4.42 Boundary-IoU points, and the explicit boundary output reaches the best score at 0.3832, or 5.19 points above baseline. Boundary BCE alone still has the highest mIoU, so the final choice depends on whether boundary fidelity or region overlap is prioritized. Next we would repeat multiple seeds, report results by country, and study instance-separation post-processing.
 
 ## Backup slides
 
-The threshold table shows that boundary-weighted BCE remains best at every tested threshold. The loss backup gives the general objective and the exact final weights. The reference slide documents the external work used in the project.
+The threshold table shows that the new model has the best Boundary IoU at all four tested thresholds. The loss backup states the exact objectives of the two strongest models. The reference slide documents the external work used in the project.
