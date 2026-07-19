@@ -1,9 +1,9 @@
 # Fdb version 4
-["pdflatex"] 1784451622.97635 "hlcv_project_slides.tex" "hlcv_project_slides.pdf" "hlcv_project_slides" 1784451625.85337 0
+["pdflatex"] 1784461212.93408 "hlcv_project_slides.tex" "hlcv_project_slides.pdf" "hlcv_project_slides" 1784461215.60472 0
   "../Visualizations/presentation_comparison/baseline_mask.png" 1784449300.5416 44042 7d719bb82396c15a6860eaf065c47046 ""
   "../Visualizations/presentation_comparison/boundary_bce_mask.png" 1784449315.89318 46733 35b08c484844aa5c372ef7b482bad10e ""
   "../Visualizations/presentation_comparison/mask_boundary_heads_mask.png" 1784449322.63965 50182 417496374d9d15661cdfb3615ff01acd ""
-  "../Visualizations/presentation_comparison/sdf_head_mask.png" 1784449305.7453 42108 1175a2a70fce98ffa7dac16850ca73ff ""
+  "../Visualizations/presentation_comparison/sdf_head_mask.png" 1784460666.25691 41088 b898e03dc46ef585e8ef45f3344b4465 ""
   "../Visualizations/problem_setup/val_blob_issue.png" 1784288545.43035 869758 11e2cc58b8aeac8a80bd7272b57ed1fd ""
   "../Visualizations/sample_austria_g83_00040_14/ground_truth_mask.png" 1784403463.19439 52621 03e8dd0904c9ef990c6c4297f5909185 ""
   "../Visualizations/sample_austria_g83_00040_14/rgb.png" 1784403463.06014 355625 482ad5ba393bc8e15a3b174babbb2583 ""
@@ -58,6 +58,7 @@
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb" 1248133631 31764 459c573c03a4949a528c2cc7f557e217 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmex10.pfb" 1254269338 23055 2e5b42921de910eaa97b85df04ca4891 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi10.pfb" 1254269338 30388 702fae6a5f0e6e9c48a1d872b442ffcf ""
+  "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi6.pfb" 1254269338 31113 04b711c9a4c7f8cb4ed784c6fc4cc1c5 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi7.pfb" 1254269338 30789 be3ebdf20b6442cc4aaf81a81e17daf4 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi8.pfb" 1254269338 30635 833ec815d446ec453a4913fc26d24cbc ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi9.pfb" 1254269338 30698 e53a423459271d6c5cdd91f7559396af ""
@@ -72,6 +73,7 @@
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsso8.pfb" 1255129361 106860 a773e4958b589eadcc5b01a914624508 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsso9.pfb" 1255129361 106652 ff05a0e8c2fd1774314bcad2c26aa3e8 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy10.pfb" 1254269338 27863 09ce3735688ffde955e72da27c95b61a ""
+  "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy6.pfb" 1254269338 28109 6d61305ed3d0eb794ebe36f15cf44aa0 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy7.pfb" 1254269338 27941 d1f5d03f61a46c3fcc3a2ba904ddda52 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy8.pfb" 1254269338 27802 5c876bb2c4040caaf035d60bd74a86bd ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy9.pfb" 1254269338 27835 16c2fa83351d4ef8cf5aebfab8a44bc1 ""
@@ -264,10 +266,10 @@
   "/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1744387786 5467155 19efa205003f9ecad95fbbaa6ff24da1 ""
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1744387755 3345736 674c83ef32936358dbcfadc0f5be704c ""
   "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
-  "hlcv_project_slides.aux" 1784451625.585 3028 d0150a0513dfcecfa5306f2b7c9f6c3a "pdflatex"
-  "hlcv_project_slides.nav" 1784451625.58669 1946 cb982f64312f1f16a536254219649dc6 "pdflatex"
-  "hlcv_project_slides.out" 1784451625.58631 81 5bcea9cf7d2d9aece7cac4018e9f6c5b "pdflatex"
-  "hlcv_project_slides.tex" 1784451610.38604 23415 93f4ad8b7e88218ee2e4d6bfc99bd484 ""
+  "hlcv_project_slides.aux" 1784461215.37379 3028 d0150a0513dfcecfa5306f2b7c9f6c3a "pdflatex"
+  "hlcv_project_slides.nav" 1784461215.37498 1946 cb982f64312f1f16a536254219649dc6 "pdflatex"
+  "hlcv_project_slides.out" 1784461215.3747 81 5bcea9cf7d2d9aece7cac4018e9f6c5b "pdflatex"
+  "hlcv_project_slides.tex" 1784461123.72037 24191 2e54150b01bef57568b2fe5375d61207 ""
   (generated)
   "hlcv_project_slides.aux"
   "hlcv_project_slides.log"

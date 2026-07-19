@@ -41,7 +41,7 @@ def _segmentation_metrics():
     return dict(
         pixel_iou=PixelIoU(threshold=0.5),
         miou=MeanIoU(threshold=0.5),
-        boundary_iou=BoundaryIoU(threshold=0.5, radius=2),
+        boundary_iou=BoundaryIoU(threshold=0.5, radius=1),
     )
 
 

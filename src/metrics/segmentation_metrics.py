@@ -41,10 +41,16 @@ class PixelIoU:
 
 
 class BoundaryIoU:
+    """IoU between symmetric boundary bands around prediction and target.
+
+    ``radius`` controls how far each band extends both inward and outward from
+    the corresponding mask boundary.
+    """
+
     def __init__(
         self,
         threshold=0.5,
-        radius=2,
+        radius=1,
         eps=1e-6,
     ):
         self.threshold = threshold
@@ -54,15 +60,28 @@ class BoundaryIoU:
     def compute(self, outputs, targets):
         pred = (mask_probability_from_outputs(outputs) > self.threshold).float()
         target = (targets["mask"] > 0.5).float()
-        pred_boundary = _mask_boundary(pred, self.radius)
-        target_boundary = _mask_boundary(target, self.radius)
+        pred_boundary = symmetric_boundary_band(pred, self.radius)
+        target_boundary = symmetric_boundary_band(target, self.radius)
         intersection = (pred_boundary * target_boundary).flatten(1).sum(dim=1)
         union = ((pred_boundary + target_boundary) > 0).flatten(1).sum(dim=1).float()
         return ((intersection + self.eps) / (union + self.eps)).mean().item()
 
 
-def _mask_boundary(mask, radius):
-    pad = radius
+def symmetric_boundary_band(mask, radius):
+    """Return a band extending ``radius`` pixels inside and outside a mask."""
+
     kernel = 2 * radius + 1
-    eroded = -F.max_pool2d(-mask, kernel_size=kernel, stride=1, padding=pad)
-    return (mask - eroded).clamp(min=0)
+    mask = mask.float()
+    dilated = F.max_pool2d(
+        mask,
+        kernel_size=kernel,
+        stride=1,
+        padding=radius,
+    )
+    eroded = -F.max_pool2d(
+        -mask,
+        kernel_size=kernel,
+        stride=1,
+        padding=radius,
+    )
+    return (dilated - eroded).clamp(min=0.0, max=1.0)

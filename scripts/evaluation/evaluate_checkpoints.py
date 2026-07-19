@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from cfgs import field_segmentation
+from src.metrics.segmentation_metrics import symmetric_boundary_band
 from src.utils.prediction import mask_probability_from_outputs
 from src.utils.utils import seed_everything
 
@@ -28,19 +29,13 @@ def _load_checkpoint(model, checkpoint, device):
     model.load_state_dict(state)
 
 
-def _mask_boundary(mask, radius=2):
-    kernel = 2 * radius + 1
-    eroded = -torch.nn.functional.max_pool2d(-mask.float(), kernel_size=kernel, stride=1, padding=radius)
-    return (mask.float() - eroded).clamp(min=0.0)
-
-
 def _fast_mask_metric_sums(outputs, batch, threshold, prediction_args=None):
     pred = mask_probability_from_outputs(outputs, **(prediction_args or {})) > threshold
     target = batch["mask"] > 0.5
     intersection = (pred & target).flatten(1).sum(dim=1).float()
     union = (pred | target).flatten(1).sum(dim=1).float()
-    pred_boundary = _mask_boundary(pred.float(), radius=2)
-    target_boundary = _mask_boundary(target.float(), radius=2)
+    pred_boundary = symmetric_boundary_band(pred, radius=1)
+    target_boundary = symmetric_boundary_band(target, radius=1)
     boundary_intersection = (pred_boundary * target_boundary).flatten(1).sum(dim=1)
     boundary_union = ((pred_boundary + target_boundary) > 0).flatten(1).sum(dim=1).float()
     eps = 1e-6
