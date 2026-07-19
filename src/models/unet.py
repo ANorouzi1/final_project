@@ -136,6 +136,43 @@ class FrameFieldUNet(DualHeadUNet):
         }
 
 
+class ThreeHeadUNet(DualHeadUNet):
+    """U-Net with mask, optional signed-distance, and explicit boundary heads."""
+
+    def __init__(
+        self,
+        in_channels=3,
+        base_channels=32,
+        num_classes=1,
+        bilinear=True,
+        predict_distance=True,
+    ):
+        super().__init__(
+            in_channels=in_channels,
+            base_channels=base_channels,
+            num_classes=num_classes,
+            bilinear=bilinear,
+            predict_distance=predict_distance,
+        )
+        c = base_channels
+        self.boundary_head = nn.Sequential(
+            nn.Conv2d(c, c, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(c),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(c, 1, kernel_size=1),
+        )
+
+    def forward(self, x):
+        features = self._forward_features(x)
+        outputs = {
+            "mask_logits": self.mask_head(features),
+            "boundary_logits": self.boundary_head(features),
+        }
+        if self.distance_head is not None:
+            outputs["distance_logits"] = self.distance_head(features)
+        return outputs
+
+
 class MaskOnlyUNet(BaseModel):
     """U-Net baseline with the same backbone but no auxiliary distance head."""
 

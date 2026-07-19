@@ -9,6 +9,7 @@ from src.utils.utils import seed_everything
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="synthetic_debug")
+    parser.add_argument("--log-dir", default="Logs")
     args = parser.parse_args()
 
     project_root = Path(__file__).resolve().parent
@@ -20,7 +21,7 @@ def main():
 
     trainer = config["trainer_module"](
         config=config,
-        log_dir=project_root / "Logs",
+        log_dir=project_root / args.log_dir,
         train_loader=train_loader,
         eval_loader=eval_loader,
     )

@@ -7,13 +7,16 @@ import torch
 from src.data_loaders.field_dataset import FieldSegmentationDataModule, NUM_INPUT_CHANNELS
 from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
 from src.losses.segmentation_losses import (
+    BoundaryWeightedDiceBCEBoundarySDFTVLoss,
     BoundaryWeightedDiceBCEDistanceTVLoss,
+    BoundaryWeightedSDFDiceBCEDistanceTVLoss,
     DiceBCESeamLoss,
     DiceBCETVLoss,
     DiceBCEDistanceTVLoss,
+    ThreeHeadBoundaryDiceBCEDistanceTVLoss,
 )
 from src.metrics.segmentation_metrics import BoundaryIoU, MeanIoU, PixelIoU
-from src.models.unet import DualHeadUNet, FrameFieldUNet, MaskOnlyUNet
+from src.models.unet import DualHeadUNet, FrameFieldUNet, MaskOnlyUNet, ThreeHeadUNet
 from src.trainers.field_trainer import FieldSegmentationTrainer
 
 
@@ -269,6 +272,87 @@ ftw_dual_head_boundary_bce_w20_s012["trainer_config"] = _base_trainer(
     "ftw_dual_head_boundary_bce_w20_s012", epochs=50, eval_period=2
 )
 
+ftw_three_head_boundary_bce_w20_s012 = deepcopy(
+    ftw_dual_head_boundary_bce_w20_s012
+)
+ftw_three_head_boundary_bce_w20_s012["name"] = "ftw_three_head_boundary_bce_w20_s012"
+ftw_three_head_boundary_bce_w20_s012["model_arch"] = ThreeHeadUNet
+ftw_three_head_boundary_bce_w20_s012[
+    "criterion"
+] = ThreeHeadBoundaryDiceBCEDistanceTVLoss
+ftw_three_head_boundary_bce_w20_s012["criterion_args"] = dict(
+    ftw_dual_head_boundary_bce_w20_s012["criterion_args"],
+    boundary_head_weight=0.3,
+    boundary_target_threshold=0.12,
+)
+ftw_three_head_boundary_bce_w20_s012["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012", epochs=50, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw1 = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012
+)
+ftw_three_head_boundary_bce_w20_s012_headw1[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw1"
+ftw_three_head_boundary_bce_w20_s012_headw1["criterion_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012["criterion_args"],
+    boundary_head_weight=1.0,
+)
+ftw_three_head_boundary_bce_w20_s012_headw1["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw1", epochs=50, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw2 = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012
+)
+ftw_three_head_boundary_bce_w20_s012_headw2[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw2"
+ftw_three_head_boundary_bce_w20_s012_headw2["criterion_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012["criterion_args"],
+    boundary_head_weight=2.0,
+)
+ftw_three_head_boundary_bce_w20_s012_headw2["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw2", epochs=50, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw2_other3 = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012_headw2
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw2_other3"
+ftw_three_head_boundary_bce_w20_s012_headw2_other3["data_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3["data_args"],
+    countries=["austria", "croatia", "denmark"],
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3["trainer_config"] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3", epochs=60, eval_period=2
+)
+
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf = deepcopy(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf[
+    "name"
+] = "ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf"
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["model_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["model_args"],
+    predict_distance=False,
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["criterion_args"] = dict(
+    ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf["criterion_args"],
+    distance_weight=0.0,
+)
+ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf[
+    "trainer_config"
+] = _base_trainer(
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf",
+    epochs=60,
+    eval_period=2,
+)
+
 ftw_dual_head_boundary_bce_w20_s012_d0 = deepcopy(
     ftw_dual_head_boundary_bce_w20_s012
 )
@@ -420,6 +504,116 @@ ftw_dual_head_boundary_bce_w30["trainer_config"] = _base_trainer(
 
 
 
+ftw_dual_head_boundary_sdf = deepcopy(ftw_dual_head)
+ftw_dual_head_boundary_sdf["name"] = "ftw_dual_head_boundary_sdf"
+ftw_dual_head_boundary_sdf["criterion"] = BoundaryWeightedSDFDiceBCEDistanceTVLoss
+ftw_dual_head_boundary_sdf["criterion_args"] = dict(
+    bce_weight=1.0,
+    dice_weight=1.0,
+    distance_weight=FTW_DISTANCE_WEIGHT,
+    tv_weight=FTW_TV_WEIGHT,
+    distance_boundary_weight=3.0,
+    sdf_boundary_sigma=0.12,
+)
+ftw_dual_head_boundary_sdf["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_sdf",
+    epochs=30,
+    eval_period=5,
+)
+
+ftw_dual_head_boundary_sdf_w20_s012 = deepcopy(ftw_dual_head_boundary_sdf)
+ftw_dual_head_boundary_sdf_w20_s012["name"] = "ftw_dual_head_boundary_sdf_w20_s012"
+ftw_dual_head_boundary_sdf_w20_s012["criterion_args"]["distance_weight"] = 0.1
+ftw_dual_head_boundary_sdf_w20_s012["criterion_args"][
+    "distance_boundary_weight"
+] = 20.0
+ftw_dual_head_boundary_sdf_w20_s012["criterion_args"]["sdf_boundary_sigma"] = 0.12
+ftw_dual_head_boundary_sdf_w20_s012["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_sdf_w20_s012",
+    epochs=60,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_both_w20_s012 = deepcopy(ftw_dual_head)
+ftw_dual_head_boundary_both_w20_s012["name"] = "ftw_dual_head_boundary_both_w20_s012"
+ftw_dual_head_boundary_both_w20_s012["criterion"] = (
+    BoundaryWeightedDiceBCEBoundarySDFTVLoss
+)
+ftw_dual_head_boundary_both_w20_s012["criterion_args"] = dict(
+    bce_weight=1.0,
+    dice_weight=1.0,
+    distance_weight=0.1,
+    tv_weight=FTW_TV_WEIGHT,
+    boundary_weight=20.0,
+    boundary_sigma=0.12,
+    distance_boundary_weight=20.0,
+    sdf_boundary_sigma=0.12,
+)
+ftw_dual_head_boundary_both_w20_s012["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_both_w20_s012",
+    epochs=60,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_both_w20_s012_d03 = deepcopy(
+    ftw_dual_head_boundary_both_w20_s012
+)
+ftw_dual_head_boundary_both_w20_s012_d03["name"] = (
+    "ftw_dual_head_boundary_both_w20_s012_d03"
+)
+ftw_dual_head_boundary_both_w20_s012_d03["criterion_args"][
+    "distance_weight"
+] = 0.3
+ftw_dual_head_boundary_both_w20_s012_d03["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_both_w20_s012_d03",
+    epochs=60,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_both_w20_s012_d05 = deepcopy(
+    ftw_dual_head_boundary_both_w20_s012
+)
+ftw_dual_head_boundary_both_w20_s012_d05["name"] = (
+    "ftw_dual_head_boundary_both_w20_s012_d05"
+)
+ftw_dual_head_boundary_both_w20_s012_d05["criterion_args"][
+    "distance_weight"
+] = 0.5
+ftw_dual_head_boundary_both_w20_s012_d05["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_both_w20_s012_d05",
+    epochs=60,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_both_w20_s012_d10 = deepcopy(
+    ftw_dual_head_boundary_both_w20_s012
+)
+ftw_dual_head_boundary_both_w20_s012_d10["name"] = (
+    "ftw_dual_head_boundary_both_w20_s012_d10"
+)
+ftw_dual_head_boundary_both_w20_s012_d10["criterion_args"][
+    "distance_weight"
+] = 1.0
+ftw_dual_head_boundary_both_w20_s012_d10["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_both_w20_s012_d10",
+    epochs=60,
+    eval_period=2,
+)
+
+ftw_dual_head_boundary_both_w20_s012_d30 = deepcopy(
+    ftw_dual_head_boundary_both_w20_s012
+)
+ftw_dual_head_boundary_both_w20_s012_d30["name"] = (
+    "ftw_dual_head_boundary_both_w20_s012_d30"
+)
+ftw_dual_head_boundary_both_w20_s012_d30["criterion_args"][
+    "distance_weight"
+] = 3.0
+ftw_dual_head_boundary_both_w20_s012_d30["trainer_config"] = _base_trainer(
+    "ftw_dual_head_boundary_both_w20_s012_d30",
+    epochs=60,
+    eval_period=2,
+)
 ftw_mask_baseline = dict(
     name="ftw_mask_baseline",
     model_arch=MaskOnlyUNet,
@@ -485,4 +679,16 @@ REPORT_CONFIG_NAMES = [
     "ftw_dual_head_boundary_bce_w20_s012_d030",
     "ftw_dual_head_boundary_bce_w20_s012_tv1e6",
     "ftw_dual_head_boundary_bce_w20_s012_no_aug",
+    "ftw_three_head_boundary_bce_w20_s012",
+    "ftw_three_head_boundary_bce_w20_s012_headw1",
+    "ftw_three_head_boundary_bce_w20_s012_headw2",
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3",
+    "ftw_three_head_boundary_bce_w20_s012_headw2_other3_nosdf",
+    "ftw_dual_head_boundary_sdf",
+    "ftw_dual_head_boundary_sdf_w20_s012",
+    "ftw_dual_head_boundary_both_w20_s012",
+    "ftw_dual_head_boundary_both_w20_s012_d03",
+    "ftw_dual_head_boundary_both_w20_s012_d05",
+    "ftw_dual_head_boundary_both_w20_s012_d10",
+    "ftw_dual_head_boundary_both_w20_s012_d30",
 ]

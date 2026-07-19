@@ -100,10 +100,12 @@ def main():
                         "ftw_mask_baseline",
                         "ftw_dual_head",
                         "ftw_dual_head_boundary_bce",
+                        "ftw_dual_head_boundary_bce_w20_s012",
+                        "ftw_three_head_boundary_bce_w20_s012",
                         "ftw_dual_head_sdf_prediction",
                     ])
     ap.add_argument("--data-dir", default=None, help="override data dir (else config's)")
-    ap.add_argument("--countries", nargs="+", default=["austria"])
+    ap.add_argument("--countries", nargs="+", default=["france"])
     ap.add_argument("--split", choices=["val", "test"], default="test")
     ap.add_argument("--checkpoint", default=None,
                     help="explicit .pth (only valid with a single --configs)")

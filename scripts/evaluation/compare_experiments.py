@@ -45,7 +45,8 @@ def main():
         default=[
             "ftw_mask_baseline",
             "ftw_dual_head",
-            "ftw_dual_head_boundary_bce",
+            "ftw_dual_head_boundary_bce_w20_s012",
+            "ftw_three_head_boundary_bce_w20_s012",
         ],
     )
     parser.add_argument("--log-dir", default="Logs")

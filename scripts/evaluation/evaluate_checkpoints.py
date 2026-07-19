@@ -160,11 +160,12 @@ def main():
     parser.add_argument("--baseline-checkpoint", default="Saved/ftw_mask_baseline/last_model.pth")
     parser.add_argument("--dual-checkpoint", default="Saved/ftw_dual_head/last_model.pth")
     parser.add_argument("--boundary-checkpoint", default="Saved/ftw_dual_head_boundary_bce/last_model.pth")
+    parser.add_argument("--three-head-checkpoint", default="Saved/ftw_three_head_boundary_bce_w20_s012/last_model.pth")
     parser.add_argument(
         "--models",
         nargs="+",
-        choices=["baseline", "dual_mask", "dual_sdf_pred", "boundary_bce"],
-        default=["baseline", "dual_mask", "dual_sdf_pred", "boundary_bce"],
+        choices=["baseline", "dual_mask", "dual_sdf_pred", "boundary_bce", "three_head"],
+        default=["baseline", "dual_mask", "dual_sdf_pred", "boundary_bce", "three_head"],
         help="Which model views to evaluate. Use `--models baseline` when only the baseline checkpoint is available.",
     )
     parser.add_argument("--thresholds", nargs="+", type=float, default=[0.4, 0.5, 0.6, 0.7])
@@ -183,6 +184,7 @@ def main():
         "dual_mask": ("ftw_dual_head", Path(args.dual_checkpoint)),
         "dual_sdf_pred": ("ftw_dual_head_sdf_prediction", Path(args.dual_checkpoint)),
         "boundary_bce": ("ftw_dual_head_boundary_bce", Path(args.boundary_checkpoint)),
+        "three_head": ("ftw_three_head_boundary_bce_w20_s012", Path(args.three_head_checkpoint)),
     }
     models = {name: available_models[name] for name in args.models}
 
