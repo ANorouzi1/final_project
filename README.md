@@ -76,7 +76,7 @@ python scripts/evaluation/compare_boundary_weights.py
 
 ## Quick Start
 
-From the project root, run the notebooks. If you prefer a short script:
+Run the notebooks from the project root, or use the command-line entry point:
 
 ```bash
 .venv/bin/python run_experiment.py --config synthetic_debug
@@ -106,7 +106,7 @@ Compare validation metrics after the runs:
 .venv/bin/python scripts/evaluation/compare_experiments.py
 ```
 
-Evaluate saved checkpoints directly, if you decide to keep checkpoints for a run:
+Evaluate saved checkpoints directly:
 
 ```bash
 .venv/bin/python scripts/evaluation/evaluate_checkpoints.py --models baseline dual_mask --split test

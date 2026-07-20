@@ -470,7 +470,7 @@ class FTWFieldDataModule(BaseDataModule):
         self._sdf_datasets = [train_dataset]
         super().__init__(train_dataset, heldout_split=heldout_split, split_seed=split_seed, **loader_kwargs)
 
-        # Prefer the official validation split unless a random heldout was requested.
+        # Use the official validation split unless random holdout is enabled.
         if not heldout_split and val_split is not None:
             val_dataset = FTWFieldDataset(
                 data_dir=data_dir,
