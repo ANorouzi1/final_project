@@ -8,7 +8,7 @@ from src.utils.utils import seed_everything
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="synthetic_debug")
+    parser.add_argument("--config", required=True)
     parser.add_argument("--log-dir", default="Logs")
     args = parser.parse_args()
 

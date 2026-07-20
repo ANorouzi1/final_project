@@ -5,7 +5,6 @@ from pathlib import Path
 import torch
 
 from src.data_loaders.field_dataset import FieldSegmentationDataModule, NUM_INPUT_CHANNELS
-from src.data_loaders.synthetic_fields import SyntheticFieldDataModule
 from src.losses.segmentation_losses import (
     BoundaryWeightedDiceBCEBoundarySDFTVLoss,
     BoundaryWeightedDiceBCEDistanceTVLoss,
@@ -43,74 +42,6 @@ def _segmentation_metrics():
         miou=MeanIoU(threshold=0.5),
         boundary_iou=BoundaryIoU(threshold=0.5, radius=1),
     )
-
-
-synthetic_debug = dict(
-    name="synthetic_debug",
-    model_arch=DualHeadUNet,
-    model_args=dict(
-        in_channels=3,
-        base_channels=24,
-        num_classes=1,
-        bilinear=True,
-    ),
-    datamodule=SyntheticFieldDataModule,
-    data_args=dict(
-        n_samples=96,
-        image_size=128,
-        batch_size=8,
-        shuffle=True,
-        heldout_split=0.2,
-        num_workers=0,
-        seed=7,
-    ),
-    optimizer=partial(torch.optim.AdamW, lr=3e-4, weight_decay=1e-4),
-    lr_scheduler=partial(torch.optim.lr_scheduler.StepLR, step_size=4, gamma=0.75),
-    criterion=DiceBCEDistanceTVLoss,
-    criterion_args=dict(
-        bce_weight=1.0,
-        dice_weight=1.0,
-        distance_weight=0.35,
-        tv_weight=1e-6,
-    ),
-    metrics=_segmentation_metrics(),
-    trainer_module=FieldSegmentationTrainer,
-    trainer_config=_base_trainer("synthetic_debug", epochs=2, eval_period=1),
-)
-
-
-synthetic_full = dict(
-    name="synthetic_full",
-    model_arch=DualHeadUNet,
-    model_args=dict(
-        in_channels=3,
-        base_channels=32,
-        num_classes=1,
-        bilinear=True,
-    ),
-    datamodule=SyntheticFieldDataModule,
-    data_args=dict(
-        n_samples=1200,
-        image_size=160,
-        batch_size=8,
-        shuffle=True,
-        heldout_split=0.2,
-        num_workers=0,
-        seed=11,
-    ),
-    optimizer=partial(torch.optim.AdamW, lr=3e-4, weight_decay=1e-4),
-    lr_scheduler=partial(torch.optim.lr_scheduler.CosineAnnealingLR, T_max=25),
-    criterion=DiceBCEDistanceTVLoss,
-    criterion_args=dict(
-        bce_weight=1.0,
-        dice_weight=1.0,
-        distance_weight=0.4,
-        tv_weight=1e-6,
-    ),
-    metrics=_segmentation_metrics(),
-    trainer_module=FieldSegmentationTrainer,
-    trainer_config=_base_trainer("synthetic_full", epochs=25, eval_period=5),
-)
 
 
 ftw_dual_head = dict(

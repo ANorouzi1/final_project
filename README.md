@@ -22,12 +22,10 @@ The structure follows Assignment 3:
 
 ## Recommended Workflow
 
-Open these notebooks:
+Open this notebooks:
 
 1. `notebooks/01_project_overview.ipynb`
-2. `notebooks/02_train_synthetic_demo.ipynb`
 
-The second notebook runs without downloading data by using a synthetic polygon-field dataset. This is useful for checking that the full training loop, SDF loss, TV regularization, compact metrics, visualization, and checkpointing work before plugging in the real Fields of The World data.
 
 ## Real Data Layout
 
@@ -50,39 +48,13 @@ data/ftw/
 
 The FTW loader uses the semantic mask for foreground supervision and the instance mask to build a signed distance field in `[-1, 1]`. Positive values are field interiors, negative values are background, and values near zero mark field boundaries, including borders between touching instances.
 
-## download dataset
 
-the default is france in download_ftw_subset.py
-```shell
-python download_ftw_subset.py --root data/ftw --country france--include-val
-python src/utils/download_ftw_all.py --workers 16
-
-```
-
-## precompute the sdf
-
-```shell
-python scripts/data/precompute_sdf_cache.py \
-  --data-dir data/ftw \
-  --cache-dir sdf_cache \
-  --countries france \
-  --splits train val test
-```
 
 ## show ftw_dual_head_boundary_bce results on different boundary weights
 ```shell
 python scripts/evaluation/compare_boundary_weights.py
 ```
 
-## Quick Start
-
-Run the notebooks from the project root, or use the command-line entry point:
-
-```bash
-.venv/bin/python run_experiment.py --config synthetic_debug
-```
-
-The project is intentionally notebook-friendly, so the script is only a convenience wrapper.
 
 ## Feedback-Driven Diagnostics
 
@@ -117,5 +89,3 @@ Generate prediction panels:
 ```bash
 .venv/bin/python scripts/visualization/visualize_predictions.py --config ftw_dual_head --split test --num-samples 6
 ```
-
-See `docs/proposal.pdf` for the original project idea and `docs/feedback.txt` for the course feedback that motivated the current baseline/ablation work.
