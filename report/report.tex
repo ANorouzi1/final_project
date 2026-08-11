@@ -10,6 +10,8 @@
 \usepackage{microtype}
 \usepackage{multirow}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
 \usepackage[pagebackref,breaklinks,colorlinks]{hyperref}
 
 \definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
@@ -60,6 +62,24 @@ We compare three interventions against the same mask-only U-Net. First, boundary
 \subsection{Data representation and shared backbone}
 Each $256\!\times\!256$ chip contains red, green, blue, and near-infrared bands from two seasonal windows, concatenated into an eight-channel input. Reflectance values are scaled and clipped to $[0,1]$. The backbone is a U-Net with base width 32, four downsampling and four upsampling stages, transposed-convolution upsampling, and skip connections. The mask-only model has 7.76M trainable parameters; either auxiliary head adds about 9.3K parameters (0.12\%). No pretrained encoder is used.
 
+\begin{center}
+\vspace{-2pt}
+\begin{tikzpicture}[
+  >=Latex,
+  box/.style={draw, rounded corners=1pt, align=center, minimum height=5.2mm, inner sep=1.2pt, font=\scriptsize}
+]
+  \node[box, fill=gray!12, text width=23mm] (shared) at (-2.15,0)
+    {Shared U-Net\\decoder features};
+  \node[box, fill=cvprblue!13, text width=35mm] (mask) at (1.25,0.39)
+    {Mask head $\rightarrow$ field probability\\\tiny used at inference};
+  \node[box, fill=orange!14, text width=35mm] (auxiliary) at (1.25,-0.39)
+    {Auxiliary head $\rightarrow$ SDF or border\\\tiny separate variants; training only};
+  \draw[->, line width=.45pt] (shared.east) -- (mask.west);
+  \draw[->, line width=.45pt] (shared.east) -- (auxiliary.west);
+\end{tikzpicture}
+\vspace{-5pt}
+\end{center}
+
 Let $Y_i\in\{0,1\}$ be the semantic target and $z_i$ the mask logit. From the FTW instance mask we compute an SDF $D_i\in[-1,1]$. Distances are positive inside each field and normalized per instance, zero at its boundary, and negative in the background with outside distances clipped at 32 pixels. Thus touching field instances retain separate zero level sets even when their semantic class is identical.
 
 All methods include Dice loss~\cite{milletari2016vnet},
@@ -83,7 +103,7 @@ and the normalized loss is
 The weight equals 21 on a boundary, 8.36 at $|D|=0.12$, and approaches one far away. The objective is $\mathcal{L}_{\mathrm{WBCE}}+\mathcal{L}_{\mathrm{Dice}}$. Because the weighting acts on mask logits, boundary mistakes directly influence the prediction used at inference.
 
 \subsection{Boundary-focused SDF regression}
-The second intervention adds a distance head $z^D$ to the shared decoder. Its $\tanh$ output matches the normalized SDF range, and Smooth L1 limits the influence of large distance errors. The experiment uses
+The second intervention instantiates the auxiliary branch as a distance head $z^D$. A $\tanh$ output matches the normalized SDF range, while Smooth L1 limits large-distance errors:
 \begin{align}
   a_i &= \exp\left(-|D_i|/\tau\right),\\
   \mathcal{L}_{\mathrm{WSDF}} &=
@@ -94,16 +114,14 @@ The second intervention adds a distance head $z^D$ to the shared decoder. Its $\
 The hypothesis is multi-task learning: accurate local geometry should improve the features shared with the mask head. Only the mask output is used for the reported segmentation.
 
 \subsection{Explicit boundary prediction}
-The final model combines direct mask weighting with a second active head that predicts
-\begin{equation}
-  B_i=\mathbf{1}\left[|D_i|\leq0.12\right].
-\end{equation}
-Because the positive boundary band is thin, the boundary BCE uses a batch-wise positive-class weight equal to the negative-to-positive pixel ratio, clipped at 50. Its objective is
+The final intervention instantiates the same branch as a boundary head for $B_i=\mathbf{1}[|D_i|\leq0.12]$; mask training retains weighted BCE and Dice supervision.
+
+Thin-band BCE uses the batch-wise negative-to-positive pixel ratio, clipped at 50. The joint objective is
 \begin{equation}
   \mathcal{L}_{M+B}=\mathcal{L}_{\mathrm{WBCE}}+
   \mathcal{L}_{\mathrm{Dice}}+2\mathcal{L}^{\mathrm{bal}}_{\mathrm{BCE}}(z^B,B).
 \end{equation}
-This head explicitly teaches shared features which pixels form borders, but the final binary segmentation still comes from the mask head. The heads interact only through the shared decoder and summed training loss, and mask inference is unchanged.
+The auxiliary head affects the mask only through shared features and the joint loss; mask inference is unchanged.
 
 \section{Experimental Setup}
 \textbf{Data.} We use the official FTW splits for Austria, Croatia, and Denmark: 10,938 training, 1,347 validation, and 1,430 test chips. Training applies horizontal and vertical flips, rotations, mild affine translation and scaling, RGB brightness/contrast jitter, Gaussian blur and noise, and random erasing. Validation and test inputs are not augmented.
