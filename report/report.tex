@@ -25,7 +25,8 @@ Where Should Boundary Supervision Enter?}
 \author{Arian Norouzi \qquad Xiyang Lyu \qquad Yelyzaveta Tryfonova\\
 Team 004, High-Level Computer Vision\\
 Saarland University\\
-{\tt\small 7061871 \qquad 7058370 \qquad 7072789}}
+{\tt\small 7061871 \qquad 7058370 \qquad 7072789}
+\qquad {\small\href{https://github.com/ANorouzi1/final_project/tree/main}{Project code}}}
 
 \begin{document}
 \maketitle
@@ -162,7 +163,7 @@ Each configuration is a single run, so small differences may reflect optimizatio
 For binary agricultural field segmentation in this controlled FTW experiment, boundary information is most useful when it acts directly on the mask objective and on an explicit border task. Boundary-weighted BCE supplies most of the improvement and achieves the highest mIoU, while the added boundary head yields the best Boundary IoU. Boundary-focused SDF regression provides much less benefit and slightly reduces region overlap. The evidence supports direct boundary supervision for this setting, while the limited geographic scope and single-seed runs leave broader generalization to future work.
 
 \section*{Appendix: Team Contributions}
-\textbf{Arian Norouzi:} pipeline, SDF objectives, evaluation/visuals, presentation, and report. \textbf{Xiyang Lyu:} configurations, training/checkpoints, comparisons, and boundary-head experiments. \textbf{Yelyzaveta Tryfonova:} loader, SDF caching/runtime, and debugging.
+\textbf{Arian Norouzi:} pipeline, baseline, SDF objectives, evaluation/visuals. \textbf{Xiyang Lyu:} configurations, training/checkpoints, comparisons, and boundary-head experiments. \textbf{Yelyzaveta Tryfonova:} loader, weighted BCE, SDF caching/runtime, and debugging.
 
 \clearpage
 {\small

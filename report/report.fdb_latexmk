@@ -1,17 +1,18 @@
 # Fdb version 4
-["bibtex report"] 1786438287.49669 "report.aux" "report.bbl" "report" 1786438289.63948 0
+["bibtex report"] 1786440555.23053 "report.aux" "report.bbl" "report" 1786440650.98274 0
   "./ieee_fullname.bst" 1620868820 19905 72b73f4cb1c51eaa1a7af8ecad2b6bfb ""
   "./references.bib" 1786438105.17938 3870 23491715e5659edb40e9484bdd585050 ""
-  "report.aux" 1786438289.23623 4832 5e9591df953c9e3e892b2d427f979d88 "pdflatex"
+  "report.aux" 1786440650.49392 4832 5e9591df953c9e3e892b2d427f979d88 "pdflatex"
   (generated)
   "report.bbl"
   "report.blg"
   (rewritten before read)
-["pdflatex"] 1786438287.63932 "report.tex" "report.pdf" "report" 1786438289.6397 0
+["pdflatex"] 1786440649.24213 "/Users/ariannoruzi/Desktop/project_hlcv/HLCV_final_project/report/report.tex" "report.pdf" "report" 1786440650.98301 0
   "../Visualizations/presentation_comparison/baseline_mask.png" 1784449300.5416 44042 7d719bb82396c15a6860eaf065c47046 ""
   "../Visualizations/presentation_comparison/mask_boundary_heads_mask.png" 1784449322.63965 50182 417496374d9d15661cdfb3615ff01acd ""
   "../Visualizations/problem_setup/val_blob_issue.png" 1784288545.43035 869758 11e2cc58b8aeac8a80bd7272b57ed1fd ""
   "../Visualizations/sample_austria_g83_00040_14/ground_truth_mask.png" 1784403463.19439 52621 03e8dd0904c9ef990c6c4297f5909185 ""
+  "/Users/ariannoruzi/Desktop/project_hlcv/HLCV_final_project/report/report.tex" 1786440649.00612 15653 8da05ed0353b083bd400cb6699b5ce0a ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/adobe/courier/pcrr7t.tfm" 1136768653 960 379cc0019370a9e0208a0a3f949f847a ""
@@ -149,11 +150,11 @@
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1744387755 3345736 674c83ef32936358dbcfadc0f5be704c ""
   "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
   "cvpr.sty" 1659311204 22663 ae69ac60d981219f288927532f3b519c ""
-  "report.aux" 1786438289.23623 4832 5e9591df953c9e3e892b2d427f979d88 "pdflatex"
-  "report.bbl" 1786438287.63643 3017 b7a1fb1e86809389e747e5c77ac78e41 "bibtex report"
-  "report.brf" 1786438289.23761 553 d4f58dddd392a02b9d17e0900b84101c "pdflatex"
-  "report.out" 1786438289.23725 1790 7e5fc89e75fbd049107784661494ef50 "pdflatex"
-  "report.tex" 1786438280.97593 15566 99bde5feb3a41c2232a981a846ae8b22 ""
+  "report.aux" 1786440650.49392 4832 5e9591df953c9e3e892b2d427f979d88 "pdflatex"
+  "report.bbl" 1786440555.40706 2977 2e4cb7d200f42036896f9443e141590c "bibtex report"
+  "report.brf" 1786440650.49773 553 d4f58dddd392a02b9d17e0900b84101c "pdflatex"
+  "report.out" 1786440650.49718 1790 7e5fc89e75fbd049107784661494ef50 "pdflatex"
+  "report.tex" 1786440649.00612 15653 8da05ed0353b083bd400cb6699b5ce0a ""
   (generated)
   "report.aux"
   "report.brf"
