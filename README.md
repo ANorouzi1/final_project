@@ -20,12 +20,6 @@ The structure follows Assignment 3:
 - `Saved/`: optional/legacy checkpoints
 - `sdf_cache/`: generated signed-distance-field targets
 
-## Recommended Workflow
-
-Open this notebooks:
-
-1. `notebooks/01_project_overview.ipynb`
-
 
 ## Real Data Layout
 
