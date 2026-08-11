@@ -1,0 +1,73 @@
+\begin{thebibliography}{10}\itemsep=-1pt
+
+\bibitem{bischke2019buildings}
+Benjamin Bischke, Patrick Helber, Joachim Folz, Damian Borth, and Andreas
+  Dengel.
+\newblock Multi-task learning for segmentation of building footprints with deep
+  neural networks.
+\newblock In {\em 2019 IEEE International Conference on Image Processing},
+  pages 1480--1484, 2019.
+
+\bibitem{caruana1997multitask}
+Rich Caruana.
+\newblock Multitask learning.
+\newblock {\em Machine Learning}, 28(1):41--75, 1997.
+
+\bibitem{cheng2021boundaryiou}
+Bowen Cheng, Ross Girshick, Piotr Doll{\'a}r, Alexander~C. Berg, and Alexander
+  Kirillov.
+\newblock Boundary {IoU}: Improving object-centric image segmentation
+  evaluation.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 15334--15342, 2021.
+
+\bibitem{kendall2018multitask}
+Alex Kendall, Yarin Gal, and Roberto Cipolla.
+\newblock Multi-task learning using uncertainty to weigh losses for scene
+  geometry and semantics.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition}, pages 7482--7491, 2018.
+
+\bibitem{kerner2025ftw}
+Hannah Kerner, Snehal Chaudhari, Aninda Ghosh, Caleb Robinson, Adeel Ahmad,
+  Eddie Choi, Nathan Jacobs, Chris Holmes, Matthias Mohr, Rahul Dodhia, Juan
+  M.~Lavista Ferres, and Jennifer Marcus.
+\newblock Fields of the world: A machine learning benchmark dataset for global
+  agricultural field boundary segmentation.
+\newblock In {\em Proceedings of the AAAI Conference on Artificial
+  Intelligence}, volume~39, pages 28151--28159, 2025.
+
+\bibitem{kervadec2021boundary}
+Hoel Kervadec, Jihene Bouchtiba, Christian Desrosiers, Eric Granger, Jose Dolz,
+  and Ismail~Ben Ayed.
+\newblock Boundary loss for highly unbalanced segmentation.
+\newblock {\em Medical Image Analysis}, 67:101851, 2021.
+
+\bibitem{loshchilov2019adamw}
+Ilya Loshchilov and Frank Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock In {\em International Conference on Learning Representations}, 2019.
+
+\bibitem{milletari2016vnet}
+Fausto Milletari, Nassir Navab, and Seyed-Ahmad Ahmadi.
+\newblock V-net: Fully convolutional neural networks for volumetric medical
+  image segmentation.
+\newblock In {\em Fourth International Conference on 3D Vision}, pages
+  565--571, 2016.
+
+\bibitem{ronneberger2015unet}
+Olaf Ronneberger, Philipp Fischer, and Thomas Brox.
+\newblock U-net: Convolutional networks for biomedical image segmentation.
+\newblock In {\em Medical Image Computing and Computer-Assisted Intervention},
+  volume 9351 of {\em Lecture Notes in Computer Science}, pages 234--241.
+  Springer, 2015.
+
+\bibitem{zhen2020joint}
+Mingmin Zhen, Jinglu Wang, Lei Zhou, Shiwei Li, Tianwei Shen, Jiaxiang Shang,
+  Tian Fang, and Long Quan.
+\newblock Joint semantic segmentation and boundary detection using iterative
+  pyramid contexts.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 13666--13675, 2020.
+
+\end{thebibliography}
